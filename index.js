@@ -12,6 +12,7 @@ const prisma = require('./src/lib/prisma')
 const { redis, redisConfig } = require('./src/lib/redis')
 const { registrarJobsRecurrentes } = require('./src/queues')
 const healthRouter = require('./src/routes/health')
+const masterAdminAuthRouter = require('./src/modules/masterAdmin/auth.routes')
 
 const app = express()
 const PORT = Number(process.env.APP_PORT) || 3000
@@ -39,6 +40,7 @@ app.use(morgan(process.env.LOG_FORMAT || 'dev'))
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api', healthRouter)
+app.use('/api/master-admin/auth', masterAdminAuthRouter)
 
 // ── Manejo global de errores ──────────────────────────────────────────────────
 app.use((err, req, res, next) => {
