@@ -1,0 +1,43 @@
+# Dependencias — se instalan dentro del contenedor
+node_modules/
+
+# Variables de entorno — nunca en la imagen
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Claude / agentes
+.claude/
+.agents/
+skills-lock.json
+
+# Documentos internos
+*.xml
+
+# Logs
+*.log
+logs/
+
+# Cobertura y tests
+coverage/
+.nyc_output/
+
+# Build artifacts
+dist/
+build/
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Prisma — solo se necesita la carpeta prisma/
+# (migrations y schema van dentro del contenedor)
+prisma/migrations/dev.db
+
+# Editor
+.vscode/
+.idea/

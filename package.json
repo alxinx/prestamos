@@ -1,0 +1,37 @@
+{
+  "name": "cobranzas-saas-api",
+  "version": "1.0.0",
+  "description": "API SaaS de gestión de préstamos y cobranzas",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "6.10.1",
+    "bcrypt": "5.1.1",
+    "bullmq": "5.52.2",
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.5",
+    "dotenv": "16.5.0",
+    "express": "5.1.0",
+    "express-rate-limit": "7.5.0",
+    "express-validator": "7.2.1",
+    "helmet": "8.0.0",
+    "ioredis": "5.6.1",
+    "jsonwebtoken": "9.0.2",
+    "morgan": "1.10.0",
+    "uuid": "11.1.0",
+    "zod": "3.25.65"
+  },
+  "devDependencies": {
+    "nodemon": "3.1.10",
+    "prisma": "6.10.1"
+  }
+}

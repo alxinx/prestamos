@@ -1,0 +1,1400 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+// Módulo 1: MasterAdmin
+enum EstadoPlan {
+  ACTIVO
+  INACTIVO
+}
+
+enum EstadoTenant {
+  ACTIVO
+  PERIODO_GRACIA
+  SUSPENDIDO
+  CANCELADO
+}
+
+enum EstadoFactura {
+  PENDIENTE
+  PAGADO
+  FALLIDO
+  VENCIDO
+}
+
+enum MetodoPagoManual {
+  EFECTIVO
+  TRANSFERENCIA
+  NEQUI
+  DAVIPLATA
+  OTRO
+}
+
+enum TipoSuspension {
+  AUTOMATICA
+  MANUAL
+}
+
+enum MotivoSuspension {
+  PAGO_VENCIDO
+  SOLICITUD_TENANT
+  FRAUDE
+  OTRO
+}
+
+enum TipoReactivacion {
+  PASARELA_AUTOMATICA
+  PAGO_MANUAL_MASTERADMIN
+  MANUAL_SIN_PAGO
+}
+
+// Módulo 2: Entidad
+enum TipoPersona {
+  NATURAL
+  JURIDICA
+}
+
+enum TipoUbicacionEntidad {
+  SEDE_PRINCIPAL
+  SEDE_SECUNDARIA
+}
+
+enum EstadoWhatsapp {
+  NO_CONFIGURADO
+  ACTIVO
+  SUSPENDIDO
+  ERROR
+}
+
+enum ProveedorPago {
+  NEQUI
+  DAVIPLATA
+  PSE
+}
+
+enum EstadoConfiguracionPago {
+  NO_CONFIGURADO
+  CONECTADO
+  ERROR
+}
+
+// Módulo 3: Empleados
+enum EstadoEmpleado {
+  ACTIVO
+  INACTIVO
+  SUSPENDIDO
+  RETIRADO
+}
+
+enum NombreRol {
+  COBRADOR
+  SECRETARIA
+  ADMINISTRADOR
+  AUDITOR
+}
+
+enum ModuloPermiso {
+  CAPITAL
+  CLIENTES
+  CREDITOS
+  COBROS
+  EMPLEADOS
+  REPORTES
+  CAJA
+  TESORERIA
+}
+
+enum TipoEntidadDocumento {
+  CLIENTE
+  EMPLEADO
+  ENTIDAD
+  CREDITO
+}
+
+enum TipoDocumento {
+  CEDULA
+  CONTRATO
+  FOTO
+  ANTECEDENTES
+  RUT
+  CAMARA_COMERCIO
+  RECIBO_PUBLICO
+  REFERENCIA
+  LETRA_CAMBIO
+  FIRMA_OTP
+  COMPROBANTE
+  OTRO
+}
+
+// Módulo 4: Clientes
+enum EstadoCliente {
+  ACTIVO
+  EN_MORA
+  BLOQUEADO
+  INACTIVO
+  FALLECIDO
+}
+
+enum TipoUbicacionCliente {
+  RESIDENCIA
+  TRABAJO
+  NEGOCIO_PROPIO
+  DONDE_SE_FIRMO
+  FAMILIAR
+  OTRO
+}
+
+enum RelacionPersona {
+  FAMILIAR
+  AMIGO
+  COLEGA
+  VECINO
+  OTRO
+}
+
+// Módulo 5: Capital
+enum EstadoCaja {
+  ACTIVA
+  INACTIVA
+}
+
+enum TipoMovimientoCaja {
+  APORTE
+  RETIRO
+  PRESTAMO_OTORGADO
+  PAGO_RECIBIDO
+  UTILIDAD_RETIRADA
+}
+
+// Módulo 6: Créditos
+enum FrecuenciaPago {
+  DIARIO
+  SEMANAL
+  QUINCENAL
+  MENSUAL
+}
+
+enum EstadoPlantillaCredito {
+  ACTIVA
+  INACTIVA
+}
+
+enum EstadoCredito {
+  ACTIVO
+  PAGADO
+  EN_MORA
+  VENCIDO
+  CASTIGADO
+  REFINANCIADO
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+  NEQUI
+  DAVIPLATA
+  OTRO
+}
+
+enum TipoPago {
+  PAGO_CUOTA
+  ABONO_PARCIAL
+  PAGO_TOTAL
+  PAGO_MULTIPLES_CREDITOS
+  PAGO_COMPROBANTE_ADMIN
+}
+
+enum EstadoPago {
+  PENDIENTE_LIQUIDAR
+  LIQUIDADO
+  ANULADO
+}
+
+enum EstadoMora {
+  VIGENTE
+  PAGADA
+  CONDONADA
+}
+
+enum TipoRecargo {
+  GASTO_COBRANZA
+  PENALIZACION
+  OTRO
+}
+
+enum TipoGarantia {
+  MOTO
+  VEHICULO
+  ELECTRODOMESTICO
+  PAGARE
+  LETRA_CAMBIO
+  DOCUMENTO_FIRMADO
+  INMUEBLE
+  OTRO
+}
+
+enum EstadoDeudorSolidario {
+  ACTIVO
+  LIBERADO
+}
+
+// Módulo 7: Cobros
+enum EstadoCierreCajaIndividual {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+enum EstadoCierreCajaGlobal {
+  PENDIENTE
+  CERRADO
+}
+
+enum EstadoSolicitudExtemporanea {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+// Módulo 8: Tesorería
+enum TipoCuentaCaja {
+  BANCO
+  BILLETERA_DIGITAL
+  CAJA_FUERTE
+}
+
+enum EstadoCuentaCaja {
+  ACTIVA
+  INACTIVA
+}
+
+enum TipoMovimientoTesoreria {
+  INGRESO
+  EGRESO
+  TRASLADO
+}
+
+enum SubtipoMovimientoTesoreria {
+  LIQUIDACION_COBRADOR
+  CONSIGNACION_CLIENTE_BANCO
+  CONSIGNACION_CLIENTE_BILLETERA
+  APORTE_SOCIO
+  OTRO_INGRESO
+  PRESTAMO_OTORGADO
+  RETIRO_UTILIDADES_SOCIO
+  GASTO_OPERATIVO
+  NOMINA_COBRADOR
+  DEVOLUCION_CLIENTE
+  OTRO_EGRESO
+  BANCO_A_CAJA_CAPITAL
+  CAJA_CAPITAL_A_BANCO
+  ENTRE_CUENTAS
+}
+
+enum EstadoMovimientoTesoreria {
+  PENDIENTE
+  CONFIRMADO
+  ANULADO
+}
+
+enum EstadoConsignacion {
+  PENDIENTE
+  VERIFICADA
+  RECHAZADA
+}
+
+enum TipoEgresoProgramado {
+  NOMINA
+  GASTO_OPERATIVO
+  RETIRO_SOCIO
+  OTRO
+}
+
+enum EstadoEgresoProgramado {
+  PROGRAMADO
+  EJECUTADO
+  CANCELADO
+}
+
+enum EstadoConciliacion {
+  CUADRADO
+  DESCUADRADO
+}
+
+// ==================== MÓDULO 1: MASTER ADMIN (schema público) ====================
+
+model MasterAdmin {
+  id           String    @id @db.Char(36)
+  email        String    @unique
+  passwordHash String    @map("password_hash") // bcrypt async, factor 12
+  dosFASecreto String    @map("dos_fa_secreto") // AES-256-GCM encrypted
+  ipWhitelist  Json      @map("ip_whitelist")
+  ultimoAcceso DateTime? @map("ultimo_acceso")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("master_admins")
+}
+
+model Plan {
+  id                     String     @id @db.Char(36)
+  nombre                 String
+  precio                 Decimal    @db.Decimal(15, 2)
+  limiteCobradores       Int        @map("limite_cobradores")
+  limiteClientes         Int        @map("limite_clientes")
+  limiteMensajesWsp      Int        @map("limite_mensajes_wsp")
+  consultasScore         Int        @map("consultas_score")
+  tieneBot               Boolean    @default(false) @map("tiene_bot")
+  tienePortalCliente     Boolean    @default(false) @map("tiene_portal_cliente")
+  tieneFirmaDigital      Boolean    @default(false) @map("tiene_firma_digital")
+  precioClienteAdicional Decimal    @db.Decimal(15, 2) @map("precio_cliente_adicional")
+  estado                 EstadoPlan
+  createdAt              DateTime   @default(now()) @map("created_at")
+  updatedAt              DateTime   @updatedAt @map("updated_at")
+
+  tenants  Tenant[]
+  facturas Factura[]
+
+  @@map("planes")
+}
+
+model Tenant {
+  id               String       @id @db.Char(36)
+  planId           String       @map("plan_id") @db.Char(36)
+  nombreNegocio    String       @map("nombre_negocio")
+  email            String
+  subdominio       String       @unique
+  estado           EstadoTenant
+  fechaInicio      DateTime     @map("fecha_inicio")
+  fechaVencimiento DateTime     @map("fecha_vencimiento")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  plan            Plan                  @relation(fields: [planId], references: [id])
+  facturas        Factura[]
+  suspensiones    Suspension[]
+  impersonaciones ImpersonacionTenant[]
+
+  @@map("tenants")
+}
+
+model Factura {
+  id                    String        @id @db.Char(36)
+  tenantId              String        @map("tenant_id") @db.Char(36)
+  planId                String        @map("plan_id") @db.Char(36)
+  periodo               String
+  valorPlan             Decimal       @db.Decimal(15, 2) @map("valor_plan")
+  clientesExcedentes    Int           @default(0) @map("clientes_excedentes")
+  valorExcedentes       Decimal       @default(0) @db.Decimal(15, 2) @map("valor_excedentes")
+  totalFactura          Decimal       @db.Decimal(15, 2) @map("total_factura")
+  estado                EstadoFactura
+  fechaGeneracion       DateTime      @map("fecha_generacion")
+  fechaVencimiento      DateTime      @map("fecha_vencimiento")
+  fechaPago             DateTime?     @map("fecha_pago")
+  metodoPago            String?       @map("metodo_pago")
+  referenciaTransaccion String?       @map("referencia_transaccion")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  plan        Plan         @relation(fields: [planId], references: [id])
+  pagosManual PagoManual[]
+
+  @@map("facturas")
+}
+
+model PagoManual {
+  id             String           @id @db.Char(36)
+  facturaId      String           @map("factura_id") @db.Char(36)
+  valorPagado    Decimal          @db.Decimal(15, 2) @map("valor_pagado")
+  metodo         MetodoPagoManual
+  comprobanteUrl String?          @map("comprobante_url")
+  observaciones  String?          @db.Text
+  fechaPago      DateTime         @map("fecha_pago")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  factura Factura @relation(fields: [facturaId], references: [id])
+
+  @@map("pagos_manuales")
+}
+
+model Suspension {
+  id                        String            @id @db.Char(36)
+  tenantId                  String            @map("tenant_id") @db.Char(36)
+  tipoSuspension            TipoSuspension    @map("tipo_suspension")
+  motivo                    MotivoSuspension
+  fechaSuspension           DateTime          @map("fecha_suspension")
+  periodoGraciaDias         Int               @map("periodo_gracia_dias")
+  fechaLimitePago           DateTime          @map("fecha_limite_pago")
+  reactivado                Boolean           @default(false)
+  fechaReactivacion         DateTime?         @map("fecha_reactivacion")
+  tipoReactivacion          TipoReactivacion? @map("tipo_reactivacion")
+  // Obligatorio si tipoReactivacion = MANUAL_SIN_PAGO
+  motivoReactivacionSinPago String?           @db.Text @map("motivo_reactivacion_sin_pago")
+  observaciones             String?           @db.Text
+  createdAt                 DateTime          @default(now()) @map("created_at")
+  updatedAt                 DateTime          @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("suspensiones")
+}
+
+model ImpersonacionTenant {
+  id          String    @id @db.Char(36)
+  tenantId    String    @map("tenant_id") @db.Char(36)
+  motivo      String    @db.Text
+  fechaInicio DateTime  @map("fecha_inicio")
+  fechaFin    DateTime? @map("fecha_fin")
+  ipAddress   String    @map("ip_address")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("impersonaciones_tenant")
+}
+
+model AuditoriaMasterAdmin {
+  id               String   @id @db.Char(36)
+  accion           String
+  tenantIdAfectado String?  @map("tenant_id_afectado") @db.Char(36)
+  detalles         Json
+  ipAddress        String   @map("ip_address")
+  fecha            DateTime
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("auditoria_master_admin")
+}
+
+// ==================== MÓDULO 2: ENTIDAD (schema negocio) ====================
+
+model Entidad {
+  id                  String      @id @db.Char(36)
+  tenantId            String      @unique @map("tenant_id") @db.Char(36)
+  tipoPersona         TipoPersona @map("tipo_persona")
+  nombreCompleto      String?     @map("nombre_completo")
+  razonSocial         String?     @map("razon_social")
+  nit                 String?
+  cedula              String?
+  representanteLegal  String?     @map("representante_legal")
+  cedulaRepresentante String?     @map("cedula_representante")
+  email               String
+  telefono            String
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  @@map("entidades")
+}
+
+model UbicacionEntidad {
+  id         String               @id @db.Char(36)
+  tenantId   String               @map("tenant_id") @db.Char(36)
+  tipo       TipoUbicacionEntidad
+  direccion  String
+  barrio     String?
+  ciudad     String
+  referencia String?              @db.Text
+  activa     Boolean              @default(true)
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  @@map("ubicaciones_entidad")
+}
+
+model ConfiguracionOperativa {
+  id                             String   @id @db.Char(36)
+  tenantId                       String   @unique @map("tenant_id") @db.Char(36)
+  horaLimiteCierreCaja           String   @map("hora_limite_cierre_caja")
+  diasGraciaMora                 Int      @map("dias_gracia_mora")
+  porcentajeMoraDiario           Decimal  @db.Decimal(15, 2) @map("porcentaje_mora_diario")
+  frecuenciasDisponibles         Json     @map("frecuencias_disponibles")
+  montoMinimoPrestamo            Decimal  @db.Decimal(15, 2) @map("monto_minimo_prestamo")
+  montoMaximoPrestamo            Decimal  @db.Decimal(15, 2) @map("monto_maximo_prestamo")
+  limiteSolicitudesExtemporaneas Int      @map("limite_solicitudes_extemporaneas")
+  diasMaximosExtemporaneo        Int      @map("dias_maximos_extemporaneo")
+  distribucionAutomaticaCapital  Boolean  @default(false) @map("distribucion_automatica_capital")
+  createdAt                      DateTime @default(now()) @map("created_at")
+  updatedAt                      DateTime @updatedAt @map("updated_at")
+
+  @@map("configuracion_operativa")
+}
+
+model ConfiguracionWhatsapp {
+  id                  String         @id @db.Char(36)
+  tenantId            String         @unique @map("tenant_id") @db.Char(36)
+  numeroRegistrado    String?        @map("numero_registrado")
+  estado              EstadoWhatsapp
+  mensajesSentMes     Int            @default(0) @map("mensajes_sent_mes")
+  ultimaActualizacion DateTime?      @map("ultima_actualizacion")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  @@map("configuracion_whatsapp")
+}
+
+model ConfiguracionPagos {
+  id                String                  @id @db.Char(36)
+  tenantId          String                  @map("tenant_id") @db.Char(36)
+  proveedor         ProveedorPago
+  apiKey            String?                 @map("api_key") // AES-256-GCM encrypted — never stored in plaintext
+  apiSecret         String?                 @map("api_secret") // AES-256-GCM encrypted — never stored in plaintext
+  estado            EstadoConfiguracionPago
+  ultimaTransaccion DateTime?               @map("ultima_transaccion")
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+
+  @@map("configuracion_pagos")
+}
+
+// ==================== MÓDULO 3: EMPLEADOS ====================
+
+model Rol {
+  id            String     @id @db.Char(36)
+  tenantId      String     @map("tenant_id") @db.Char(36)
+  nombre        NombreRol
+  esPredefinido Boolean    @default(true) @map("es_predefinido")
+  descripcion   String?
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  empleados   Empleado[]
+  rolPermisos RolPermiso[]
+
+  @@map("roles")
+}
+
+// NOTA: Después de correr `prisma migrate dev`, ejecutar en SQL raw:
+// CREATE UNIQUE INDEX un_super_admin_por_tenant ON empleados (tenant_id) WHERE es_super_admin = TRUE;
+// Prisma no soporta índices únicos parciales de forma nativa.
+model Empleado {
+  id             String         @id @db.Char(36)
+  tenantId       String         @map("tenant_id") @db.Char(36)
+  rolId          String         @map("rol_id") @db.Char(36)
+  nombreCompleto String         @map("nombre_completo")
+  cedula         String
+  telefono       String
+  email          String
+  passwordHash   String         @map("password_hash") // bcrypt async, factor 12
+  cargo          String?
+  fechaIngreso   DateTime       @map("fecha_ingreso")
+  esSuperAdmin   Boolean        @default(false) @map("es_super_admin")
+  estado         EstadoEmpleado
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  rol Rol @relation(fields: [rolId], references: [id])
+
+  empleadoPermisos         EmpleadoPermiso[]
+  empleadoZonas            EmpleadoZona[]
+  documentosSubidos        Documento[]               @relation("DocumentoSubidoPor")
+  creditosAsignados        Credito[]                 @relation("CreditoCobrador")
+  pagosRegistrados         Pago[]                    @relation("PagoEmpleado")
+  pagosLiquidados          Pago[]                    @relation("PagoLiquidadoPor")
+  historialEstadoCambios   HistorialEstadoCredito[]  @relation("EstadoCambiadoPor")
+  recargosAplicados        Recargo[]                 @relation("RecargosAplicadoPor")
+  pagosAnulados            AnulacionPago[]           @relation("AnulacionPor")
+  cierresCajaCobrando      CierreCajaIndividual[]    @relation("CierreCobrador")
+  cierresCajaAprobados     CierreCajaIndividual[]    @relation("CierreAprobadoPor")
+  cierresCajaGlobal        CierreCajaGlobal[]        @relation("CierreCerradoPor")
+  solicitudesExtemporaneas SolicitudExtemporanea[]   @relation("SolicitudCobrador")
+  solicitudesAprobadas     SolicitudExtemporanea[]   @relation("SolicitudAprobadaPor")
+  movimientosRegistrados   MovimientoTesoreria[]     @relation("MovimientoRegistradoPor")
+  movimientosAprobados     MovimientoTesoreria[]     @relation("MovimientoAprobadoPor")
+  consignacionesRegistradas Consignacion[]           @relation("ConsignacionRegistradaPor")
+  conciliacionesRevisadas  Conciliacion[]            @relation("ConciliacionRevisadaPor")
+  movimientosCajaRegistrados MovimientoCaja[]        @relation("MovimientoCajaRegistradoPor")
+  distribucionesAprobadas  DistribucionUtilidades[]  @relation("DistribucionAprobadaPor")
+  clientesAsignados        Cliente[]                 @relation("ClienteCobrador")
+  socioVinculado           Socio[]                   @relation("SocioEmpleado")
+  auditLogs                AuditLog[]                @relation("AuditEmpleado")
+
+  @@unique([tenantId, email])
+  @@map("empleados")
+}
+
+model PermisoCatalogo {
+  id          String        @id @db.Char(36)
+  codigo      String        @unique
+  nombre      String
+  descripcion String        @db.Text
+  modulo      ModuloPermiso
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  rolPermisos      RolPermiso[]
+  empleadoPermisos EmpleadoPermiso[]
+
+  @@map("permisos_catalogo")
+}
+
+model RolPermiso {
+  id                String   @id @db.Char(36)
+  tenantId          String   @map("tenant_id") @db.Char(36)
+  rolId             String   @map("rol_id") @db.Char(36)
+  permisoCatalogoId String   @map("permiso_catalogo_id") @db.Char(36)
+  activo            Boolean
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  rol             Rol             @relation(fields: [rolId], references: [id])
+  permisoCatalogo PermisoCatalogo @relation(fields: [permisoCatalogoId], references: [id])
+
+  @@map("rol_permisos")
+}
+
+model EmpleadoPermiso {
+  id                String   @id @db.Char(36)
+  tenantId          String   @map("tenant_id") @db.Char(36)
+  empleadoId        String   @map("empleado_id") @db.Char(36)
+  permisoCatalogoId String   @map("permiso_catalogo_id") @db.Char(36)
+  activo            Boolean
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  empleado        Empleado        @relation(fields: [empleadoId], references: [id])
+  permisoCatalogo PermisoCatalogo @relation(fields: [permisoCatalogoId], references: [id])
+
+  @@map("empleado_permisos")
+}
+
+model ZonaCobertura {
+  id          String   @id @db.Char(36)
+  tenantId    String   @map("tenant_id") @db.Char(36)
+  nombre      String
+  descripcion String?
+  activa      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empleadoZonas EmpleadoZona[]
+  clientes      Cliente[]
+
+  @@map("zonas_cobertura")
+}
+
+model EmpleadoZona {
+  id         String   @id @db.Char(36)
+  tenantId   String   @map("tenant_id") @db.Char(36)
+  empleadoId String   @map("empleado_id") @db.Char(36)
+  zonaId     String   @map("zona_id") @db.Char(36)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  empleado Empleado      @relation(fields: [empleadoId], references: [id])
+  zona     ZonaCobertura @relation(fields: [zonaId], references: [id])
+
+  @@map("empleado_zonas")
+}
+
+// Tabla polimórfica para documentos de clientes, empleados, entidad y créditos
+model Documento {
+  id            String               @id @db.Char(36)
+  tenantId      String               @map("tenant_id") @db.Char(36)
+  entidadTipo   TipoEntidadDocumento @map("entidad_tipo")
+  entidadId     String               @map("entidad_id") @db.Char(36)
+  tipoDocumento TipoDocumento        @map("tipo_documento")
+  nombreArchivo String               @map("nombre_archivo")
+  url           String               // Ruta en Cloudflare R2
+  tamanioBytes  Int?                 @map("tamanio_bytes")
+  metadatosOtp  Json?                @map("metadatos_otp") // Evidencia de firma OTP
+  subidoPorId   String               @map("subido_por") @db.Char(36)
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  subidoPor Empleado @relation("DocumentoSubidoPor", fields: [subidoPorId], references: [id])
+
+  @@map("documentos")
+}
+
+// ==================== MÓDULO 4: CLIENTES ====================
+
+// No lleva tenantId — datos universales compartidos por cédula entre tenants
+model ClienteGlobal {
+  id              String    @id @db.Char(36)
+  cedula          String    @unique
+  nombreCompleto  String    @map("nombre_completo")
+  telefono        String
+  fechaNacimiento DateTime? @map("fecha_nacimiento")
+  // scoreGlobal — solo visible si el cliente otorgó consentimiento (compartirScore = true)
+  scoreGlobal     Decimal?  @db.Decimal(15, 2) @map("score_global")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  clientes        Cliente[]
+  consentimientos Consentimiento[]
+
+  @@map("clientes_globales")
+}
+
+model Cliente {
+  id              String        @id @db.Char(36)
+  tenantId        String        @map("tenant_id") @db.Char(36)
+  clienteGlobalId String        @map("cliente_global_id") @db.Char(36)
+  zonaId          String?       @map("zona_id") @db.Char(36)
+  cobradorId      String?       @map("cobrador_id") @db.Char(36)
+  estado          EstadoCliente
+  observaciones   String?       @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  clienteGlobal      ClienteGlobal       @relation(fields: [clienteGlobalId], references: [id])
+  zona               ZonaCobertura?      @relation(fields: [zonaId], references: [id])
+  cobrador           Empleado?           @relation("ClienteCobrador", fields: [cobradorId], references: [id])
+  ubicaciones        UbicacionCliente[]
+  referencias        ReferenciaPersonal[]
+  scoreInterno       ScoreInterno?
+  historialScore     HistorialScore[]
+  creditos           Credito[]
+  pagos              Pago[]              @relation("PagoCliente")
+  deudoresSolidarios DeudorSolidario[]   @relation("DeudorCliente")
+
+  @@map("clientes")
+}
+
+model UbicacionCliente {
+  id               String               @id @db.Char(36)
+  tenantId         String               @map("tenant_id") @db.Char(36)
+  clienteId        String               @map("cliente_id") @db.Char(36)
+  tipo             TipoUbicacionCliente
+  direccion        String
+  barrio           String?
+  ciudad           String
+  referencia       String?              @db.Text
+  horarioUbicacion String?              @map("horario_ubicacion")
+  latitud          Decimal?             @db.Decimal(15, 2)
+  longitud         Decimal?             @db.Decimal(15, 2)
+  esPrincipal      Boolean              @default(false) @map("es_principal")
+  activa           Boolean              @default(true)
+  createdAt        DateTime             @default(now()) @map("created_at")
+  updatedAt        DateTime             @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@map("ubicaciones_cliente")
+}
+
+model ReferenciaPersonal {
+  id                 String          @id @db.Char(36)
+  tenantId           String          @map("tenant_id") @db.Char(36)
+  clienteId          String          @map("cliente_id") @db.Char(36)
+  nombreCompleto     String          @map("nombre_completo")
+  telefono           String
+  relacionConCliente RelacionPersona @map("relacion_con_cliente")
+  observaciones      String?         @db.Text
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@map("referencias_personales")
+}
+
+model ScoreInterno {
+  id                     String   @id @db.Char(36)
+  tenantId               String   @map("tenant_id") @db.Char(36)
+  clienteId              String   @unique @map("cliente_id") @db.Char(36)
+  scoreActual            Decimal  @db.Decimal(15, 2) @map("score_actual") // 1.00 a 5.00
+  pagosPuntuales         Int      @default(0) @map("pagos_puntuales")
+  pagosAnticipados       Int      @default(0) @map("pagos_anticipados")
+  abonosParciales        Int      @default(0) @map("abonos_parciales")
+  vecesEnMora            Int      @default(0) @map("veces_en_mora")
+  diasPromedioMora       Decimal  @default(0) @db.Decimal(15, 2) @map("dias_promedio_mora")
+  registrosExtemporaneos Int      @default(0) @map("registros_extemporaneos")
+  fechaUltimoCalculo     DateTime @map("fecha_ultimo_calculo")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@map("scores_internos")
+}
+
+model HistorialScore {
+  id            String   @id @db.Char(36)
+  tenantId      String   @map("tenant_id") @db.Char(36)
+  clienteId     String   @map("cliente_id") @db.Char(36)
+  scoreAnterior Decimal  @db.Decimal(15, 2) @map("score_anterior")
+  scoreNuevo    Decimal  @db.Decimal(15, 2) @map("score_nuevo")
+  motivoCambio  String   @map("motivo_cambio")
+  fecha         DateTime
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [clienteId], references: [id])
+
+  @@map("historial_scores")
+}
+
+model Consentimiento {
+  id                       String    @id @db.Char(36)
+  clienteGlobalId          String    @map("cliente_global_id") @db.Char(36)
+  tenantId                 String    @map("tenant_id") @db.Char(36)
+  tratamientoDatos         Boolean   @default(false) @map("tratamiento_datos")
+  fechaTratamientoDatos    DateTime? @map("fecha_tratamiento_datos")
+  compartirScore           Boolean   @default(false) @map("compartir_score")
+  fechaCompartirScore      DateTime? @map("fecha_compartir_score")
+  recibirNotificacionesWsp Boolean   @default(false) @map("recibir_notificaciones_wsp")
+  fechaNotificacionesWsp   DateTime? @map("fecha_notificaciones_wsp")
+  evidenciaOtp             String?   @map("evidencia_otp")
+  ipFirma                  String?   @map("ip_firma")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  clienteGlobal ClienteGlobal @relation(fields: [clienteGlobalId], references: [id])
+
+  @@map("consentimientos")
+}
+
+// ==================== MÓDULO 5: CAPITAL ====================
+
+model Socio {
+  id             String   @id @db.Char(36)
+  tenantId       String   @map("tenant_id") @db.Char(36)
+  empleadoId     String?  @map("empleado_id") @db.Char(36)
+  nombreCompleto String   @map("nombre_completo")
+  cedula         String
+  telefono       String?
+  email          String?
+  observaciones  String?  @db.Text
+  activo         Boolean  @default(true)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  empleado       Empleado?               @relation("SocioEmpleado", fields: [empleadoId], references: [id])
+  cajas          Caja[]
+  distribuciones DistribucionUtilidades[]
+
+  @@map("socios")
+}
+
+model Caja {
+  id             String     @id @db.Char(36)
+  tenantId       String     @map("tenant_id") @db.Char(36)
+  socioId        String     @map("socio_id") @db.Char(36)
+  nombre         String
+  capitalInicial Decimal    @db.Decimal(15, 2) @map("capital_inicial")
+  estado         EstadoCaja
+  // capitalDisponible — calculado en backend sumando movimientos
+  // capitalEnCalle — calculado en backend sumando créditos activos
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  socio          Socio                    @relation(fields: [socioId], references: [id])
+  movimientos    MovimientoCaja[]
+  distribuciones DistribucionUtilidades[]
+  creditos       Credito[]
+  cuentasCaja    CuentaCaja[]             @relation("CajaCapital")
+
+  @@map("cajas")
+}
+
+model MovimientoCaja {
+  id                     String             @id @db.Char(36)
+  tenantId               String             @map("tenant_id") @db.Char(36)
+  cajaId                 String             @map("caja_id") @db.Char(36)
+  tipo                   TipoMovimientoCaja
+  monto                  Decimal            @db.Decimal(15, 2)
+  referenciaId           String?            @map("referencia_id") @db.Char(36)
+  referenciaTipo         String?            @map("referencia_tipo")
+  saldoDespuesMovimiento Decimal            @db.Decimal(15, 2) @map("saldo_despues_movimiento")
+  registradoPorId        String             @map("registrado_por") @db.Char(36)
+  fecha                  DateTime
+  observaciones          String?            @db.Text
+  createdAt              DateTime           @default(now()) @map("created_at")
+  updatedAt              DateTime           @updatedAt @map("updated_at")
+
+  caja          Caja     @relation(fields: [cajaId], references: [id])
+  registradoPor Empleado @relation("MovimientoCajaRegistradoPor", fields: [registradoPorId], references: [id])
+
+  @@map("movimientos_caja")
+}
+
+model DistribucionUtilidades {
+  id                  String   @id @db.Char(36)
+  tenantId            String   @map("tenant_id") @db.Char(36)
+  cajaId              String   @map("caja_id") @db.Char(36)
+  socioId             String   @map("socio_id") @db.Char(36)
+  periodo             String
+  utilidadesGeneradas Decimal  @db.Decimal(15, 2) @map("utilidades_generadas")
+  montoRetirado       Decimal  @db.Decimal(15, 2) @map("monto_retirado")
+  fechaRetiro         DateTime @map("fecha_retiro")
+  aprobadoPorId       String   @map("aprobado_por") @db.Char(36)
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  caja        Caja     @relation(fields: [cajaId], references: [id])
+  socio       Socio    @relation(fields: [socioId], references: [id])
+  aprobadoPor Empleado @relation("DistribucionAprobadaPor", fields: [aprobadoPorId], references: [id])
+
+  @@map("distribucion_utilidades")
+}
+
+// ==================== MÓDULO 6: CRÉDITOS ====================
+
+model PlantillaCredito {
+  id             String                 @id @db.Char(36)
+  tenantId       String                 @map("tenant_id") @db.Char(36)
+  nombre         String
+  plazo          Int                    // en días
+  tasaInteres    Decimal                @db.Decimal(15, 2) @map("tasa_interes")
+  numeroCuotas   Int                    @map("numero_cuotas")
+  frecuenciaPago FrecuenciaPago         @map("frecuencia_pago")
+  montoMinimo    Decimal                @db.Decimal(15, 2) @map("monto_minimo")
+  montoMaximo    Decimal                @db.Decimal(15, 2) @map("monto_maximo")
+  estado         EstadoPlantillaCredito
+  createdAt      DateTime               @default(now()) @map("created_at")
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+
+  creditos Credito[]
+
+  @@map("plantillas_credito")
+}
+
+model Credito {
+  id                    String        @id @db.Char(36)
+  tenantId              String        @map("tenant_id") @db.Char(36)
+  clienteId             String        @map("cliente_id") @db.Char(36)
+  cobradorId            String        @map("cobrador_id") @db.Char(36)
+  cajaId                String        @map("caja_id") @db.Char(36)
+  plantillaId           String?       @map("plantilla_id") @db.Char(36)
+  montoInicial          Decimal       @db.Decimal(15, 2) @map("monto_inicial")
+  tasaInteres           Decimal       @db.Decimal(15, 2) @map("tasa_interes")
+  plazo                 Int
+  numeroCuotas          Int           @map("numero_cuotas")
+  frecuenciaPago        FrecuenciaPago @map("frecuencia_pago")
+  fechaInicio           DateTime      @map("fecha_inicio")
+  fechaVencimiento      DateTime      @map("fecha_vencimiento")
+  estado                EstadoCredito
+  creditoRefinanciadoId String?       @map("credito_refinanciado_id") @db.Char(36)
+  observaciones         String?       @db.Text
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  // saldoActual, interésCausado, moraActual — calculados en backend, nunca persistidos
+
+  cliente               Cliente                  @relation(fields: [clienteId], references: [id])
+  cobrador              Empleado                 @relation("CreditoCobrador", fields: [cobradorId], references: [id])
+  caja                  Caja                     @relation(fields: [cajaId], references: [id])
+  plantilla             PlantillaCredito?        @relation(fields: [plantillaId], references: [id])
+  creditoRefinanciado   Credito?                 @relation("CreditoRefinanciado", fields: [creditoRefinanciadoId], references: [id])
+  creditosRefinanciados Credito[]                @relation("CreditoRefinanciado")
+  historialEstados      HistorialEstadoCredito[]
+  pagos                 Pago[]                   @relation("PagoCredito")
+  distribuciones        DistribucionPago[]
+  morasAplicadas        MoraAplicada[]
+  recargos              Recargo[]
+  garantias             Garantia[]
+  deudoresSolidarios    DeudorSolidario[]
+  solicitudesExtemporaneas SolicitudExtemporanea[]
+
+  @@map("creditos")
+}
+
+model HistorialEstadoCredito {
+  id             String        @id @db.Char(36)
+  tenantId       String        @map("tenant_id") @db.Char(36)
+  creditoId      String        @map("credito_id") @db.Char(36)
+  estadoAnterior EstadoCredito @map("estado_anterior")
+  estadoNuevo    EstadoCredito @map("estado_nuevo")
+  motivo         String?       @db.Text
+  cambiadoPorId  String?       @map("cambiado_por") @db.Char(36) // null si fue automático
+  fecha          DateTime
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  credito     Credito   @relation(fields: [creditoId], references: [id])
+  cambiadoPor Empleado? @relation("EstadoCambiadoPor", fields: [cambiadoPorId], references: [id])
+
+  @@map("historial_estado_credito")
+}
+
+// Los pagos son inmutables. Solo se anula via AnulacionPago.
+// Distribución al liquidar: 1° mora, 2° recargos, 3° intereses, 4° capital.
+model Pago {
+  id               String     @id @db.Char(36)
+  tenantId         String     @map("tenant_id") @db.Char(36)
+  creditoId        String     @map("credito_id") @db.Char(36)
+  clienteId        String     @map("cliente_id") @db.Char(36)
+  empleadoId       String     @map("empleado_id") @db.Char(36)
+  montoRecibido    Decimal    @db.Decimal(15, 2) @map("monto_recibido")
+  metodoPago       MetodoPago @map("metodo_pago")
+  tipo             TipoPago
+  estado           EstadoPago
+  fechaRegistro    DateTime   @map("fecha_registro")
+  fechaLiquidacion DateTime?  @map("fecha_liquidacion")
+  liquidadoPorId   String?    @map("liquidado_por") @db.Char(36)
+  comprobanteUrl   String?    @map("comprobante_url")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  credito               Credito                @relation("PagoCredito", fields: [creditoId], references: [id])
+  cliente               Cliente                @relation("PagoCliente", fields: [clienteId], references: [id])
+  empleado              Empleado               @relation("PagoEmpleado", fields: [empleadoId], references: [id])
+  liquidadoPor          Empleado?              @relation("PagoLiquidadoPor", fields: [liquidadoPorId], references: [id])
+  distribuciones        DistribucionPago[]
+  anulacion             AnulacionPago?
+  solicitudExtemporanea SolicitudExtemporanea? @relation("PagoGenerado")
+
+  @@map("pagos")
+}
+
+model DistribucionPago {
+  id             String   @id @db.Char(36)
+  tenantId       String   @map("tenant_id") @db.Char(36)
+  pagoId         String   @map("pago_id") @db.Char(36)
+  creditoId      String   @map("credito_id") @db.Char(36)
+  valorMora      Decimal  @default(0) @db.Decimal(15, 2) @map("valor_mora")
+  valorRecargos  Decimal  @default(0) @db.Decimal(15, 2) @map("valor_recargos")
+  valorIntereses Decimal  @default(0) @db.Decimal(15, 2) @map("valor_intereses")
+  valorCapital   Decimal  @default(0) @db.Decimal(15, 2) @map("valor_capital")
+  totalAplicado  Decimal  @db.Decimal(15, 2) @map("total_aplicado")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  pago    Pago    @relation(fields: [pagoId], references: [id])
+  credito Credito @relation(fields: [creditoId], references: [id])
+
+  @@map("distribucion_pagos")
+}
+
+model MoraAplicada {
+  id              String     @id @db.Char(36)
+  tenantId        String     @map("tenant_id") @db.Char(36)
+  creditoId       String     @map("credito_id") @db.Char(36)
+  fechaInicioMora DateTime   @map("fecha_inicio_mora")
+  fechaFinMora    DateTime?  @map("fecha_fin_mora")
+  diasMora        Int        @map("dias_mora")
+  porcentajeMora  Decimal    @db.Decimal(15, 2) @map("porcentaje_mora")
+  valorMora       Decimal    @db.Decimal(15, 2) @map("valor_mora")
+  estado          EstadoMora
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  credito Credito @relation(fields: [creditoId], references: [id])
+
+  @@map("moras_aplicadas")
+}
+
+model Recargo {
+  id            String      @id @db.Char(36)
+  tenantId      String      @map("tenant_id") @db.Char(36)
+  creditoId     String      @map("credito_id") @db.Char(36)
+  tipo          TipoRecargo
+  valor         Decimal     @db.Decimal(15, 2)
+  motivo        String      @db.Text
+  aplicadoPorId String      @map("aplicado_por") @db.Char(36)
+  fecha         DateTime
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  credito     Credito  @relation(fields: [creditoId], references: [id])
+  aplicadoPor Empleado @relation("RecargosAplicadoPor", fields: [aplicadoPorId], references: [id])
+
+  @@map("recargos")
+}
+
+model Garantia {
+  id            String       @id @db.Char(36)
+  tenantId      String       @map("tenant_id") @db.Char(36)
+  creditoId     String       @map("credito_id") @db.Char(36)
+  tipo          TipoGarantia
+  descripcion   String       @db.Text
+  valorEstimado Decimal?     @db.Decimal(15, 2) @map("valor_estimado")
+  observaciones String?      @db.Text
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  credito Credito @relation(fields: [creditoId], references: [id])
+
+  @@map("garantias")
+}
+
+model DeudorSolidario {
+  id                String                @id @db.Char(36)
+  tenantId          String                @map("tenant_id") @db.Char(36)
+  creditoId         String                @map("credito_id") @db.Char(36)
+  clienteId         String?               @map("cliente_id") @db.Char(36)
+  nombreCompleto    String?               @map("nombre_completo") // nullable si clienteId existe
+  cedula            String
+  telefono          String
+  direccion         String?
+  relacionConDeudor RelacionPersona       @map("relacion_con_deudor")
+  firmoDocumento    Boolean               @default(false) @map("firmo_documento")
+  estado            EstadoDeudorSolidario
+  createdAt         DateTime              @default(now()) @map("created_at")
+  updatedAt         DateTime              @updatedAt @map("updated_at")
+
+  credito Credito  @relation(fields: [creditoId], references: [id])
+  cliente Cliente? @relation("DeudorCliente", fields: [clienteId], references: [id])
+
+  @@map("deudores_solidarios")
+}
+
+model AnulacionPago {
+  id                          String        @id @db.Char(36)
+  tenantId                    String        @map("tenant_id") @db.Char(36)
+  pagoId                      String        @unique @map("pago_id") @db.Char(36)
+  anuladoPorId                String        @map("anulado_por") @db.Char(36)
+  motivo                      String        @db.Text
+  estadoCreditoAntesAnulacion EstadoCredito @map("estado_credito_antes_anulacion")
+  fechaAnulacion              DateTime      @map("fecha_anulacion")
+  createdAt                   DateTime      @default(now()) @map("created_at")
+  updatedAt                   DateTime      @updatedAt @map("updated_at")
+
+  pago       Pago     @relation(fields: [pagoId], references: [id])
+  anuladoPor Empleado @relation("AnulacionPor", fields: [anuladoPorId], references: [id])
+
+  @@map("anulaciones_pago")
+}
+
+// ==================== MÓDULO 7: COBROS ====================
+
+model CierreCajaIndividual {
+  id                     String                     @id @db.Char(36)
+  tenantId               String                     @map("tenant_id") @db.Char(36)
+  cobradorId             String                     @map("cobrador_id") @db.Char(36)
+  fecha                  DateTime
+  totalSegunSistema      Decimal                    @db.Decimal(15, 2) @map("total_segun_sistema")
+  totalEntregadoCobrador Decimal                    @db.Decimal(15, 2) @map("total_entregado_cobrador")
+  diferencia             Decimal                    @db.Decimal(15, 2) // calculado automáticamente
+  estado                 EstadoCierreCajaIndividual
+  aprobadoPorId          String?                    @map("aprobado_por") @db.Char(36)
+  fechaAprobacion        DateTime?                  @map("fecha_aprobacion")
+  movimientoTesoreriaId  String?                    @map("movimiento_tesoreria_id") @db.Char(36)
+  observaciones          String?                    @db.Text
+  createdAt              DateTime                   @default(now()) @map("created_at")
+  updatedAt              DateTime                   @updatedAt @map("updated_at")
+
+  cobrador            Empleado             @relation("CierreCobrador", fields: [cobradorId], references: [id])
+  aprobadoPor         Empleado?            @relation("CierreAprobadoPor", fields: [aprobadoPorId], references: [id])
+  movimientoTesoreria MovimientoTesoreria? @relation("CierreMovimientoTesoreria", fields: [movimientoTesoreriaId], references: [id])
+
+  @@map("cierres_caja_individual")
+}
+
+model CierreCajaGlobal {
+  id                       String                 @id @db.Char(36)
+  tenantId                 String                 @map("tenant_id") @db.Char(36)
+  fecha                    DateTime
+  totalRecaudadoCobradores Decimal                @db.Decimal(15, 2) @map("total_recaudado_cobradores")
+  totalPagosDigitales      Decimal                @db.Decimal(15, 2) @map("total_pagos_digitales")
+  totalIngresosDia         Decimal                @db.Decimal(15, 2) @map("total_ingresos_dia")
+  totalEgresosDia          Decimal                @db.Decimal(15, 2) @map("total_egresos_dia")
+  saldoInicialDia          Decimal                @db.Decimal(15, 2) @map("saldo_inicial_dia")
+  saldoFinalDia            Decimal                @db.Decimal(15, 2) @map("saldo_final_dia")
+  diferenciasDetectadas    Decimal                @default(0) @db.Decimal(15, 2) @map("diferencias_detectadas")
+  estado                   EstadoCierreCajaGlobal
+  bloqueaAdmin             Boolean                @default(true) @map("bloquea_admin")
+  cerradoPorId             String?                @map("cerrado_por") @db.Char(36)
+  fechaCierre              DateTime?              @map("fecha_cierre")
+  observaciones            String?                @db.Text
+  createdAt                DateTime               @default(now()) @map("created_at")
+  updatedAt                DateTime               @updatedAt @map("updated_at")
+
+  cerradoPor Empleado?                 @relation("CierreCerradoPor", fields: [cerradoPorId], references: [id])
+  detalles   DetalleCierreCajaGlobal[]
+
+  @@map("cierres_caja_global")
+}
+
+model DetalleCierreCajaGlobal {
+  id                 String   @id @db.Char(36)
+  tenantId           String   @map("tenant_id") @db.Char(36)
+  cierreCajaGlobalId String   @map("cierre_caja_global_id") @db.Char(36)
+  cuentaCajaId       String   @map("cuenta_caja_id") @db.Char(36)
+  saldoInicio        Decimal  @db.Decimal(15, 2) @map("saldo_inicio")
+  totalIngresos      Decimal  @db.Decimal(15, 2) @map("total_ingresos")
+  totalEgresos       Decimal  @db.Decimal(15, 2) @map("total_egresos")
+  saldoFinal         Decimal  @db.Decimal(15, 2) @map("saldo_final")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  cierreCajaGlobal CierreCajaGlobal @relation(fields: [cierreCajaGlobalId], references: [id])
+  cuentaCaja       CuentaCaja       @relation(fields: [cuentaCajaId], references: [id])
+
+  @@map("detalles_cierre_caja_global")
+}
+
+model SolicitudExtemporanea {
+  id             String                      @id @db.Char(36)
+  tenantId       String                      @map("tenant_id") @db.Char(36)
+  cobradorId     String                      @map("cobrador_id") @db.Char(36)
+  creditoId      String                      @map("credito_id") @db.Char(36)
+  fechaOriginal  DateTime                    @map("fecha_original")
+  valor          Decimal                     @db.Decimal(15, 2)
+  motivo         String                      @db.Text
+  estado         EstadoSolicitudExtemporanea
+  aprobadoPorId  String?                     @map("aprobado_por") @db.Char(36)
+  motivoRechazo  String?                     @db.Text @map("motivo_rechazo")
+  resueltoPor    DateTime?                   @map("resuelto_por")
+  pagoGeneradoId String?                     @unique @map("pago_generado_id") @db.Char(36)
+  createdAt      DateTime                    @default(now()) @map("created_at")
+  updatedAt      DateTime                    @updatedAt @map("updated_at")
+
+  cobrador     Empleado  @relation("SolicitudCobrador", fields: [cobradorId], references: [id])
+  credito      Credito   @relation(fields: [creditoId], references: [id])
+  aprobadoPor  Empleado? @relation("SolicitudAprobadaPor", fields: [aprobadoPorId], references: [id])
+  pagoGenerado Pago?     @relation("PagoGenerado", fields: [pagoGeneradoId], references: [id])
+
+  @@map("solicitudes_extemporaneas")
+}
+
+// ==================== MÓDULO 8: TESORERÍA ====================
+
+model CuentaCaja {
+  id              String           @id @db.Char(36)
+  tenantId        String           @map("tenant_id") @db.Char(36)
+  cajaCapitalId   String?          @map("caja_capital_id") @db.Char(36)
+  tipo            TipoCuentaCaja
+  nombre          String
+  entidad         String?
+  numeroCuenta    String?          @map("numero_cuenta")
+  esCajaPrincipal Boolean          @default(false) @map("es_caja_principal")
+  estado          EstadoCuentaCaja
+  // saldoActual — calculado en backend sumando movimientos, nunca persistido
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  cajaCapital              Caja?                     @relation("CajaCapital", fields: [cajaCapitalId], references: [id])
+  movimientosOrigen        MovimientoTesoreria[]     @relation("MovimientoCuentaOrigen")
+  movimientosDestino       MovimientoTesoreria[]     @relation("MovimientoCuentaDestino")
+  consignaciones           Consignacion[]
+  egresosProgramados       EgresoProgramado[]
+  conciliaciones           Conciliacion[]
+  detallesCierreGlobal     DetalleCierreCajaGlobal[]
+
+  @@map("cuentas_caja")
+}
+
+model MovimientoTesoreria {
+  id              String                     @id @db.Char(36)
+  tenantId        String                     @map("tenant_id") @db.Char(36)
+  tipo            TipoMovimientoTesoreria
+  subtipo         SubtipoMovimientoTesoreria
+  cuentaOrigenId  String?                    @map("cuenta_origen_id") @db.Char(36)
+  cuentaDestinoId String?                    @map("cuenta_destino_id") @db.Char(36)
+  monto           Decimal                    @db.Decimal(15, 2)
+  fechaMovimiento DateTime                   @map("fecha_movimiento")
+  referenciaTipo  String?                    @map("referencia_tipo")
+  referenciaId    String?                    @map("referencia_id") @db.Char(36)
+  comprobanteUrl  String?                    @map("comprobante_url")
+  registradoPorId String                     @map("registrado_por") @db.Char(36)
+  aprobadoPorId   String?                    @map("aprobado_por") @db.Char(36)
+  estado          EstadoMovimientoTesoreria
+  observaciones   String?                    @db.Text
+  createdAt       DateTime                   @default(now()) @map("created_at")
+  updatedAt       DateTime                   @updatedAt @map("updated_at")
+
+  cuentaOrigen            CuentaCaja?              @relation("MovimientoCuentaOrigen", fields: [cuentaOrigenId], references: [id])
+  cuentaDestino           CuentaCaja?              @relation("MovimientoCuentaDestino", fields: [cuentaDestinoId], references: [id])
+  registradoPor           Empleado                 @relation("MovimientoRegistradoPor", fields: [registradoPorId], references: [id])
+  aprobadoPor             Empleado?                @relation("MovimientoAprobadoPor", fields: [aprobadoPorId], references: [id])
+  consignacionMovimientos ConsignacionMovimiento[]
+  egresosProgramados      EgresoProgramado[]       @relation("MovimientoGenerado")
+  cierresCajaIndividual   CierreCajaIndividual[]   @relation("CierreMovimientoTesoreria")
+
+  @@map("movimientos_tesoreria")
+}
+
+model Consignacion {
+  id                String             @id @db.Char(36)
+  tenantId          String             @map("tenant_id") @db.Char(36)
+  cuentaDestinoId   String             @map("cuenta_destino_id") @db.Char(36)
+  fechaConsignacion DateTime           @map("fecha_consignacion")
+  valorTotal        Decimal            @db.Decimal(15, 2) @map("valor_total")
+  comprobanteUrl    String?            @map("comprobante_url")
+  registradoPorId   String             @map("registrado_por") @db.Char(36)
+  estado            EstadoConsignacion
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  cuentaDestino CuentaCaja              @relation(fields: [cuentaDestinoId], references: [id])
+  registradoPor Empleado                @relation("ConsignacionRegistradaPor", fields: [registradoPorId], references: [id])
+  movimientos   ConsignacionMovimiento[]
+
+  @@map("consignaciones")
+}
+
+model ConsignacionMovimiento {
+  id             String   @id @db.Char(36)
+  tenantId       String   @map("tenant_id") @db.Char(36)
+  consignacionId String   @map("consignacion_id") @db.Char(36)
+  movimientoId   String   @map("movimiento_id") @db.Char(36)
+  valorAplicado  Decimal  @db.Decimal(15, 2) @map("valor_aplicado")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  consignacion Consignacion        @relation(fields: [consignacionId], references: [id])
+  movimiento   MovimientoTesoreria @relation(fields: [movimientoId], references: [id])
+
+  @@map("consignacion_movimientos")
+}
+
+model EgresoProgramado {
+  id                   String                 @id @db.Char(36)
+  tenantId             String                 @map("tenant_id") @db.Char(36)
+  descripcion          String
+  monto                Decimal                @db.Decimal(15, 2)
+  fechaProgramada      DateTime               @map("fecha_programada")
+  cuentaOrigenId       String                 @map("cuenta_origen_id") @db.Char(36)
+  tipoEgreso           TipoEgresoProgramado   @map("tipo_egreso")
+  estado               EstadoEgresoProgramado
+  movimientoGeneradoId String?                @unique @map("movimiento_generado_id") @db.Char(36)
+  createdAt            DateTime               @default(now()) @map("created_at")
+  updatedAt            DateTime               @updatedAt @map("updated_at")
+
+  cuentaOrigen       CuentaCaja           @relation(fields: [cuentaOrigenId], references: [id])
+  movimientoGenerado MovimientoTesoreria? @relation("MovimientoGenerado", fields: [movimientoGeneradoId], references: [id])
+
+  @@map("egresos_programados")
+}
+
+model Conciliacion {
+  id                String             @id @db.Char(36)
+  tenantId          String             @map("tenant_id") @db.Char(36)
+  cuentaCajaId      String             @map("cuenta_caja_id") @db.Char(36)
+  fechaCorte        DateTime           @map("fecha_corte")
+  saldoSegunSistema Decimal            @db.Decimal(15, 2) @map("saldo_segun_sistema")
+  saldoReal         Decimal            @db.Decimal(15, 2) @map("saldo_real")
+  diferencia        Decimal            @db.Decimal(15, 2) // calculado automáticamente en backend
+  estado            EstadoConciliacion
+  observaciones     String?            @db.Text
+  revisadoPorId     String             @map("revisado_por") @db.Char(36)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  cuentaCaja  CuentaCaja @relation(fields: [cuentaCajaId], references: [id])
+  revisadoPor Empleado   @relation("ConciliacionRevisadaPor", fields: [revisadoPorId], references: [id])
+
+  @@map("conciliaciones")
+}
+
+// ==================== MÓDULO 9: AUDITORÍA ====================
+
+// Los registros de auditoría son inmutables — nunca se modifican ni eliminan.
+model AuditLog {
+  id            String   @id @db.Char(36)
+  tenantId      String   @map("tenant_id") @db.Char(36)
+  empleadoId    String?  @map("empleado_id") @db.Char(36) // null si fue acción automática
+  accion        String
+  entidadTipo   String   @map("entidad_tipo")
+  entidadId     String   @map("entidad_id") @db.Char(36)
+  valorAnterior Json?    @map("valor_anterior")
+  valorNuevo    Json?    @map("valor_nuevo")
+  metadata      Json?
+  ipAddress     String?  @map("ip_address")
+  fecha         DateTime
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  empleado Empleado? @relation("AuditEmpleado", fields: [empleadoId], references: [id])
+
+  @@map("audit_logs")
+}

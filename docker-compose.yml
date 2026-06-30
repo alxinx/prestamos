@@ -1,0 +1,80 @@
+services:
+
+  # ── Aplicación Node.js ─────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      target: development
+    container_name: cobranzas_app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Sobreescribe el host de .env para apuntar a los servicios de Docker
+      DATABASE_URL: mysql://root:${MYSQL_ROOT_PASSWORD:-root1234}@db:3306/${DB_NAME:-cobranzas_saas}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      # Hot reload: monta el código fuente
+      - .:/app
+      # Evita que node_modules del host sobreescriba el del contenedor
+      - /app/node_modules
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cobranzas_net
+
+  # ── MySQL 8 ────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8.0
+    container_name: cobranzas_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root1234}
+      MYSQL_DATABASE: ${DB_NAME:-cobranzas_saas}
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root1234}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cobranzas_net
+
+  # ── Redis 7 ────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: cobranzas_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - cobranzas_net
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  cobranzas_net:
+    driver: bridge
