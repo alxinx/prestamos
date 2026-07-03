@@ -10,6 +10,12 @@ datasource db {
 // ==================== ENUMS ====================
 
 // Módulo 1: MasterAdmin
+enum EstadoEngagement {
+  ACTIVO
+  EN_RIESGO
+  INACTIVO
+}
+
 enum EstadoPlan {
   ACTIVO
   INACTIVO
@@ -59,6 +65,13 @@ enum TipoReactivacion {
 enum TipoPersona {
   NATURAL
   JURIDICA
+}
+
+enum TipoIdTenant {
+  NIT
+  CC
+  CE
+  PASAPORTE
 }
 
 enum TipoUbicacionEntidad {
@@ -348,14 +361,15 @@ model Plan {
   nombre                 String
   precio                 Decimal    @db.Decimal(15, 2)
   limiteCobradores       Int        @map("limite_cobradores")
-  limiteClientes         Int        @map("limite_clientes")
+  limitePrestamos        Int        @map("limite_prestamos")
   limiteMensajesWsp      Int        @map("limite_mensajes_wsp")
   consultasScore         Int        @map("consultas_score")
   tieneBot               Boolean    @default(false) @map("tiene_bot")
   tienePortalCliente     Boolean    @default(false) @map("tiene_portal_cliente")
   tieneFirmaDigital      Boolean    @default(false) @map("tiene_firma_digital")
-  precioClienteAdicional Decimal    @db.Decimal(15, 2) @map("precio_cliente_adicional")
-  estado                 EstadoPlan
+  precioPréstamoAdicional    Decimal    @db.Decimal(15, 2) @map("precio_prestamo_adicional")
+  precioColaboradorAdicional Decimal    @db.Decimal(15, 2) @map("precio_colaborador_adicional")
+  estado                     EstadoPlan
   createdAt              DateTime   @default(now()) @map("created_at")
   updatedAt              DateTime   @updatedAt @map("updated_at")
 
@@ -366,21 +380,30 @@ model Plan {
 }
 
 model Tenant {
-  id               String       @id @db.Char(36)
-  planId           String       @map("plan_id") @db.Char(36)
-  nombreNegocio    String       @map("nombre_negocio")
-  email            String
-  subdominio       String       @unique
-  estado           EstadoTenant
-  fechaInicio      DateTime     @map("fecha_inicio")
-  fechaVencimiento DateTime     @map("fecha_vencimiento")
-  createdAt        DateTime     @default(now()) @map("created_at")
-  updatedAt        DateTime     @updatedAt @map("updated_at")
+  id                  String       @id @db.Char(36)
+  planId              String       @map("plan_id") @db.Char(36)
+  nombreNegocio       String       @map("nombre_negocio")
+  tipoPersona         TipoPersona  @map("tipo_persona")
+  nombreCompleto      String       @map("nombre_completo")
+  razonSocial         String?      @map("razon_social")
+  tipoIdentificacion  TipoIdTenant @map("tipo_identificacion")
+  numeroIdentificacion String      @map("numero_identificacion")
+  email               String       @unique
+  telefono            String?
+  subdominio          String       @unique
+  estado              EstadoTenant
+  fechaInicio              DateTime  @map("fecha_inicio")
+  fechaVencimiento         DateTime  @map("fecha_vencimiento")
+  tokenActivacion          String?   @unique @map("token_activacion") @db.Char(64)
+  tokenActivacionExpira    DateTime? @map("token_activacion_expira")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
 
-  plan            Plan                  @relation(fields: [planId], references: [id])
+  plan            Plan                    @relation(fields: [planId], references: [id])
   facturas        Factura[]
   suspensiones    Suspension[]
   impersonaciones ImpersonacionTenant[]
+  actividadResumen TenantActividadResumen?
 
   @@map("tenants")
 }
@@ -1380,6 +1403,25 @@ model Conciliacion {
 // ==================== MÓDULO 9: AUDITORÍA ====================
 
 // Los registros de auditoría son inmutables — nunca se modifican ni eliminan.
+model TenantActividadResumen {
+  tenantId               String           @id @map("tenant_id") @db.Char(36)
+  ultimoPagoRegistrado   DateTime?        @map("ultimo_pago_registrado")
+  ultimoPrestamoCreado   DateTime?        @map("ultimo_prestamo_creado")
+  ultimoCierreCaja       DateTime?        @map("ultimo_cierre_caja")
+  ultimoLogin            DateTime?        @map("ultimo_login")
+  pagosUltimos30Dias     Int              @default(0) @map("pagos_ultimos_30_dias")
+  prestamosActivos       Int              @default(0) @map("prestamos_activos")
+  prestamosCreados_mes   Int              @default(0) @map("prestamos_creados_mes")
+  estadoEngagement       EstadoEngagement @map("estado_engagement")
+  fechaCalculo           DateTime         @map("fecha_calculo")
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@map("tenant_actividad_resumen")
+}
+
 model AuditLog {
   id            String   @id @db.Char(36)
   tenantId      String   @map("tenant_id") @db.Char(36)

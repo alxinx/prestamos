@@ -100,4 +100,23 @@ async function cerrarSesion(req) {
   return { nombreCookie: COOKIE_REFRESH }
 }
 
-module.exports = { iniciarSesion, renovarToken, cerrarSesion }
+async function cambiarPassword(req) {
+  const { contrasenaActual, nuevaContrasena } = req.body
+  const adminId = req.masterAdmin.id
+
+  const admin = await prisma.masterAdmin.findUnique({ where: { id: adminId } })
+  if (!admin) return { error: 'Administrador no encontrado', status: 404 }
+
+  const contrasenaValida = await bcrypt.compare(contrasenaActual, admin.passwordHash)
+  if (!contrasenaValida) return { error: 'La contraseña actual es incorrecta', status: 401 }
+
+  const nuevoHash = await bcrypt.hash(nuevaContrasena, 12)
+  await prisma.masterAdmin.update({
+    where: { id: adminId },
+    data: { passwordHash: nuevoHash },
+  })
+
+  return { ok: true }
+}
+
+module.exports = { iniciarSesion, renovarToken, cerrarSesion, cambiarPassword }

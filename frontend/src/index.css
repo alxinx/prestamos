@@ -47,10 +47,20 @@
   /* ── Sombras ─────────────────────────────────────────────────── */
   --shadow-card:       0 2px 12px 0 rgba(0,40,85,0.08);
   --shadow-card-hover: 0 4px 24px 0 rgba(0,40,85,0.13);
+
+  /* ── Admin dark theme ────────────────────────────────────────── */
+  --color-admin-bg:           #06182B;
+  --color-admin-accent:       #00C982;
+  --color-admin-accent-dark:  #00a86b;
 }
 
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
+
+  @keyframes girar    { to { transform: rotate(360deg) } }
+  @keyframes fadeIn   { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp  { from { opacity: 0; transform: translateY(20px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: translateY(0) } }
 
   body {
     margin: 0;

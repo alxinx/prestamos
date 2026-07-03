@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 
-
 const IconoCorreo = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -44,29 +43,6 @@ const IconoIngreso = () => (
   </svg>
 )
 
-const estiloInput = {
-  width: '100%',
-  padding: '12px 14px 12px 42px',
-  fontSize: '15px',
-  color: '#0b1c30',
-  background: '#ffffff',
-  border: '1.5px solid #c4c6d0',
-  borderRadius: '0.5rem',
-  outline: 'none',
-  fontFamily: 'inherit',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
-}
-
-function alEnfocar(e) {
-  e.target.style.borderColor = '#001430'
-  e.target.style.boxShadow = '0 0 0 3px rgba(0,20,48,0.08)'
-}
-
-function alDesEnfocar(e) {
-  e.target.style.borderColor = '#c4c6d0'
-  e.target.style.boxShadow = 'none'
-}
-
 export default function LoginMasterAdmin() {
   const { guardarToken } = useAuth()
   const [correo, setCorreo] = useState('')
@@ -106,43 +82,36 @@ export default function LoginMasterAdmin() {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: 'linear-gradient(135deg, #eff4ff 0%, #f8f9ff 50%, #e5eeff 100%)' }}
-    >
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-surface-low via-background to-surface-default">
       <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <div style={{ width: '100%', maxWidth: '448px', background: '#ffffff', borderRadius: '1rem', boxShadow: '0 4px 32px 0 rgba(0,40,85,0.10)', padding: '2.5rem 2.5rem 2rem' }}>
+        <div className="w-full max-w-[448px] bg-surface-lowest rounded-xl shadow-[0_4px_32px_0_rgba(0,40,85,0.10)] px-10 pt-10 pb-8">
 
           <div className="flex justify-center mb-8">
-            <img
-              src="/logotipo_sin slogan.webp"
-              alt="GotaPay"
-              style={{ height: '48px', width: 'auto' }}
-            />
+            <img src="/logotipo_sin slogan.webp" alt="GotaPay" className="h-12 w-auto" />
           </div>
 
           <div className="text-center mb-8">
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#001430', margin: '0 0 6px', letterSpacing: '-0.01em' }}>
+            <h1 className="text-[22px] font-bold text-primary m-0 mb-1.5 tracking-[-0.01em]">
               Acceso Master Admin
             </h1>
-            <p style={{ fontSize: '14px', color: '#43474f', margin: 0 }}>
+            <p className="text-sm text-on-surface-variant m-0">
               Sistema de Gestión de Créditos y Cobranzas
             </p>
           </div>
 
           {error && (
-            <div style={{ background: '#ffdad6', color: '#93000a', borderRadius: '0.5rem', padding: '10px 14px', fontSize: '14px', marginBottom: '20px' }}>
+            <div className="bg-error-container text-on-error-container rounded-lg px-3.5 py-2.5 text-sm mb-5">
               {error}
             </div>
           )}
 
           <form onSubmit={manejarEnvio} noValidate>
-            <div style={{ marginBottom: '20px' }}>
-              <label htmlFor="correo" style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#001430', marginBottom: '6px' }}>
+            <div className="mb-5">
+              <label htmlFor="correo" className="block text-sm font-semibold text-primary mb-1.5">
                 Correo electrónico
               </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#747780', pointerEvents: 'none' }}>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
                   <IconoCorreo />
                 </span>
                 <input
@@ -153,19 +122,17 @@ export default function LoginMasterAdmin() {
                   value={correo}
                   onChange={e => setCorreo(e.target.value)}
                   placeholder="admin@gotapay.com"
-                  style={estiloInput}
-                  onFocus={alEnfocar}
-                  onBlur={alDesEnfocar}
+                  className="w-full py-3 pl-[42px] pr-3.5 text-[15px] text-on-background bg-surface-lowest border-[1.5px] border-outline-variant rounded-md outline-none font-sans transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(0,20,48,0.08)]"
                 />
               </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="contrasena" style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#001430', marginBottom: '6px' }}>
+            <div className="mb-4">
+              <label htmlFor="contrasena" className="block text-sm font-semibold text-primary mb-1.5">
                 Contraseña
               </label>
-              <div style={{ position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#747780', pointerEvents: 'none' }}>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
                   <IconoCandado />
                 </span>
                 <input
@@ -176,27 +143,25 @@ export default function LoginMasterAdmin() {
                   value={contrasena}
                   onChange={e => setContrasena(e.target.value)}
                   placeholder="••••••••"
-                  style={{ ...estiloInput, paddingRight: '44px' }}
-                  onFocus={alEnfocar}
-                  onBlur={alDesEnfocar}
+                  className="w-full py-3 pl-[42px] pr-[44px] text-[15px] text-on-background bg-surface-lowest border-[1.5px] border-outline-variant rounded-md outline-none font-sans transition-[border-color,box-shadow] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(0,20,48,0.08)]"
                 />
                 <button
                   type="button"
                   onClick={() => setMostrarContrasena(v => !v)}
                   aria-label={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#747780', padding: 0, display: 'flex', alignItems: 'center' }}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-outline p-0 flex items-center"
                 >
                   <IconoOjo abierto={mostrarContrasena} />
                 </button>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#43474f' }}>
-                <input type="checkbox" style={{ width: '16px', height: '16px', accentColor: '#001430', cursor: 'pointer' }} />
+            <div className="flex items-center justify-between mb-6">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-on-surface-variant">
+                <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" />
                 Recuérdame
               </label>
-              <button type="button" style={{ fontSize: '14px', color: '#001430', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, padding: 0, fontFamily: 'inherit' }}>
+              <button type="button" className="text-sm text-primary bg-transparent border-none cursor-pointer font-medium p-0 font-sans">
                 Olvidé mi contraseña
               </button>
             </div>
@@ -204,20 +169,19 @@ export default function LoginMasterAdmin() {
             <button
               type="submit"
               disabled={cargando}
-              style={{ width: '100%', padding: '13px', background: cargando ? '#002855' : '#001430', color: '#ffffff', fontSize: '15px', fontWeight: 600, borderRadius: '0.5rem', border: 'none', cursor: cargando ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'inherit', transition: 'background 0.15s' }}
-              onMouseEnter={e => { if (!cargando) e.currentTarget.style.background = '#002855' }}
-              onMouseLeave={e => { if (!cargando) e.currentTarget.style.background = '#001430' }}
+              className={`w-full py-3.5 text-[15px] font-semibold text-white rounded-md border-none flex items-center justify-center gap-2 font-sans transition-colors duration-150
+                ${cargando ? 'bg-primary-container cursor-not-allowed' : 'bg-primary cursor-pointer hover:bg-primary-container'}`}
             >
               {cargando ? 'Verificando...' : (<>Iniciar Sesión <IconoIngreso /></>)}
             </button>
           </form>
 
-          <div style={{ height: '1px', background: '#e5eeff', margin: '24px 0 20px' }} />
+          <div className="h-px bg-surface-default my-6" />
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '24px' }}>
+          <div className="flex justify-center gap-6">
             {['Encriptación Bancaria', 'Velocidad Fintech'].map(etiqueta => (
-              <span key={etiqueta} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#007146', fontWeight: 500 }}>
-                <span style={{ background: '#56fbab', borderRadius: '9999px', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#007146' }}>
+              <span key={etiqueta} className="flex items-center gap-1.5 text-[13px] text-on-secondary-container font-medium">
+                <span className="bg-secondary-container rounded-full w-5 h-5 flex items-center justify-center text-on-secondary-container">
                   <IconoCheck />
                 </span>
                 {etiqueta}
@@ -225,22 +189,19 @@ export default function LoginMasterAdmin() {
             ))}
           </div>
 
-          <p style={{ textAlign: 'center', fontSize: '12px', color: '#747780', marginTop: '24px', marginBottom: 0, lineHeight: '1.5' }}>
+          <p className="text-center text-[12px] text-outline mt-6 mb-0 leading-relaxed">
             Esta es una terminal de acceso restringido para uso exclusivo de<br />administradores GotaPay.
           </p>
         </div>
       </div>
 
-      <footer style={{ padding: '16px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e5eeff' }}>
-        <span style={{ fontSize: '13px', color: '#747780' }}>
-          <strong style={{ color: '#001430' }}>GotaPay Master</strong> © {new Date().getFullYear()} GotaPay. Secure Fintech Infrastructure.
+      <footer className="px-8 py-4 flex items-center justify-between border-t border-surface-default">
+        <span className="text-[13px] text-outline">
+          <strong className="text-primary">GotaPay Master</strong> © {new Date().getFullYear()} GotaPay. Infraestructura Fintech Segura.
         </span>
-        <div style={{ display: 'flex', gap: '24px' }}>
-          {['Privacy Policy', 'Terms of Service', 'Security Whitepaper'].map(enlace => (
-            <a key={enlace} href="#" style={{ fontSize: '13px', color: '#747780', textDecoration: 'none' }}
-              onMouseEnter={e => e.target.style.color = '#001430'}
-              onMouseLeave={e => e.target.style.color = '#747780'}
-            >
+        <div className="flex gap-6">
+          {['Política de Privacidad', 'Términos de Servicio', 'Seguridad'].map(enlace => (
+            <a key={enlace} href="#" className="text-[13px] text-outline no-underline hover:text-primary transition-colors duration-150">
               {enlace}
             </a>
           ))}

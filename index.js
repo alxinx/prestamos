@@ -11,10 +11,14 @@ const cookieParser = require('cookie-parser')
 const prisma = require('./src/lib/prisma')
 const { redis, redisConfig } = require('./src/lib/redis')
 const { registrarJobsRecurrentes } = require('./src/queues')
+const { crearWorkerActividad } = require('./src/queues/workers/actividadTenants.worker')
 const healthRouter = require('./src/routes/health')
 const masterAdminAuthRouter = require('./src/modules/masterAdmin/auth.routes')
+const masterAdminPlanesRouter = require('./src/modules/masterAdmin/planes.routes')
+const masterAdminTenantsRouter = require('./src/modules/masterAdmin/tenants.routes')
 
 const app = express()
+app.disable('x-powered-by')
 const PORT = Number(process.env.APP_PORT) || 3000
 
 // ── Seguridad: headers HTTP ──────────────────────────────────────────────────
@@ -41,6 +45,8 @@ app.use(morgan(process.env.LOG_FORMAT || 'dev'))
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api', healthRouter)
 app.use('/api/master-admin/auth', masterAdminAuthRouter)
+app.use('/api/master-admin/planes', masterAdminPlanesRouter)
+app.use('/api/master-admin/tenants', masterAdminTenantsRouter)
 
 // ── Manejo global de errores ──────────────────────────────────────────────────
 app.use((err, req, res, next) => {
@@ -85,6 +91,7 @@ async function start() {
 
     if (process.env.MORA_JOB_ENABLED === 'true') {
       await registrarJobsRecurrentes()
+      crearWorkerActividad()
       console.log('[Queues] Jobs recurrentes registrados')
     }
 
@@ -109,7 +116,8 @@ async function shutdown(signal) {
 process.on('SIGINT', () => shutdown('SIGINT'))
 process.on('SIGTERM', () => shutdown('SIGTERM'))
 process.on('unhandledRejection', (reason) => {
-  console.error('[Server] Unhandled rejection:', reason)
+  const mensaje = reason instanceof Error ? reason.message : String(reason)
+  console.error('[Server] Unhandled rejection:', mensaje)
   process.exit(1)
 })
 

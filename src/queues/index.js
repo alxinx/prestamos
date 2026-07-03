@@ -1,12 +1,15 @@
+'use strict'
+
 const { Queue } = require('bullmq')
 const { redisConfig } = require('../lib/redis')
 
 const queueOpts = { connection: redisConfig }
 
-const moraQueue = new Queue('mora', queueOpts)
-const notificacionesQueue = new Queue('notificaciones', queueOpts)
-const scoreQueue = new Queue('score', queueOpts)
-const cierreQueue = new Queue('cierre', queueOpts)
+const moraQueue             = new Queue('mora',              queueOpts)
+const notificacionesQueue   = new Queue('notificaciones',    queueOpts)
+const scoreQueue            = new Queue('score',             queueOpts)
+const cierreQueue           = new Queue('cierre',            queueOpts)
+const actividadTenantsQueue = new Queue('actividad-tenants', queueOpts)
 
 async function registrarJobsRecurrentes() {
   await moraQueue.upsertJobScheduler(
@@ -29,6 +32,11 @@ async function registrarJobsRecurrentes() {
     { pattern: process.env.QUEUE_CIERRE_CRON || '0 0 * * *' },
     { name: 'verificar-cierre', data: {} }
   )
+  await actividadTenantsQueue.upsertJobScheduler(
+    'calcular-actividad-diaria',
+    { pattern: process.env.QUEUE_ACTIVIDAD_CRON || '0 0 * * *' },
+    { name: 'calcular-actividad', data: {} }
+  )
 }
 
 module.exports = {
@@ -36,5 +44,6 @@ module.exports = {
   notificacionesQueue,
   scoreQueue,
   cierreQueue,
+  actividadTenantsQueue,
   registrarJobsRecurrentes,
 }

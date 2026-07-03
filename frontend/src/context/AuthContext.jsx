@@ -1,10 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null)
   const [cargando, setCargando] = useState(true)
+  const inicializado = useRef(false)
 
   const renovarToken = useCallback(async () => {
     try {
@@ -23,6 +24,9 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    // Evita la doble llamada de React StrictMode en desarrollo
+    if (inicializado.current) return
+    inicializado.current = true
     renovarToken().finally(() => setCargando(false))
   }, [renovarToken])
 

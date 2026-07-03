@@ -1,6 +1,6 @@
 'use strict'
 
-const { iniciarSesion, renovarToken, cerrarSesion } = require('./auth.service')
+const { iniciarSesion, renovarToken, cerrarSesion, cambiarPassword } = require('./auth.service')
 
 const opcionesCookie = {
   httpOnly: process.env.COOKIE_HTTP_ONLY !== 'false',
@@ -43,4 +43,14 @@ async function manejarLogout(req, res, next) {
   }
 }
 
-module.exports = { manejarLogin, manejarRefresh, manejarLogout }
+async function manejarCambioPassword(req, res, next) {
+  try {
+    const resultado = await cambiarPassword(req)
+    if (resultado.error) return res.status(resultado.status).json({ error: resultado.error })
+    res.json({ message: 'Contraseña actualizada correctamente' })
+  } catch (err) {
+    next(err)
+  }
+}
+
+module.exports = { manejarLogin, manejarRefresh, manejarLogout, manejarCambioPassword }

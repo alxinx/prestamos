@@ -1,0 +1,122 @@
+{
+  "25c973d6321d61dfffd7222d7163b6e2_0": {
+    "author": "Alejo",
+    "comment": "Log de error de conexión a Redis en arranque",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:55Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_0": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:47Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_1": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:48Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_2": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:49Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_3": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:49Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_4": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:50Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_5": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:50Z"
+  },
+  "419b3f1f03eaf2c2589c021b7f9176d1_6": {
+    "author": "Alejo",
+    "comment": "Log de infraestructura del servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:51Z"
+  },
+  "5700918d9a9420fe783e517646b42a21_0": {
+    "author": "Alejo",
+    "comment": "Script seed de desarrollo, no se ejecuta en producción",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:52Z"
+  },
+  "5700918d9a9420fe783e517646b42a21_1": {
+    "author": "Alejo",
+    "comment": "Script seed de desarrollo, no se ejecuta en producción",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:52Z"
+  },
+  "5700918d9a9420fe783e517646b42a21_2": {
+    "author": "Alejo",
+    "comment": "Script seed de desarrollo, no se ejecuta en producción",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:53Z"
+  },
+  "5700918d9a9420fe783e517646b42a21_3": {
+    "author": "Alejo",
+    "comment": "Script seed de desarrollo, no se ejecuta en producción",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:54Z"
+  },
+  "5700918d9a9420fe783e517646b42a21_4": {
+    "author": "Alejo",
+    "comment": "Script seed de desarrollo, no se ejecuta en producción",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:54Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_0": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:06Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_1": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:06Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_2": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:07Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_3": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:07Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_4": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:08Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_5": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:08Z"
+  },
+  "fe12f26c179e4d4e57bdc0299f76540e_6": {
+    "author": "Alejo",
+    "comment": "Falso positivo: log de infraestructura de servidor, no del path de requests",
+    "false_positive": true,
+    "ignored_at": "2026-07-03T13:18:09Z"
+  }
+}
