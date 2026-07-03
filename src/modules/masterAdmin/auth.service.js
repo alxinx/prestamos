@@ -14,6 +14,9 @@ const {
 const HASH_FICTICIO = '$2b$12$invalidhashfortimingattackpreventionxxxxxxxxxxxxxxxxxxxxxxx'
 const COOKIE_REFRESH = 'ma_refresh'
 
+const MAX_INTENTOS_EMAIL  = Number(process.env.LOGIN_MAX_INTENTOS_EMAIL) || 5
+const BLOQUEO_SEGUNDOS    = Number(process.env.LOGIN_BLOQUEO_SEGUNDOS)   || 15 * 60
+
 function extraerIp(req) {
   const reenviada = req.headers['x-forwarded-for']
   const cruda = reenviada ? reenviada.split(',')[0].trim() : req.ip
@@ -24,9 +27,33 @@ function claveRefresh(jti) {
   return `masterAdmin:rt:${jti}`
 }
 
+function claveIntentos(email) {
+  return `masterAdmin:login:fallos:${email.toLowerCase()}`
+}
+
+async function estaBloquedoPorEmail(email) {
+  const intentos = await redis.get(claveIntentos(email))
+  return intentos !== null && Number(intentos) >= MAX_INTENTOS_EMAIL
+}
+
+async function registrarFallo(email) {
+  const clave = claveIntentos(email)
+  const intentos = await redis.incr(clave)
+  if (intentos === 1) await redis.expire(clave, BLOQUEO_SEGUNDOS)
+}
+
+async function resetearIntentos(email) {
+  await redis.del(claveIntentos(email))
+}
+
 async function iniciarSesion(req) {
   const { email, password } = req.body
   const ip = extraerIp(req)
+
+  // Bloqueo por cuenta: independiente de la IP de origen
+  if (await estaBloquedoPorEmail(email)) {
+    return { error: 'Demasiados intentos fallidos. Intente de nuevo más tarde.', status: 429 }
+  }
 
   const admin = await prisma.masterAdmin.findUnique({ where: { email } })
 
@@ -35,6 +62,7 @@ async function iniciarSesion(req) {
   const contrasenaValida = await bcrypt.compare(password, hashAComparar)
 
   if (!admin || !contrasenaValida) {
+    await registrarFallo(email)
     return { error: 'Credenciales inválidas', status: 401 }
   }
 
@@ -45,6 +73,9 @@ async function iniciarSesion(req) {
   if (!ipsPermitidas.includes(ip)) {
     return { error: 'Acceso no autorizado desde esta IP', status: 403 }
   }
+
+  // Login exitoso: limpiar contador de fallos
+  await resetearIntentos(email)
 
   const jti = uuidv7()
   const cargaToken = { sub: admin.id, role: 'MASTER_ADMIN' }

@@ -1,7 +1,7 @@
 'use strict'
 
 const { Router } = require('express')
-const { authLimiter } = require('../../middleware/rateLimiter')
+const { authLimiter, refreshLimiter } = require('../../middleware/rateLimiter')
 const authMasterAdmin = require('../../middleware/authMasterAdmin')
 const { validarLogin, validarCambioPassword } = require('./auth.validator')
 const { manejarLogin, manejarRefresh, manejarLogout, manejarCambioPassword } = require('./auth.controller')
@@ -9,7 +9,7 @@ const { manejarLogin, manejarRefresh, manejarLogout, manejarCambioPassword } = r
 const router = Router()
 
 router.post('/login', authLimiter, validarLogin, manejarLogin)
-router.post('/refresh', manejarRefresh)
+router.post('/refresh', refreshLimiter, manejarRefresh)
 router.post('/logout', manejarLogout)
 router.post('/cambiar-password', authMasterAdmin, validarCambioPassword, manejarCambioPassword)
 

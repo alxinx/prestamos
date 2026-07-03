@@ -12,6 +12,7 @@ const prisma = require('./src/lib/prisma')
 const { redis, redisConfig } = require('./src/lib/redis')
 const { registrarJobsRecurrentes } = require('./src/queues')
 const { crearWorkerActividad } = require('./src/queues/workers/actividadTenants.worker')
+const { globalLimiter } = require('./src/middleware/rateLimiter')
 const healthRouter = require('./src/routes/health')
 const masterAdminAuthRouter = require('./src/modules/masterAdmin/auth.routes')
 const masterAdminPlanesRouter = require('./src/modules/masterAdmin/planes.routes')
@@ -41,6 +42,9 @@ app.use(cookieParser())
 
 // ── Logging ───────────────────────────────────────────────────────────────────
 app.use(morgan(process.env.LOG_FORMAT || 'dev'))
+
+// ── Rate limiting global (primera línea contra DoS) ──────────────────────────
+app.use('/api', globalLimiter)
 
 // ── Rutas ─────────────────────────────────────────────────────────────────────
 app.use('/api', healthRouter)
