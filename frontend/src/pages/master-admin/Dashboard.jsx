@@ -194,18 +194,16 @@ const colorTipo = {
 const tarjeta = 'bg-white/[0.04] border border-white/[0.07] rounded-xl backdrop-blur px-6 py-5'
 
 export default function Dashboard() {
-  const { token, cargando: authCargando } = useAuth()
+  const { autenticado, cargando: authCargando } = useAuth()
   const [stats, setStats] = useState(null)
 
   useEffect(() => {
-    if (authCargando || !token) return
-    fetch('/api/master-admin/tenants/stats', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    if (authCargando || !autenticado) return
+    fetch('/api/master-admin/tenants/stats', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (!d.error) setStats(d) })
       .catch(() => {})
-  }, [authCargando, token])
+  }, [authCargando, autenticado])
 
   const kpis = kpisBase.map(k =>
     k.etiqueta === 'Tenants Activos'

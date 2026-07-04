@@ -3,8 +3,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null)
-  const [cargando, setCargando] = useState(true)
+  const [autenticado, setAutenticado] = useState(false)
+  const [cargando, setCargando]       = useState(true)
   const inicializado = useRef(false)
 
   const renovarToken = useCallback(async () => {
@@ -13,35 +13,31 @@ export function AuthProvider({ children }) {
         method: 'POST',
         credentials: 'include',
       })
-      if (!res.ok) { setToken(null); return null }
-      const datos = await res.json()
-      setToken(datos.accessToken)
-      return datos.accessToken
+      if (!res.ok) { setAutenticado(false); return false }
+      setAutenticado(true)
+      return true
     } catch {
-      setToken(null)
-      return null
+      setAutenticado(false)
+      return false
     }
   }, [])
 
   useEffect(() => {
-    // Evita la doble llamada de React StrictMode en desarrollo
     if (inicializado.current) return
     inicializado.current = true
     renovarToken().finally(() => setCargando(false))
   }, [renovarToken])
-
-  const guardarToken = (nuevoToken) => setToken(nuevoToken)
 
   const cerrarSesion = async () => {
     await fetch('/api/master-admin/auth/logout', {
       method: 'POST',
       credentials: 'include',
     }).catch(() => {})
-    setToken(null)
+    setAutenticado(false)
   }
 
   return (
-    <AuthContext.Provider value={{ token, cargando, guardarToken, cerrarSesion, renovarToken }}>
+    <AuthContext.Provider value={{ autenticado, cargando, cerrarSesion, renovarToken }}>
       {children}
     </AuthContext.Provider>
   )

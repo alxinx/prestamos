@@ -37,7 +37,7 @@ function CampoTexto({ id, label, valor, onChange, placeholder, tipo = 'text', au
 }
 
 export default function ModalConfigApp({ onCerrar }) {
-  const { token } = useAuth()
+  useAuth()
   const [form, setForm] = useState({ nombreRazonSocial: '', nit: '', email: '' })
   const [cargando, setCargando] = useState(true)
   const [enviando, setEnviando] = useState(false)
@@ -57,10 +57,7 @@ export default function ModalConfigApp({ onCerrar }) {
   }, [])
 
   useEffect(() => {
-    if (!token) return
-    fetch('/api/master-admin/datos-saas', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch('/api/master-admin/datos-saas', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         if (d.datos) {
@@ -73,7 +70,7 @@ export default function ModalConfigApp({ onCerrar }) {
       })
       .catch(() => {})
       .finally(() => setCargando(false))
-  }, [token])
+  }, [])
 
   function cambiar(campo, valor) {
     setForm(prev => ({ ...prev, [campo]: valor }))
@@ -92,7 +89,8 @@ export default function ModalConfigApp({ onCerrar }) {
     try {
       const res = await fetch('/api/master-admin/datos-saas', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(form),
       })
       const datos = await res.json()

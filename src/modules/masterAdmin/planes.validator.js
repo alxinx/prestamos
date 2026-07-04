@@ -12,7 +12,7 @@ const esquemaPlan = z.object({
   nombre: z.string().min(1, 'El nombre es requerido').max(100),
   precio: z.number().nonnegative('El precio no puede ser negativo'),
   limitePrestamos: limiteEntero,
-  limiteCobradores: limiteEntero,
+  limiteColaboradores: limiteEntero,
   limiteMensajesWsp: limiteEntero,
   consultasScore: limiteEntero,
   tieneBot: z.boolean(),
@@ -26,7 +26,7 @@ const esquemaPlan = z.object({
 const esquemaConfigPlan = z.object({
   precio: z.number().nonnegative('El precio no puede ser negativo'),
   limitePrestamos: limiteEntero,
-  limiteCobradores: limiteEntero,
+  limiteColaboradores: limiteEntero,
   limiteMensajesWsp: limiteEntero,
   consultasScore: limiteEntero,
   precioPrestamoAdicional: z.number().nonnegative('El precio adicional no puede ser negativo'),

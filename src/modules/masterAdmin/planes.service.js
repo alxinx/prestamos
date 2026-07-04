@@ -8,7 +8,7 @@ function camposPlane(datos) {
     nombre: datos.nombre,
     precio: datos.precio,
     limitePrestamos: datos.limitePrestamos,
-    limiteCobradores: datos.limiteCobradores,
+    limiteColaboradores: datos.limiteColaboradores,
     limiteMensajesWsp: datos.limiteMensajesWsp,
     consultasScore: datos.consultasScore,
     tieneBot: datos.tieneBot,
@@ -87,7 +87,7 @@ async function actualizarConfigPlan(id, datos) {
     data: {
       precio: datos.precio,
       limitePrestamos: datos.limitePrestamos,
-      limiteCobradores: datos.limiteCobradores,
+      limiteColaboradores: datos.limiteColaboradores,
       limiteMensajesWsp: datos.limiteMensajesWsp,
       consultasScore: datos.consultasScore,
       precioPréstamoAdicional: datos.precioPrestamoAdicional,

@@ -104,7 +104,7 @@ function CampoPassword({ id, label, valor, onChange, placeholder }) {
 }
 
 export default function ModalConfigUsuario({ onCerrar }) {
-  const { token, renovarToken } = useAuth()
+  useAuth()
   const [contrasenaActual, setContrasenaActual] = useState('')
   const [nuevaContrasena, setNuevaContrasena] = useState('')
   const [confirmarContrasena, setConfirmarContrasena] = useState('')
@@ -143,15 +143,10 @@ export default function ModalConfigUsuario({ onCerrar }) {
 
     setEnviando(true)
     try {
-      let tokenActual = token
-      if (!tokenActual) tokenActual = await renovarToken()
-
       const res = await fetch('/api/master-admin/auth/cambiar-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tokenActual}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ contrasenaActual, nuevaContrasena, confirmarContrasena }),
       })
 

@@ -17,7 +17,7 @@ function formatearLimite(valor, sufijo) {
 function generarFilasCaracteristicas(plan) {
   const items = [
     { etiqueta: formatearLimite(plan.limitePrestamos, 'préstamos activos'),       incluido: true },
-    { etiqueta: formatearLimite(plan.limiteCobradores, 'cobradores'),              incluido: true },
+    { etiqueta: formatearLimite(plan.limiteColaboradores, 'cobradores'),              incluido: true },
     { etiqueta: formatearLimite(plan.limiteMensajesWsp, 'mensajes WhatsApp/mes'), incluido: true },
     {
       etiqueta: plan.consultasScore > 0

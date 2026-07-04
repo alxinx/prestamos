@@ -3,8 +3,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 const TenantAuthContext = createContext(null)
 
 export function TenantAuthProvider({ children }) {
-  const [token, setToken] = useState(null)
-  const [cargando, setCargando] = useState(true)
+  const [autenticado, setAutenticado] = useState(false)
+  const [cargando, setCargando]       = useState(true)
   const inicializado = useRef(false)
 
   const renovarToken = useCallback(async () => {
@@ -13,13 +13,12 @@ export function TenantAuthProvider({ children }) {
         method: 'POST',
         credentials: 'include',
       })
-      if (!res.ok) { setToken(null); return null }
-      const datos = await res.json()
-      setToken(datos.accessToken)
-      return datos.accessToken
+      if (!res.ok) { setAutenticado(false); return false }
+      setAutenticado(true)
+      return true
     } catch {
-      setToken(null)
-      return null
+      setAutenticado(false)
+      return false
     }
   }, [])
 
@@ -29,19 +28,17 @@ export function TenantAuthProvider({ children }) {
     renovarToken().finally(() => setCargando(false))
   }, [renovarToken])
 
-  const guardarToken = (nuevoToken) => setToken(nuevoToken)
-
   const cerrarSesion = async () => {
     await fetch('/api/tenant/auth/logout', {
       method: 'POST',
       credentials: 'include',
     }).catch(() => {})
-    setToken(null)
+    setAutenticado(false)
     window.location.href = '/login'
   }
 
   return (
-    <TenantAuthContext.Provider value={{ token, cargando, guardarToken, cerrarSesion, renovarToken }}>
+    <TenantAuthContext.Provider value={{ autenticado, cargando, cerrarSesion, renovarToken }}>
       {children}
     </TenantAuthContext.Provider>
   )

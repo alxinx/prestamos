@@ -360,7 +360,7 @@ model Plan {
   id                     String     @id @db.Char(36)
   nombre                 String
   precio                 Decimal    @db.Decimal(15, 2)
-  limiteCobradores       Int        @map("limite_cobradores")
+  limiteColaboradores    Int        @map("limite_colaboradores")
   limitePrestamos        Int        @map("limite_prestamos")
   limiteMensajesWsp      Int        @map("limite_mensajes_wsp")
   consultasScore         Int        @map("consultas_score")
@@ -414,7 +414,7 @@ model Factura {
   planId                String        @map("plan_id") @db.Char(36)
   periodo               String
   valorPlan             Decimal       @db.Decimal(15, 2) @map("valor_plan")
-  clientesExcedentes    Int           @default(0) @map("clientes_excedentes")
+  prestamosExcedentes   Int           @default(0) @map("prestamos_excedentes")
   valorExcedentes       Decimal       @default(0) @db.Decimal(15, 2) @map("valor_excedentes")
   totalFactura          Decimal       @db.Decimal(15, 2) @map("total_factura")
   estado                EstadoFactura

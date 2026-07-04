@@ -35,7 +35,7 @@ const COLORES_ENGAGEMENT = {
 }
 
 function WidgetColaboradores({ plan, actividad }) {
-  const limite = plan?.limiteCobradores ?? 0
+  const limite = plan?.limiteColaboradores ?? 0
   const actual = actividad?.colaboradoresActivos ?? 0
   const pct = limite > 0 ? actual / limite : 0
 
@@ -165,14 +165,14 @@ function TarjetaPlan({ plan, seleccionado, esActual, onSeleccionar }) {
           {plan.limitePrestamos === -1 ? '∞' : plan.limitePrestamos} préstamos
         </span>
         <span className="text-[11px] text-slate-400">
-          {plan.limiteCobradores === -1 ? '∞' : plan.limiteCobradores} colaboradores
+          {plan.limiteColaboradores === -1 ? '∞' : plan.limiteColaboradores} colaboradores
         </span>
       </div>
     </div>
   )
 }
 
-function ModalCambiarPlan({ tenant, token, onCerrar, onPlanCambiado }) {
+function ModalCambiarPlan({ tenant, onCerrar, onPlanCambiado }) {
   const [planes, setPlanes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [planSeleccionado, setPlanSeleccionado] = useState(null)
@@ -181,12 +181,12 @@ function ModalCambiarPlan({ tenant, token, onCerrar, onPlanCambiado }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('/api/master-admin/planes', { headers: { Authorization: `Bearer ${token}` } })
+    fetch('/api/master-admin/planes', { credentials: 'include' })
       .then(r => r.json())
       .then(d => setPlanes((d.planes ?? []).filter(p => p.estado === 'ACTIVO')))
       .catch(() => setError('No se pudieron cargar los planes'))
       .finally(() => setCargando(false))
-  }, [token])
+  }, [])
 
   async function confirmar() {
     setGuardando(true)
@@ -194,7 +194,8 @@ function ModalCambiarPlan({ tenant, token, onCerrar, onPlanCambiado }) {
     try {
       const res = await fetch(`/api/master-admin/tenants/${tenant.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           planId: planSeleccionado.id,
           nombreNegocio: tenant.nombreNegocio,
@@ -509,19 +510,19 @@ function CampoPrecio({ label, valor, onChange, claseInputRef = claseInput }) {
   )
 }
 
-function ConfiguracionAvanzada({ tenant, onGuardado, token }) {
+function ConfiguracionAvanzada({ tenant, onGuardado }) {
   const plan = tenant.plan
 
   const precioBase = Number(plan?.precio ?? 0)
   const limitePrestamosBase = plan?.limitePrestamos === -1 ? Infinity : (plan?.limitePrestamos ?? 0)
-  const limiteColaboradoresBase = plan?.limiteCobradores === -1 ? Infinity : (plan?.limiteCobradores ?? 0)
+  const limiteColaboradoresBase = plan?.limiteColaboradores === -1 ? Infinity : (plan?.limiteColaboradores ?? 0)
 
   const [cfg, setCfg] = useState({
     precio: Number(plan?.precio ?? 0),
     prestamos: plan?.limitePrestamos === -1 ? 0 : (plan?.limitePrestamos ?? 0),
     prestamosIlimitado: plan?.limitePrestamos === -1,
-    colaboradores: plan?.limiteCobradores === -1 ? 0 : (plan?.limiteCobradores ?? 0),
-    colaboradoresIlimitado: plan?.limiteCobradores === -1,
+    colaboradores: plan?.limiteColaboradores === -1 ? 0 : (plan?.limiteColaboradores ?? 0),
+    colaboradoresIlimitado: plan?.limiteColaboradores === -1,
     mensajesWsp: plan?.limiteMensajesWsp === -1 ? 0 : (plan?.limiteMensajesWsp ?? 0),
     mensajesWspIlimitado: plan?.limiteMensajesWsp === -1,
     consultasScore: plan?.consultasScore === -1 ? 0 : (plan?.consultasScore ?? 0),
@@ -576,11 +577,12 @@ function ConfiguracionAvanzada({ tenant, onGuardado, token }) {
     try {
       const res = await fetch(`/api/master-admin/planes/${plan.id}/config`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           precio: cfg.precio,
           limitePrestamos: cfg.prestamosIlimitado ? -1 : cfg.prestamos,
-          limiteCobradores: cfg.colaboradoresIlimitado ? -1 : cfg.colaboradores,
+          limiteColaboradores: cfg.colaboradoresIlimitado ? -1 : cfg.colaboradores,
           limiteMensajesWsp: cfg.mensajesWspIlimitado ? -1 : cfg.mensajesWsp,
           consultasScore: cfg.consultasScoreIlimitado ? -1 : cfg.consultasScore,
           precioPrestamoAdicional: cfg.precioAdicional,
@@ -681,7 +683,7 @@ function ConfiguracionAvanzada({ tenant, onGuardado, token }) {
 }
 
 export default function TenantPanel() {
-  const { token, cargando: authCargando } = useAuth()
+  const { autenticado, cargando: authCargando } = useAuth()
   const [tenant, setTenant] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [mostrarModalPlan, setMostrarModalPlan] = useState(false)
@@ -689,12 +691,10 @@ export default function TenantPanel() {
   const tenantId = window.location.pathname.split('/')[3]
 
   const cargar = useCallback(async () => {
-    if (!token) return
+    if (!autenticado) return
     setCargando(true)
     try {
-      const res = await fetch(`/api/master-admin/tenants/${tenantId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch(`/api/master-admin/tenants/${tenantId}`, { credentials: 'include' })
       if (res.ok) {
         const d = await res.json()
         setTenant(d.tenant)
@@ -702,11 +702,11 @@ export default function TenantPanel() {
     } finally {
       setCargando(false)
     }
-  }, [token, tenantId])
+  }, [autenticado, tenantId])
 
   useEffect(() => {
-    if (!authCargando && token) cargar()
-  }, [authCargando, token, cargar])
+    if (!authCargando && autenticado) cargar()
+  }, [authCargando, autenticado, cargar])
 
   if (authCargando || cargando) {
     return (
@@ -796,7 +796,7 @@ export default function TenantPanel() {
             <HistorialFacturacion facturas={facturas} />
             <SaludSistema tenant={tenant} />
           </div>
-          <ConfiguracionAvanzada tenant={tenant} onGuardado={cargar} token={token} />
+          <ConfiguracionAvanzada tenant={tenant} onGuardado={cargar} />
         </div>
 
       </div>
@@ -804,7 +804,6 @@ export default function TenantPanel() {
       {mostrarModalPlan && (
         <ModalCambiarPlan
           tenant={tenant}
-          token={token}
           onCerrar={() => setMostrarModalPlan(false)}
           onPlanCambiado={cargar}
         />

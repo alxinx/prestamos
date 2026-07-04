@@ -44,7 +44,7 @@ const IconoIngreso = () => (
 )
 
 export default function LoginMasterAdmin() {
-  const { guardarToken } = useAuth()
+  useAuth()
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [mostrarContrasena, setMostrarContrasena] = useState(false)
@@ -71,8 +71,6 @@ export default function LoginMasterAdmin() {
         return
       }
 
-      // Token solo en memoria — nunca en localStorage ni sessionStorage
-      guardarToken(datos.accessToken)
       window.location.href = '/master-admin/dashboard'
     } catch {
       setError('No se pudo conectar con el servidor')

@@ -208,7 +208,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
   )
 }
 
-function FormularioTenant({ tenantEditando, onGuardado, token, planes }) {
+function FormularioTenant({ tenantEditando, onGuardado, planes }) {
   const modoEdicion = tenantEditando !== null
   const [form, setForm] = useState(VACIO)
   const [enviando, setEnviando] = useState(false)
@@ -265,7 +265,7 @@ function FormularioTenant({ tenantEditando, onGuardado, token, planes }) {
       const params = new URLSearchParams({ email: valor })
       if (modoEdicion && tenantEditando?.id) params.append('excluirId', tenantEditando.id)
       const res = await fetch(`/api/master-admin/tenants/verificar-email?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       })
       const d = await res.json()
       if (!d.disponible) {
@@ -308,7 +308,8 @@ function FormularioTenant({ tenantEditando, onGuardado, token, planes }) {
       const url = modoEdicion ? `/api/master-admin/tenants/${tenantEditando.id}` : '/api/master-admin/tenants'
       const res = await fetch(url, {
         method: modoEdicion ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(cuerpo),
       })
       const datos = await res.json()
@@ -515,7 +516,7 @@ function FormularioTenant({ tenantEditando, onGuardado, token, planes }) {
 }
 
 export default function Tenants() {
-  const { token, cargando: authCargando } = useAuth()
+  const { autenticado, cargando: authCargando } = useAuth()
   const esMobil = useTamanoPantalla()
   const [tenants, setTenants] = useState([])
   const [planes, setPlanes] = useState([])
@@ -527,17 +528,17 @@ export default function Tenants() {
   const [paginacion, setPaginacion] = useState({ total: 0, totalPaginas: 1 })
 
   const cargarPlanes = useCallback(async () => {
-    if (!token) return
-    const res = await fetch('/api/master-admin/planes', { headers: { Authorization: `Bearer ${token}` } })
+    if (!autenticado) return
+    const res = await fetch('/api/master-admin/planes', { credentials: 'include' })
     if (res.ok) { const d = await res.json(); setPlanes(d.planes) }
-  }, [token])
+  }, [autenticado])
 
   const cargarTenants = useCallback(async () => {
-    if (!token) return
+    if (!autenticado) return
     setCargandoTabla(true)
     try {
       const params = new URLSearchParams({ busqueda, pagina, porPagina: 10 })
-      const res = await fetch(`/api/master-admin/tenants?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`/api/master-admin/tenants?${params}`, { credentials: 'include' })
       if (!res.ok) return
       const d = await res.json()
       setTenants(d.tenants)
@@ -545,22 +546,22 @@ export default function Tenants() {
     } finally {
       setCargandoTabla(false)
     }
-  }, [token, busqueda, pagina])
+  }, [autenticado, busqueda, pagina])
 
   useEffect(() => {
-    if (!authCargando && token) { cargarPlanes(); cargarTenants() }
-  }, [authCargando, token, cargarPlanes, cargarTenants])
+    if (!authCargando && autenticado) { cargarPlanes(); cargarTenants() }
+  }, [authCargando, autenticado, cargarPlanes, cargarTenants])
 
   useEffect(() => { setPagina(1) }, [busqueda])
 
   useEffect(() => {
     const editarId = new URLSearchParams(window.location.search).get('editar')
-    if (!editarId || !token || authCargando) return
-    fetch(`/api/master-admin/tenants/${editarId}`, { headers: { Authorization: `Bearer ${token}` } })
+    if (!editarId || !autenticado || authCargando) return
+    fetch(`/api/master-admin/tenants/${editarId}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (d.tenant) alEditar(d.tenant) })
     window.history.replaceState(null, '', '/master-admin/tenants')
-  }, [authCargando, token])
+  }, [authCargando, autenticado])
 
   function alEditar(tenant) {
     setTenantEditando(tenant)
@@ -581,7 +582,7 @@ export default function Tenants() {
   async function eliminarUltimo() {
     const res = await fetch('/api/master-admin/tenants/dev/ultimo', {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     })
     const d = await res.json()
     if (res.ok) cargarTenants()
@@ -726,12 +727,12 @@ export default function Tenants() {
             >
               ← Volver al listado
             </button>
-            <FormularioTenant tenantEditando={tenantEditando} onGuardado={alGuardar} token={token} planes={planes} />
+            <FormularioTenant tenantEditando={tenantEditando} onGuardado={alGuardar} planes={planes} />
           </div>
         ) : (
           <div className={`${esMobil ? 'flex flex-col' : 'grid grid-cols-[3fr_2fr]'} gap-6 items-start`}>
             {panelLista}
-            {!esMobil && <FormularioTenant tenantEditando={tenantEditando} onGuardado={alGuardar} token={token} planes={planes} />}
+            {!esMobil && <FormularioTenant tenantEditando={tenantEditando} onGuardado={alGuardar} planes={planes} />}
           </div>
         )}
       </div>

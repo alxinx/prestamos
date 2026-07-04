@@ -55,7 +55,7 @@ const features = [
 const badges = ['PCI-DSS NIVEL 1', 'AES-256']
 
 export default function LoginTenant() {
-  const { guardarToken } = useTenantAuth()
+  useTenantAuth()
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [recordar, setRecordar] = useState(false)
@@ -75,7 +75,6 @@ export default function LoginTenant() {
       })
       const datos = await res.json()
       if (!res.ok) { setError(datos.error || 'Error al iniciar sesión.'); return }
-      guardarToken(datos.accessToken)
       window.location.href = '/panel/dashboard'
     } catch {
       setError('Error de conexión. Intenta nuevamente.')

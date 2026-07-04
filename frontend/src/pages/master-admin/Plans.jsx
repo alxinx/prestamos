@@ -13,7 +13,7 @@ const VACIO = {
   nombre: '',
   precio: 0,
   limitePrestamos: '',
-  limiteCobradores: '',
+  limiteColaboradores: '',
   limiteMensajesWsp: '',
   consultasScore: '',
   tieneBot: false,
@@ -76,7 +76,7 @@ function CampoLimite({ label, campoValor, campoIlimitado, valorActual, ilimitado
   )
 }
 
-function FormularioPlan({ planEditando, onGuardado, token }) {
+function FormularioPlan({ planEditando, onGuardado }) {
   const modoEdicion = planEditando !== null
   const [form, setForm] = useState(VACIO)
   const [ilimitados, setIlimitados] = useState({ prestamos: false, cobradores: false, mensajes: false, score: false })
@@ -90,7 +90,7 @@ function FormularioPlan({ planEditando, onGuardado, token }) {
         nombre: planEditando.nombre,
         precio: Number(planEditando.precio),
         limitePrestamos: planEditando.limitePrestamos === ILIMITADO ? '' : String(planEditando.limitePrestamos),
-        limiteCobradores: planEditando.limiteCobradores === ILIMITADO ? '' : String(planEditando.limiteCobradores),
+        limiteColaboradores: planEditando.limiteColaboradores === ILIMITADO ? '' : String(planEditando.limiteColaboradores),
         limiteMensajesWsp: planEditando.limiteMensajesWsp === ILIMITADO ? '' : String(planEditando.limiteMensajesWsp),
         consultasScore: planEditando.consultasScore === ILIMITADO ? '' : String(planEditando.consultasScore),
         tieneBot: planEditando.tieneBot,
@@ -102,7 +102,7 @@ function FormularioPlan({ planEditando, onGuardado, token }) {
       })
       setIlimitados({
         prestamos: planEditando.limitePrestamos === ILIMITADO,
-        cobradores: planEditando.limiteCobradores === ILIMITADO,
+        cobradores: planEditando.limiteColaboradores === ILIMITADO,
         mensajes: planEditando.limiteMensajesWsp === ILIMITADO,
         score: planEditando.consultasScore === ILIMITADO,
       })
@@ -139,7 +139,7 @@ function FormularioPlan({ planEditando, onGuardado, token }) {
         nombre: form.nombre.trim(),
         precio: form.precio,
         limitePrestamos: ilimitados.prestamos ? ILIMITADO : Number(form.limitePrestamos),
-        limiteCobradores: ilimitados.cobradores ? ILIMITADO : Number(form.limiteCobradores),
+        limiteColaboradores: ilimitados.cobradores ? ILIMITADO : Number(form.limiteColaboradores),
         limiteMensajesWsp: ilimitados.mensajes ? ILIMITADO : Number(form.limiteMensajesWsp),
         consultasScore: ilimitados.score ? ILIMITADO : Number(form.consultasScore),
         tieneBot: form.tieneBot,
@@ -152,7 +152,8 @@ function FormularioPlan({ planEditando, onGuardado, token }) {
       const url = modoEdicion ? `/api/master-admin/planes/${planEditando.id}` : '/api/master-admin/planes'
       const res = await fetch(url, {
         method: modoEdicion ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(cuerpo),
       })
       const datos = await res.json()
@@ -210,8 +211,8 @@ function FormularioPlan({ planEditando, onGuardado, token }) {
         <div className="grid grid-cols-2 gap-3">
           <CampoLimite label="Préstamos" campoValor="limitePrestamos" campoIlimitado="ilimitadoPrestamos"
             valorActual={form.limitePrestamos} ilimitadoActual={ilimitados.prestamos} onChange={cambiar} />
-          <CampoLimite label="Colaboradores" campoValor="limiteCobradores" campoIlimitado="ilimitadoCobradores"
-            valorActual={form.limiteCobradores} ilimitadoActual={ilimitados.cobradores} onChange={cambiar} />
+          <CampoLimite label="Colaboradores" campoValor="limiteColaboradores" campoIlimitado="ilimitadoCobradores"
+            valorActual={form.limiteColaboradores} ilimitadoActual={ilimitados.cobradores} onChange={cambiar} />
           <CampoLimite label="Mensajes WhatsApp" campoValor="limiteMensajesWsp" campoIlimitado="ilimitadoMensajes"
             valorActual={form.limiteMensajesWsp} ilimitadoActual={ilimitados.mensajes} onChange={cambiar} />
           <CampoLimite label="Consultas score" campoValor="consultasScore" campoIlimitado="ilimitadoScore"
@@ -295,7 +296,7 @@ function FormularioPlan({ planEditando, onGuardado, token }) {
 }
 
 export default function Plans() {
-  const { token, cargando: authCargando } = useAuth()
+  const { autenticado, cargando: authCargando } = useAuth()
   const esMobil = useTamanoPantalla()
   const [planes, setPlanes] = useState([])
   const [cargandoTabla, setCargandoTabla] = useState(true)
@@ -303,23 +304,21 @@ export default function Plans() {
   const [mostrarFormMobil, setMostrarFormMobil] = useState(false)
 
   const cargarPlanes = useCallback(async () => {
-    if (!token) return
+    if (!autenticado) return
     setCargandoTabla(true)
     try {
-      const res = await fetch('/api/master-admin/planes', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch('/api/master-admin/planes', { credentials: 'include' })
       if (!res.ok) return
       const datos = await res.json()
       setPlanes(datos.planes)
     } finally {
       setCargandoTabla(false)
     }
-  }, [token])
+  }, [autenticado])
 
   useEffect(() => {
-    if (!authCargando && token) cargarPlanes()
-  }, [authCargando, token, cargarPlanes])
+    if (!authCargando && autenticado) cargarPlanes()
+  }, [authCargando, autenticado, cargarPlanes])
 
   function alEditar(plan) {
     setPlanEditando(plan)
@@ -365,7 +364,7 @@ export default function Plans() {
             >
               ← Volver al listado
             </button>
-            <FormularioPlan planEditando={planEditando} onGuardado={alGuardar} token={token} />
+            <FormularioPlan planEditando={planEditando} onGuardado={alGuardar} />
           </div>
         ) : (
           <div className={`${esMobil ? 'flex flex-col' : 'grid grid-cols-[3fr_2fr]'} gap-6 items-start`}>
@@ -422,7 +421,7 @@ export default function Plans() {
                             {mostrarLimite(plan.limitePrestamos)}
                           </td>
                           <td className="px-4 py-3.5 text-[13px] text-slate-400 text-center">
-                            {mostrarLimite(plan.limiteCobradores)}
+                            {mostrarLimite(plan.limiteColaboradores)}
                           </td>
                           <td className="px-4 py-3.5 text-[13px] text-slate-400 text-center whitespace-nowrap">
                             {mostrarLimite(plan.limiteMensajesWsp)} / {mostrarLimite(plan.consultasScore)}
@@ -471,7 +470,7 @@ export default function Plans() {
 
             {/* Panel derecho: formulario (solo desktop) */}
             {!esMobil && (
-              <FormularioPlan planEditando={planEditando} onGuardado={alGuardar} token={token} />
+              <FormularioPlan planEditando={planEditando} onGuardado={alGuardar} />
             )}
           </div>
         )}

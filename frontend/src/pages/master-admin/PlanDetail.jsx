@@ -61,7 +61,7 @@ function mostrarLimite(valor) {
 }
 
 export default function PlanDetail() {
-  const { token, cargando: authCargando } = useAuth()
+  const { autenticado, cargando: authCargando } = useAuth()
   const esMobil = useTamanoPantalla()
   const [datos, setDatos] = useState(null)
   const [cargando, setCargando] = useState(true)
@@ -70,11 +70,9 @@ export default function PlanDetail() {
   const planId = idDesdePath()
 
   useEffect(() => {
-    if (authCargando || !token) return
+    if (authCargando || !autenticado) return
     setCargando(true)
-    fetch(`/api/master-admin/planes/${planId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch(`/api/master-admin/planes/${planId}`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         if (d.error) { setError(d.error); return }
@@ -82,7 +80,7 @@ export default function PlanDetail() {
       })
       .catch(() => setError('Error de conexión.'))
       .finally(() => setCargando(false))
-  }, [authCargando, token, planId])
+  }, [authCargando, autenticado, planId])
 
   const { plan, statsPorEstado, ultimosTenants } = datos ?? {}
   const ingresoEstimado = plan ? (statsPorEstado?.ACTIVO ?? 0) * Number(plan.precio) : 0
@@ -181,7 +179,7 @@ export default function PlanDetail() {
                 </div>
                 <div className="px-5 py-2">
                   <FilaFeature icono="📋" etiqueta="Préstamos activos"    valor={mostrarLimite(plan.limitePrestamos)}   destacado={plan.limitePrestamos === -1} />
-                  <FilaFeature icono="👥" etiqueta="Colaboradores"        valor={mostrarLimite(plan.limiteCobradores)}  destacado={plan.limiteCobradores === -1} />
+                  <FilaFeature icono="👥" etiqueta="Colaboradores"        valor={mostrarLimite(plan.limiteColaboradores)}  destacado={plan.limiteColaboradores === -1} />
                   <FilaFeature icono="💬" etiqueta="Mensajes WhatsApp/mes" valor={mostrarLimite(plan.limiteMensajesWsp)} destacado={plan.limiteMensajesWsp === -1} />
                   <FilaFeature icono="📊" etiqueta="Consultas de score/mes" valor={mostrarLimite(plan.consultasScore)}  destacado={plan.consultasScore === -1} />
                   <FilaFeature icono="➕" etiqueta="Precio préstamo adicional"     valor={formatearPrecio(plan.precioPréstamoAdicional ?? 0)} />

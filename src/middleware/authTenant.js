@@ -5,19 +5,14 @@ const { verificarAccessToken } = require('../lib/jwt')
 const ROLES_TENANT = ['ADMINISTRADOR', 'COBRADOR', 'SECRETARIA', 'AUDITOR']
 
 function authTenant(req, res, next) {
-  const header = req.headers.authorization
-  if (!header?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token de acceso requerido' })
-  }
+  const token = req.cookies?.['t_access']
+  if (!token) return res.status(401).json({ error: 'Sesión requerida' })
 
-  const token = header.slice(7)
   try {
     const payload = verificarAccessToken(token)
-
     if (!payload.tenantId || !ROLES_TENANT.includes(payload.role)) {
       return res.status(403).json({ error: 'Acceso denegado' })
     }
-
     req.empleado = {
       id:          payload.sub,
       tenantId:    payload.tenantId,
@@ -26,7 +21,7 @@ function authTenant(req, res, next) {
     }
     next()
   } catch {
-    return res.status(401).json({ error: 'Token inválido o expirado' })
+    return res.status(401).json({ error: 'Sesión expirada' })
   }
 }
 
