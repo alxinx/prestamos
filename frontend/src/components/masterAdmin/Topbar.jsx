@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import ModalConfigUsuario from './ModalConfigUsuario'
+import ModalConfigApp from './ModalConfigApp'
 
 const etiquetasRuta = {
   '/master-admin/dashboard':   'Dashboard',
@@ -70,6 +71,7 @@ function IconoApp() {
 function MenuSettings() {
   const [abierto, setAbierto] = useState(false)
   const [modalUsuario, setModalUsuario] = useState(false)
+  const [modalApp, setModalApp] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -104,7 +106,7 @@ function MenuSettings() {
           <div className="p-1.5">
             {[
               { etiqueta: 'Configuración de Usuario', icono: <IconoUsuario />, accion: () => { setAbierto(false); setModalUsuario(true) } },
-              { etiqueta: 'Configuración de Aplicación', icono: <IconoApp />, accion: () => setAbierto(false) },
+              { etiqueta: 'Configuración de Aplicación', icono: <IconoApp />, accion: () => { setAbierto(false); setModalApp(true) } },
             ].map(op => (
               <button
                 key={op.etiqueta}
@@ -120,6 +122,7 @@ function MenuSettings() {
       )}
 
       {modalUsuario && <ModalConfigUsuario onCerrar={() => setModalUsuario(false)} />}
+      {modalApp     && <ModalConfigApp     onCerrar={() => setModalApp(false)} />}
     </div>
   )
 }

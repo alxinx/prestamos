@@ -436,16 +436,24 @@ export default function Plans() {
                           </td>
                           <td className="px-4 py-3.5"><ChipEstado estado={plan.estado} /></td>
                           <td className="px-4 py-3.5">
-                            <button
-                              onClick={() => alEditar(plan)}
-                              className={`px-3 py-[5px] rounded-md border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150 whitespace-nowrap
-                                ${planEditando?.id === plan.id
-                                  ? 'bg-[rgba(0,201,130,0.15)] text-admin-accent'
-                                  : 'bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-50'
-                                }`}
-                            >
-                              Editar
-                            </button>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => { window.location.href = `/master-admin/planes/${plan.id}` }}
+                                className="px-3 py-[5px] rounded-md border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150 whitespace-nowrap bg-[rgba(170,199,253,0.08)] text-[#aac7fd] hover:bg-[rgba(170,199,253,0.15)]"
+                              >
+                                Ver plan
+                              </button>
+                              <button
+                                onClick={() => alEditar(plan)}
+                                className={`px-3 py-[5px] rounded-md border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150 whitespace-nowrap
+                                  ${planEditando?.id === plan.id
+                                    ? 'bg-[rgba(0,201,130,0.15)] text-admin-accent'
+                                    : 'bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-50'
+                                  }`}
+                              >
+                                Editar
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

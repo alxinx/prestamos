@@ -1,7 +1,9 @@
 'use strict'
 
-const { listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, verificarEmailDisponible } = require('./tenants.service')
+const { estadisticasTenants, listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, verificarEmailDisponible } = require('./tenants.service')
 const { controlar } = require('../../lib/controlador')
+
+const manejarEstadisticas = controlar(() => estadisticasTenants())
 
 const manejarListar = controlar(req => {
   const { busqueda = '', pagina = '1', porPagina = '10' } = req.query
@@ -28,4 +30,4 @@ const manejarEliminarUltimo = controlar(req => {
   return eliminarUltimoTenant()
 })
 
-module.exports = { manejarListar, manejarObtener, manejarCrear, manejarActualizar, manejarReenviarActivacion, manejarEliminarUltimo, manejarVerificarEmail }
+module.exports = { manejarEstadisticas, manejarListar, manejarObtener, manejarCrear, manejarActualizar, manejarReenviarActivacion, manejarEliminarUltimo, manejarVerificarEmail }

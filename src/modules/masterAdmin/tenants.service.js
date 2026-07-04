@@ -52,6 +52,16 @@ async function subdominioUnico(base) {
   }
 }
 
+async function estadisticasTenants() {
+  const [grupos, total] = await Promise.all([
+    prisma.tenant.groupBy({ by: ['estado'], _count: { _all: true } }),
+    prisma.tenant.count(),
+  ])
+  const porEstado = { ACTIVO: 0, PERIODO_GRACIA: 0, SUSPENDIDO: 0, CANCELADO: 0 }
+  grupos.forEach(g => { porEstado[g.estado] = g._count._all })
+  return { total, porEstado }
+}
+
 async function listarTenants({ busqueda = '', pagina = 1, porPagina = 10 } = {}) {
   const where = busqueda
     ? {
@@ -226,4 +236,4 @@ async function eliminarUltimoTenant() {
   return { ok: true, eliminado: ultimo.nombreNegocio }
 }
 
-module.exports = { listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, verificarEmailDisponible }
+module.exports = { estadisticasTenants, listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, verificarEmailDisponible }

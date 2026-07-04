@@ -17,6 +17,9 @@ const healthRouter = require('./src/routes/health')
 const masterAdminAuthRouter = require('./src/modules/masterAdmin/auth.routes')
 const masterAdminPlanesRouter = require('./src/modules/masterAdmin/planes.routes')
 const masterAdminTenantsRouter = require('./src/modules/masterAdmin/tenants.routes')
+const masterAdminDatosSaasRouter = require('./src/modules/masterAdmin/datosSaas.routes')
+const activacionRouter           = require('./src/modules/activacion/activacion.routes')
+const tenantAuthRouter           = require('./src/modules/tenant/auth.routes')
 
 const app = express()
 app.disable('x-powered-by')
@@ -51,6 +54,9 @@ app.use('/api', healthRouter)
 app.use('/api/master-admin/auth', masterAdminAuthRouter)
 app.use('/api/master-admin/planes', masterAdminPlanesRouter)
 app.use('/api/master-admin/tenants', masterAdminTenantsRouter)
+app.use('/api/master-admin/datos-saas', masterAdminDatosSaasRouter)
+app.use('/api/activar',      activacionRouter)
+app.use('/api/tenant/auth', tenantAuthRouter)
 
 // ── Manejo global de errores ──────────────────────────────────────────────────
 app.use((err, req, res, next) => {

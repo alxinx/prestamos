@@ -1,9 +1,11 @@
+import { useState, useEffect } from 'react'
 import DashboardMasterAdmin from '../../layouts/DashboardMasterAdmin'
+import { useAuth } from '../../context/AuthContext'
 
-const kpis = [
+const kpisBase = [
   {
     etiqueta: 'Tenants Activos',
-    valor: '1.248',
+    valor: null,          // se reemplaza con dato real
     delta: '+12.4%',
     positivo: true,
     color: '#00C982',
@@ -192,6 +194,25 @@ const colorTipo = {
 const tarjeta = 'bg-white/[0.04] border border-white/[0.07] rounded-xl backdrop-blur px-6 py-5'
 
 export default function Dashboard() {
+  const { token, cargando: authCargando } = useAuth()
+  const [stats, setStats] = useState(null)
+
+  useEffect(() => {
+    if (authCargando || !token) return
+    fetch('/api/master-admin/tenants/stats', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(d => { if (!d.error) setStats(d) })
+      .catch(() => {})
+  }, [authCargando, token])
+
+  const kpis = kpisBase.map(k =>
+    k.etiqueta === 'Tenants Activos'
+      ? { ...k, valor: stats ? stats.porEstado.ACTIVO.toLocaleString('es-CO') : '—' }
+      : k
+  )
+
   const hora = new Date().getHours()
   const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
 

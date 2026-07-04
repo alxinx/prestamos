@@ -28,6 +28,32 @@ async function listarPlanes() {
   return { planes }
 }
 
+async function obtenerPlan(id) {
+  const plan = await prisma.plan.findUnique({
+    where: { id },
+    include: { _count: { select: { tenants: true } } },
+  })
+  if (!plan) return { error: 'Plan no encontrado', status: 404 }
+
+  const conteoPorEstado = await prisma.tenant.groupBy({
+    by: ['estado'],
+    where: { planId: id },
+    _count: { _all: true },
+  })
+
+  const statsPorEstado = { ACTIVO: 0, PERIODO_GRACIA: 0, SUSPENDIDO: 0, CANCELADO: 0 }
+  conteoPorEstado.forEach(g => { statsPorEstado[g.estado] = g._count._all })
+
+  const ultimosTenants = await prisma.tenant.findMany({
+    where: { planId: id },
+    select: { id: true, nombreNegocio: true, estado: true, createdAt: true },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+  })
+
+  return { plan, statsPorEstado, ultimosTenants }
+}
+
 async function crearPlan(datos) {
   const plan = await prisma.plan.create({
     data: { id: uuidv7(), ...camposPlane(datos) },
@@ -71,4 +97,4 @@ async function actualizarConfigPlan(id, datos) {
   return { plan }
 }
 
-module.exports = { listarPlanes, crearPlan, actualizarPlan, cambiarEstadoPlan, actualizarConfigPlan }
+module.exports = { listarPlanes, obtenerPlan, crearPlan, actualizarPlan, cambiarEstadoPlan, actualizarConfigPlan }

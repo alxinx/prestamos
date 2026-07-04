@@ -50,7 +50,12 @@
   NOTIFICACIONES_JOB_ENABLED=true
 
   LOGIN_MAX_INTENTOS_EMAIL=5            (intentos fallidos antes de bloquear la cuenta por email)
-  LOGIN_BLOQUEO_SEGUNDOS=900            (segundos de bloqueo — 900 = 15 min)
+  LOGIN_BLOQUEO_SEGUNDOS=900            (segundos de bloqueo por cuenta — 900 = 15 min)
+
+  RATE_LIMIT_WINDOW_MS=900000           (ventana del rate limiter — 900000 = 15 min)
+  RATE_LIMIT_MAX_GLOBAL=300             (máx requests por IP sobre toda la API en la ventana)
+  RATE_LIMIT_MAX_AUTH=10                (máx intentos de login por IP en la ventana)
+  RATE_LIMIT_MAX_OTP=3                  (máx solicitudes de OTP por IP por hora)
 
   MAIL_HOST=                            (SES, Resend o similar — NO Mailtrap)
   MAIL_SECURE=true
@@ -62,21 +67,21 @@
 3. PRIMER DESPLIEGUE — ORDEN DE PASOS
 ─────────────────────────────────────
 
-  1. Configurar el .env con todos los valores de producción
-  2. Crear la base de datos en RDS: cobranzas_saas (o el nombre definido en DB_NAME)
+  1. Configurar el .env con todos los valores de producción.
+  2. Crear la base de datos en RDS: cobranzas_saas (o el nombre definido en DB_NAME).
   3. Aplicar migraciones:
        npx prisma migrate deploy
   4. Ejecutar el seed inicial (solo una vez):
        node prisma/seed.js
-     Esto crea los planes base y el master admin con las credenciales de .env.
+     Esto crea los planes base y el master admin con las credenciales del .env.
   5. Levantar la aplicación:
        NODE_ENV=production node index.js
-     O con PM2:
+     O con PM2 (recomendado):
        pm2 start index.js --name gotapay
   6. Cambiar la contraseña del master admin en el primer login.
 
 
-4. PROTECCIÓN CONTRA ATAQUES — QUÉ ESTÁ CUBIERTO Y QUÉ NO
+4. PROTECCIÓN CONTRA ATAQUES
 ─────────────────────────────────────────────────────────────────────────────
 
   CUBIERTO EN CÓDIGO (no requiere acción adicional):
@@ -87,10 +92,24 @@
   - Rate limiting en login: 10 intentos / 15 min por IP.
     Configurable con RATE_LIMIT_MAX_AUTH.
 
-  - Rate limiting en /refresh: 30 req / 15 min por IP.
+  - Rate limiting en /refresh: 30 req / 15 min por IP (fijo en código).
 
   - Rate limiting en OTP de firma: 3 req / hora por IP.
     Configurable con RATE_LIMIT_MAX_OTP.
+
+  - Bloqueo por cuenta tras intentos fallidos: después de 5 intentos
+    fallidos sobre el mismo email (desde cualquier IP), la cuenta queda
+    bloqueada 15 minutos en Redis. El atacante no puede evadir esto
+    rotando IPs. El contador se resetea al hacer login exitoso.
+    Configurable con LOGIN_MAX_INTENTOS_EMAIL y LOGIN_BLOQUEO_SEGUNDOS.
+
+  - Protección contra enumeración de usuarios (user enumeration):
+    El login siempre corre bcrypt aunque el email no exista, y devuelve
+    el mismo mensaje y tiempo de respuesta en ambos casos. Un atacante
+    no puede distinguir "email inválido" de "contraseña incorrecta".
+
+  - Protección contra inyección SQL: toda la app usa Prisma ORM con
+    prepared statements. No hay concatenación de strings SQL en ningún punto.
 
   - Headers de seguridad HTTP via Helmet (CSP, HSTS, X-Frame-Options, etc.)
 
@@ -124,7 +143,7 @@
        client_header_timeout 10s;
        client_body_timeout 10s;
        keepalive_timeout 30s;
-     Si se corre Node directamente (sin proxy), agregar en index.js:
+     Si se expone Node directamente (sin proxy), agregar en index.js:
        server.setTimeout(30000);
        server.headersTimeout = 15000;
        server.requestTimeout = 30000;
@@ -165,7 +184,7 @@
     MASTER_ADMIN_IP_WHITELIST=["200.x.x.x","190.x.x.x"]
 
   Agregar únicamente las IPs estáticas desde donde se administrará el panel.
-  Si la IP es dinámica, dejar vacío y confiar solo en el JWT + 2FA.
+  Si la IP es dinámica, dejar vacío y confiar solo en el JWT + bloqueo por cuenta.
 
 
 7. BACKUPS Y MONITOREO
@@ -190,9 +209,11 @@
   [ ] REDIS_TLS=true y REDIS_PASSWORD configurado
   [ ] PAYMENTS_SANDBOX=false
   [ ] MAIL_HOST apunta a servicio de producción (no Mailtrap)
+  [ ] LOGIN_MAX_INTENTOS_EMAIL y LOGIN_BLOQUEO_SEGUNDOS configurados
   [ ] MASTER_ADMIN_IP_WHITELIST configurado
   [ ] Contraseña del master admin cambiada en el primer login
   [ ] Cloudflare o AWS WAF activo delante del servidor
+  [ ] Proxy inverso (Caddy o nginx) con SSL activo
   [ ] Backups automáticos de RDS activados
   [ ] SENTRY_DSN configurado
   [ ] npm audit sin vulnerabilidades críticas o altas

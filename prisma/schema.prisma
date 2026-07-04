@@ -1422,6 +1422,18 @@ model TenantActividadResumen {
   @@map("tenant_actividad_resumen")
 }
 
+// Registro único con los datos de facturación/identidad del SaaS
+model DatosSaas {
+  id                String   @id @default("singleton") @db.VarChar(36)
+  nombreRazonSocial String   @map("nombre_razon_social") @db.VarChar(200)
+  nit               String   @db.VarChar(20)
+  email             String   @db.VarChar(150)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("datos_saas")
+}
+
 model AuditLog {
   id            String   @id @db.Char(36)
   tenantId      String   @map("tenant_id") @db.Char(36)
