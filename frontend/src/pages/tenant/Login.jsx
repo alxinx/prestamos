@@ -75,7 +75,7 @@ export default function LoginTenant() {
       })
       const datos = await res.json()
       if (!res.ok) { setError(datos.error || 'Error al iniciar sesión.'); return }
-      window.location.href = '/panel/dashboard'
+      window.location.href = '/dashboard'
     } catch {
       setError('Error de conexión. Intenta nuevamente.')
     } finally {

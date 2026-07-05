@@ -25,6 +25,28 @@ const app = express()
 app.disable('x-powered-by')
 const PORT = Number(process.env.APP_PORT) || 3000
 
+// ── Protección contra prototype pollution (CLAUDE.md §6) ─────────────────────
+// Object.freeze(Object.prototype) rompe librerías npm (Prisma, ioredis, etc.).
+// La protección se implementa como middleware de sanitización de request bodies.
+const CLAVES_PELIGROSAS = new Set(['__proto__', 'constructor', 'prototype'])
+function sanitizarObjeto(obj) {
+  if (!obj || typeof obj !== 'object') return obj
+  for (const clave of Object.keys(obj)) {
+    if (CLAVES_PELIGROSAS.has(clave)) {
+      delete obj[clave]
+    } else {
+      sanitizarObjeto(obj[clave])
+    }
+  }
+  return obj
+}
+app.use((req, _res, next) => {
+  if (req.body)   sanitizarObjeto(req.body)
+  if (req.query)  sanitizarObjeto(req.query)
+  if (req.params) sanitizarObjeto(req.params)
+  next()
+})
+
 // ── Seguridad: headers HTTP ──────────────────────────────────────────────────
 app.use(helmet())
 

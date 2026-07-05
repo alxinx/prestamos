@@ -5,7 +5,7 @@ import Topbar from '../components/masterAdmin/Topbar'
 import useTamanoPantalla from '../hooks/useTamanoPantalla'
 
 export default function DashboardMasterAdmin({ children }) {
-  const { token, cargando } = useAuth()
+  const { autenticado, cargando } = useAuth()
   const rutaActiva = window.location.pathname
   const esMobil = useTamanoPantalla()
   const [menuAbierto, setMenuAbierto] = useState(false)
@@ -15,8 +15,8 @@ export default function DashboardMasterAdmin({ children }) {
   }, [esMobil])
 
   useEffect(() => {
-    if (!cargando && !token) window.location.href = '/'
-  }, [token, cargando])
+    if (!cargando && !autenticado) window.location.href = '/'
+  }, [autenticado, cargando])
 
   if (cargando) {
     return (
@@ -29,7 +29,7 @@ export default function DashboardMasterAdmin({ children }) {
     )
   }
 
-  if (!token) return null
+  if (!autenticado) return null
 
   return (
     <div className="flex min-h-screen bg-admin-bg font-sans">

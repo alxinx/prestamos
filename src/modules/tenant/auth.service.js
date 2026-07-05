@@ -176,4 +176,31 @@ async function restablecerContrasena({ token, password }) {
   return { ok: true }
 }
 
-module.exports = { iniciarSesion, renovarToken, cerrarSesion, solicitarRecuperacion, restablecerContrasena }
+async function obtenerPerfil(req) {
+  const { id: empleadoId, tenantId } = req.empleado
+
+  const empleado = await prisma.empleado.findFirst({
+    where: { id: empleadoId, tenantId },
+    select: {
+      id:            true,
+      nombreCompleto: true,
+      email:         true,
+      esSuperAdmin:  true,
+      rol:           { select: { nombre: true } },
+      tenant:        { select: { nombreNegocio: true } },
+    },
+  })
+
+  if (!empleado) return { error: 'Empleado no encontrado', status: 404 }
+
+  return {
+    id:             empleado.id,
+    nombreCompleto: empleado.nombreCompleto,
+    email:          empleado.email,
+    rol:            empleado.rol.nombre,
+    esSuperAdmin:   empleado.esSuperAdmin,
+    nombreNegocio:  empleado.tenant.nombreNegocio,
+  }
+}
+
+module.exports = { iniciarSesion, renovarToken, cerrarSesion, solicitarRecuperacion, restablecerContrasena, obtenerPerfil }

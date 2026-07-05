@@ -1,0 +1,326 @@
+import { useState } from 'react'
+import { useTenantAuth } from '../../context/TenantAuthContext'
+
+// ─── Íconos SVG inline ───────────────────────────────────────────────────────
+
+function IcoDashboard() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="8" height="8" rx="1" /><rect x="13" y="3" width="8" height="8" rx="1" />
+      <rect x="3" y="13" width="8" height="8" rx="1" /><rect x="13" y="13" width="8" height="8" rx="1" />
+    </svg>
+  )
+}
+
+function IcoClientes() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+function IcoPrestamos() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" /><line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  )
+}
+
+function IcoCobros() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23" />
+      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    </svg>
+  )
+}
+
+function IcoColaboradores() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <polyline points="16 11 18 13 22 9" />
+    </svg>
+  )
+}
+
+function IcoCapital() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="12" cy="7" rx="9" ry="3" />
+      <path d="M3 7v10c0 1.66 4 3 9 3s9-1.34 9-3V7" />
+      <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+    </svg>
+  )
+}
+
+function IcoTesoreria() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="3" y1="22" x2="21" y2="22" />
+      <line x1="6" y1="18" x2="6" y2="11" /><line x1="10" y1="18" x2="10" y2="11" />
+      <line x1="14" y1="18" x2="14" y2="11" /><line x1="18" y1="18" x2="18" y2="11" />
+      <polygon points="12 2 20 7 4 7" />
+    </svg>
+  )
+}
+
+function IcoReportes() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" /><line x1="2" y1="20" x2="22" y2="20" />
+    </svg>
+  )
+}
+
+function IcoConfiguracion() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function IcoMisCobros() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <line x1="12" y1="11" x2="16" y2="11" /><line x1="12" y1="16" x2="16" y2="16" />
+      <line x1="8" y1="11" x2="8.01" y2="11" /><line x1="8" y1="16" x2="8.01" y2="16" />
+    </svg>
+  )
+}
+
+function IcoHistorial() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+    </svg>
+  )
+}
+
+function IcoCaja() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+      <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+      <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4z" />
+    </svg>
+  )
+}
+
+function IcoChevron({ abierto }) {
+  return (
+    <svg
+      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transition: 'transform 0.2s', transform: abierto ? 'rotate(180deg)' : 'rotate(0deg)' }}
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  )
+}
+
+function IcoCerrar() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
+
+function IcoCerrarSesion() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
+}
+
+// ─── Ítem de nav simple ───────────────────────────────────────────────────────
+
+const ACENTO = '#56fbab'
+const ACENTO_BG = 'rgba(86,251,171,0.1)'
+const ACENTO_BORDE = '1px solid rgba(86,251,171,0.15)'
+
+function ItemNav({ icono, etiqueta, ruta, rutaActiva, onClick }) {
+  const activo = rutaActiva === ruta || rutaActiva.startsWith(ruta + '/')
+
+  return (
+    <a
+      href={ruta}
+      onClick={onClick}
+      style={activo
+        ? { color: ACENTO, background: ACENTO_BG, boxShadow: `0 0 0 1px rgba(86,251,171,0.15)`, fontWeight: 600 }
+        : {}
+      }
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] no-underline text-sm transition-all duration-150 cursor-pointer
+        ${activo ? '' : 'text-slate-400 font-normal hover:bg-white/[0.05] hover:text-slate-50'}`}
+    >
+      <span className={`shrink-0 ${activo ? 'opacity-100' : 'opacity-70'}`}>{icono}</span>
+      {etiqueta}
+    </a>
+  )
+}
+
+// ─── Ítem desplegable (para "Caja") ──────────────────────────────────────────
+
+function ItemDesplegable({ icono, etiqueta, subitems, rutaActiva, onClick }) {
+  const algunActivo = subitems.some(s => rutaActiva === s.ruta || rutaActiva.startsWith(s.ruta))
+  const [abierto, setAbierto] = useState(algunActivo)
+
+  return (
+    <div>
+      <button
+        onClick={() => setAbierto(v => !v)}
+        style={algunActivo
+          ? { color: ACENTO, background: ACENTO_BG, boxShadow: `0 0 0 1px rgba(86,251,171,0.15)` }
+          : {}
+        }
+        className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] bg-transparent border-none text-sm cursor-pointer font-sans text-left transition-all duration-150
+          ${algunActivo ? '' : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-50'}`}
+      >
+        <span className={`shrink-0 ${algunActivo ? 'opacity-100' : 'opacity-70'}`}>{icono}</span>
+        <span className="flex-1">{etiqueta}</span>
+        <IcoChevron abierto={abierto} />
+      </button>
+
+      {abierto && (
+        <div className="mt-1 ml-6 flex flex-col gap-0.5 border-l border-white/[0.08] pl-3">
+          {subitems.map(s => {
+            const activo = rutaActiva === s.ruta
+            return (
+              <a
+                key={s.ruta}
+                href={s.ruta}
+                onClick={onClick}
+                style={activo ? { color: ACENTO, fontWeight: 600 } : {}}
+                className={`block px-2 py-2 rounded-lg no-underline text-[13px] transition-all duration-150
+                  ${activo ? '' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04]'}`}
+              >
+                {s.etiqueta}
+              </a>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Sidebar principal ────────────────────────────────────────────────────────
+
+const navAdmin = [
+  { etiqueta: 'Dashboard',      ruta: '/dashboard',      icono: <IcoDashboard /> },
+  { etiqueta: 'Clientes',       ruta: '/clientes',       icono: <IcoClientes /> },
+  { etiqueta: 'Préstamos',      ruta: '/prestamos',      icono: <IcoPrestamos /> },
+  { etiqueta: 'Cobros',         ruta: '/cobros',         icono: <IcoCobros /> },
+  { etiqueta: 'Colaboradores',  ruta: '/colaboradores',  icono: <IcoColaboradores /> },
+  { etiqueta: 'Capital',        ruta: '/capital',        icono: <IcoCapital /> },
+  { etiqueta: 'Tesorería',      ruta: '/tesoreria',      icono: <IcoTesoreria /> },
+  { etiqueta: 'Reportes',       ruta: '/reportes',       icono: <IcoReportes /> },
+  { etiqueta: 'Configuración',  ruta: '/configuracion',  icono: <IcoConfiguracion /> },
+]
+
+const navCobrador = [
+  { etiqueta: 'Mis cobros', ruta: '/mis-cobros', icono: <IcoMisCobros /> },
+  { etiqueta: 'Historial',  ruta: '/historial',  icono: <IcoHistorial /> },
+]
+
+const subitemsCaja = [
+  { etiqueta: 'Gastos de campo', ruta: '/caja/gastos' },
+  { etiqueta: 'Cierre de caja',  ruta: '/caja/cierre' },
+]
+
+export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerrar, rol }) {
+  const { cerrarSesion } = useTenantAuth()
+  const esCobrador = rol === 'COBRADOR'
+
+  return (
+    <aside className={`
+      w-[260px] h-screen flex flex-col shrink-0
+      border-r border-white/[0.06]
+      ${esMobil
+        ? 'fixed top-0 left-0 z-50 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform'
+        : 'sticky top-0'
+      }
+      ${esMobil ? (menuAbierto ? 'translate-x-0' : '-translate-x-full') : ''}
+    `}
+      style={{ background: 'linear-gradient(to bottom, #001430, #001a3d)' }}
+    >
+      {/* Logo */}
+      <div className="px-5 pt-6 pb-5 border-b border-white/[0.06] flex items-center justify-between">
+        <a href="/dashboard" className="flex items-center gap-2.5 no-underline">
+          <img src="/isotipo.webp" alt="GotaPay" className="h-8 w-auto" />
+          <span className="text-lg font-bold text-slate-50 tracking-[-0.02em]">
+            Gota<span style={{ color: ACENTO }}>Pay</span>
+          </span>
+        </a>
+
+        {esMobil && (
+          <button
+            onClick={onCerrar}
+            aria-label="Cerrar menú"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.06] border-none text-slate-400 cursor-pointer shrink-0"
+          >
+            <IcoCerrar />
+          </button>
+        )}
+      </div>
+
+      {/* Navegación */}
+      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+        {!esCobrador && navAdmin.map(el => (
+          <ItemNav
+            key={el.ruta}
+            icono={el.icono}
+            etiqueta={el.etiqueta}
+            ruta={el.ruta}
+            rutaActiva={rutaActiva}
+            onClick={esMobil ? onCerrar : undefined}
+          />
+        ))}
+
+        {esCobrador && (
+          <>
+            {navCobrador.map(el => (
+              <ItemNav
+                key={el.ruta}
+                icono={el.icono}
+                etiqueta={el.etiqueta}
+                ruta={el.ruta}
+                rutaActiva={rutaActiva}
+                onClick={esMobil ? onCerrar : undefined}
+              />
+            ))}
+            <ItemDesplegable
+              icono={<IcoCaja />}
+              etiqueta="Caja"
+              subitems={subitemsCaja}
+              rutaActiva={rutaActiva}
+              onClick={esMobil ? onCerrar : undefined}
+            />
+          </>
+        )}
+      </nav>
+
+      {/* Cerrar sesión */}
+      <div className="px-3 pb-6 pt-4 border-t border-white/[0.06]">
+        <button
+          onClick={cerrarSesion}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] bg-transparent border-none text-slate-400 text-sm cursor-pointer font-sans transition-all duration-150 hover:bg-[rgba(249,115,22,0.1)] hover:text-[#F97316] text-left"
+        >
+          <IcoCerrarSesion />
+          Cerrar sesión
+        </button>
+      </div>
+    </aside>
+  )
+}

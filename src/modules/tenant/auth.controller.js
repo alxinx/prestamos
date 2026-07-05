@@ -1,6 +1,6 @@
 'use strict'
 
-const { iniciarSesion, renovarToken, cerrarSesion, solicitarRecuperacion, restablecerContrasena } = require('./auth.service')
+const { iniciarSesion, renovarToken, cerrarSesion, solicitarRecuperacion, restablecerContrasena, obtenerPerfil } = require('./auth.service')
 
 const BASE_COOKIE = {
   httpOnly: process.env.COOKIE_HTTP_ONLY !== 'false',
@@ -61,4 +61,12 @@ async function manejarRestablecerContrasena(req, res, next) {
   } catch (err) { next(err) }
 }
 
-module.exports = { manejarLogin, manejarRefresh, manejarLogout, manejarSolicitarRecuperacion, manejarRestablecerContrasena }
+async function manejarMe(req, res, next) {
+  try {
+    const resultado = await obtenerPerfil(req)
+    if (resultado.error) return res.status(resultado.status).json({ error: resultado.error })
+    res.json(resultado)
+  } catch (err) { next(err) }
+}
+
+module.exports = { manejarLogin, manejarRefresh, manejarLogout, manejarSolicitarRecuperacion, manejarRestablecerContrasena, manejarMe }
