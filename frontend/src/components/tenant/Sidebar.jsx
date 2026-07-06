@@ -119,7 +119,7 @@ function IcoChevron({ abierto }) {
   return (
     <svg
       width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      style={{ transition: 'transform 0.2s', transform: abierto ? 'rotate(180deg)' : 'rotate(0deg)' }}
+      className={`transition-transform duration-200 ${abierto ? 'rotate-180' : 'rotate-0'}`}
     >
       <polyline points="6 9 12 15 18 9" />
     </svg>
@@ -146,10 +146,6 @@ function IcoCerrarSesion() {
 
 // ─── Ítem de nav simple ───────────────────────────────────────────────────────
 
-const ACENTO = '#56fbab'
-const ACENTO_BG = 'rgba(86,251,171,0.1)'
-const ACENTO_BORDE = '1px solid rgba(86,251,171,0.15)'
-
 function ItemNav({ icono, etiqueta, ruta, rutaActiva, onClick }) {
   const activo = rutaActiva === ruta || rutaActiva.startsWith(ruta + '/')
 
@@ -157,12 +153,11 @@ function ItemNav({ icono, etiqueta, ruta, rutaActiva, onClick }) {
     <a
       href={ruta}
       onClick={onClick}
-      style={activo
-        ? { color: ACENTO, background: ACENTO_BG, boxShadow: `0 0 0 1px rgba(86,251,171,0.15)`, fontWeight: 600 }
-        : {}
-      }
       className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] no-underline text-sm transition-all duration-150 cursor-pointer
-        ${activo ? '' : 'text-slate-400 font-normal hover:bg-white/[0.05] hover:text-slate-50'}`}
+        ${activo
+          ? 'text-secondary-container bg-secondary-container/10 shadow-[0_0_0_1px_rgba(86,251,171,0.15)] font-semibold'
+          : 'text-slate-400 font-normal hover:bg-white/[0.05] hover:text-slate-50'
+        }`}
     >
       <span className={`shrink-0 ${activo ? 'opacity-100' : 'opacity-70'}`}>{icono}</span>
       {etiqueta}
@@ -180,12 +175,11 @@ function ItemDesplegable({ icono, etiqueta, subitems, rutaActiva, onClick }) {
     <div>
       <button
         onClick={() => setAbierto(v => !v)}
-        style={algunActivo
-          ? { color: ACENTO, background: ACENTO_BG, boxShadow: `0 0 0 1px rgba(86,251,171,0.15)` }
-          : {}
-        }
         className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] bg-transparent border-none text-sm cursor-pointer font-sans text-left transition-all duration-150
-          ${algunActivo ? '' : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-50'}`}
+          ${algunActivo
+            ? 'text-secondary-container bg-secondary-container/10 shadow-[0_0_0_1px_rgba(86,251,171,0.15)]'
+            : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-50'
+          }`}
       >
         <span className={`shrink-0 ${algunActivo ? 'opacity-100' : 'opacity-70'}`}>{icono}</span>
         <span className="flex-1">{etiqueta}</span>
@@ -201,9 +195,11 @@ function ItemDesplegable({ icono, etiqueta, subitems, rutaActiva, onClick }) {
                 key={s.ruta}
                 href={s.ruta}
                 onClick={onClick}
-                style={activo ? { color: ACENTO, fontWeight: 600 } : {}}
                 className={`block px-2 py-2 rounded-lg no-underline text-[13px] transition-all duration-150
-                  ${activo ? '' : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04]'}`}
+                  ${activo
+                    ? 'text-secondary-container font-semibold'
+                    : 'text-slate-500 hover:text-slate-200 hover:bg-white/[0.04]'
+                  }`}
               >
                 {s.etiqueta}
               </a>
@@ -246,21 +242,20 @@ export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerr
   return (
     <aside className={`
       w-[260px] h-screen flex flex-col shrink-0
+      bg-gradient-to-b from-primary to-primary-dark
       border-r border-white/[0.06]
       ${esMobil
         ? 'fixed top-0 left-0 z-50 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform'
         : 'sticky top-0'
       }
       ${esMobil ? (menuAbierto ? 'translate-x-0' : '-translate-x-full') : ''}
-    `}
-      style={{ background: 'linear-gradient(to bottom, #001430, #001a3d)' }}
-    >
+    `}>
       {/* Logo */}
       <div className="px-5 pt-6 pb-5 border-b border-white/[0.06] flex items-center justify-between">
         <a href="/dashboard" className="flex items-center gap-2.5 no-underline">
           <img src="/isotipo.webp" alt="GotaPay" className="h-8 w-auto" />
           <span className="text-lg font-bold text-slate-50 tracking-[-0.02em]">
-            Gota<span style={{ color: ACENTO }}>Pay</span>
+            Gota<span className="text-secondary-container">Pay</span>
           </span>
         </a>
 

@@ -30,12 +30,9 @@ export default function DashboardTenant({ children }) {
 
   if (cargando) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#060f1e' }}>
+      <div className="min-h-screen flex items-center justify-center bg-tenant-bg">
         <div className="text-center">
-          <div
-            className="w-10 h-10 rounded-full mx-auto mb-4 animate-[girar_0.8s_linear_infinite]"
-            style={{ border: '3px solid rgba(86,251,171,0.2)', borderTopColor: '#56fbab' }}
-          />
+          <div className="w-10 h-10 rounded-full mx-auto mb-4 animate-[girar_0.8s_linear_infinite] border-[3px] border-secondary-container/20 [border-top-color:var(--color-secondary-container)]" />
           <p className="text-slate-400 text-sm m-0">Cargando...</p>
         </div>
       </div>
@@ -45,7 +42,7 @@ export default function DashboardTenant({ children }) {
   if (!autenticado) return null
 
   return (
-    <div className="flex min-h-screen font-sans" style={{ background: '#060f1e' }}>
+    <div className="flex min-h-screen font-sans bg-tenant-bg">
       {esMobil && menuAbierto && (
         <div
           onClick={() => setMenuAbierto(false)}
@@ -68,7 +65,7 @@ export default function DashboardTenant({ children }) {
           nombreNegocio={infoUsuario.nombreNegocio}
           rol={infoUsuario.rol}
         />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto tenant-main">{children}</main>
       </div>
     </div>
   )

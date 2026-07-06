@@ -45,8 +45,7 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
 
   return (
     <header
-      className={`h-[60px] backdrop-blur-[12px] border-b flex items-center justify-between sticky top-0 z-10 shrink-0 gap-3 ${esMobil ? 'px-4' : 'px-7'}`}
-      style={{ background: 'rgba(6,15,30,0.85)', borderBottomColor: 'rgba(255,255,255,0.06)' }}
+      className={`h-[60px] bg-surface-lowest border-b border-outline-variant/40 flex items-center justify-between sticky top-0 z-10 shrink-0 gap-3 ${esMobil ? 'px-4' : 'px-7'}`}
     >
       {/* Izquierda */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -54,7 +53,7 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
           <button
             onClick={onToggleMenu}
             aria-label="Abrir menú"
-            className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/[0.06] text-slate-50 border-none cursor-pointer hover:bg-white/[0.12] transition-colors duration-150 shrink-0"
+            className="flex items-center justify-center w-9 h-9 rounded-lg bg-surface-container text-on-surface-variant border-none cursor-pointer hover:bg-surface-high transition-colors duration-150 shrink-0"
           >
             <IconoHamburguesa />
           </button>
@@ -62,34 +61,31 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
         <div className="flex items-center gap-2 min-w-0">
           {nombreNegocio && (
             <>
-              <span className="text-[12px] text-slate-600 truncate">{nombreNegocio}</span>
-              <span className="text-slate-700 text-[12px]">/</span>
+              <span className="text-[12px] text-on-surface-variant truncate">{nombreNegocio}</span>
+              <span className="text-outline-variant text-[12px]">/</span>
             </>
           )}
-          <span className="text-sm font-semibold text-slate-50">{nombreSeccion}</span>
+          <span className="text-sm font-semibold text-on-background">{nombreSeccion}</span>
         </div>
       </div>
 
       {/* Derecha */}
       <div className={`flex items-center shrink-0 ${esMobil ? 'gap-1' : 'gap-2'}`}>
-        <button className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-transparent border-none text-slate-400 cursor-pointer transition-all duration-150 hover:bg-white/[0.08] hover:text-slate-50">
+        <button className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-transparent border-none text-on-surface-variant cursor-pointer transition-all duration-150 hover:bg-surface-container hover:text-on-background">
           <IconoCampana />
-          <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-2" style={{ background: '#56fbab', borderColor: '#060f1e' }} />
+          <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-2 bg-secondary-container border-surface-lowest" />
         </button>
 
         {!esMobil && (
           <>
-            <div className="w-px h-6 bg-white/[0.08] mx-1" />
+            <div className="w-px h-6 bg-outline-variant/40 mx-1" />
             <div className="flex items-center gap-2">
               {rol && (
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: 'rgba(86,251,171,0.12)', color: '#56fbab' }}>
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-secondary/10 text-secondary">
                   {etiquetasRol[rol] ?? rol}
                 </span>
               )}
-              <div
-                className="w-9 h-9 rounded-full border-2 flex items-center justify-center text-[13px] font-bold font-sans cursor-pointer shrink-0"
-                style={{ background: 'linear-gradient(135deg, #002855, #001430)', borderColor: 'rgba(86,251,171,0.3)', color: '#56fbab' }}
-              >
+              <div className="w-9 h-9 rounded-full border-2 border-secondary-container/30 flex items-center justify-center text-[13px] font-bold font-sans cursor-pointer shrink-0 text-secondary-container bg-[linear-gradient(135deg,var(--color-primary-container),var(--color-primary))]">
                 {iniciales}
               </div>
             </div>
