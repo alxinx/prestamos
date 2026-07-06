@@ -1,3 +1,5 @@
+import MenuUsuario from './MenuUsuario'
+
 function IconoHamburguesa() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -85,9 +87,7 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
                   {etiquetasRol[rol] ?? rol}
                 </span>
               )}
-              <div className="w-9 h-9 rounded-full border-2 border-secondary-container/30 flex items-center justify-center text-[13px] font-bold font-sans cursor-pointer shrink-0 text-secondary-container bg-[linear-gradient(135deg,var(--color-primary-container),var(--color-primary))]">
-                {iniciales}
-              </div>
+              <MenuUsuario iniciales={iniciales} />
             </div>
           </>
         )}

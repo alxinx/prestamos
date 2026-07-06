@@ -1,4 +1,3 @@
-import DashboardTenant from '../../layouts/DashboardTenant'
 import BarraProgreso from '../../components/tenant/BarraProgreso'
 import TarjetaPanel from '../../components/tenant/TarjetaPanel'
 import FilaDato from '../../components/tenant/FilaDato'
@@ -7,6 +6,8 @@ import GraficoBarras from '../../components/tenant/GraficoBarras'
 import AnilloProgreso from '../../components/tenant/AnilloProgreso'
 import FilaActividad from '../../components/tenant/FilaActividad'
 import FilaVencimiento from '../../components/tenant/FilaVencimiento'
+import BotonAccion from '../../components/tenant/BotonAccion'
+import { IcoMas } from '../../components/tenant/iconos'
 import { formatearPrecio } from '../../lib/formato'
 
 // ── Iconos para los badges pequeños ─────────────────────────────────────────
@@ -238,17 +239,22 @@ const PROXIMOS_VENCIMIENTOS = [
 
 export default function Dashboard() {
   return (
-    <DashboardTenant>
       <div className="px-4 sm:px-6 lg:px-8 pt-7 pb-12 min-h-full">
 
         {/* Encabezado */}
-        <div className="mb-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1 text-secondary">
-            Panel
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-on-background tracking-tight">
-            Dashboard
-          </h1>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1 text-secondary">
+              Panel
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-on-background tracking-tight">
+              Dashboard
+            </h1>
+          </div>
+
+          <BotonAccion href="/prestamos/nuevo" icono={<IcoMas />}>
+            Crear nuevo préstamo
+          </BotonAccion>
         </div>
 
         {/* Grid de stats — 1 col mobile / 2 cols tablet / 4 cols desktop */}
@@ -363,6 +369,5 @@ export default function Dashboard() {
         </div>
 
       </div>
-    </DashboardTenant>
   )
 }

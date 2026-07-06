@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import { TenantAuthProvider } from './context/TenantAuthContext'
 
@@ -16,6 +17,7 @@ import RecuperarContrasena from './pages/tenant/RecuperarContrasena'
 import RestablecerContrasena from './pages/tenant/RestablecerContrasena'
 
 // Tenant — panel privado
+import LayoutTenant from './layouts/DashboardTenant'
 import DashboardTenant from './pages/tenant/Dashboard'
 import Clientes from './pages/tenant/Clientes'
 import Prestamos from './pages/tenant/Prestamos'
@@ -44,13 +46,8 @@ function RutasMasterAdmin({ ruta }) {
   return null
 }
 
-function RutasTenant({ ruta }) {
-  // Auth pública
-  if (ruta.startsWith('/login'))                    return <LoginTenant />
-  if (ruta.startsWith('/recuperar-contrasena'))     return <RecuperarContrasena />
-  if (ruta.startsWith('/restablecer-contrasena'))   return <RestablecerContrasena />
-
-  // Panel privado — administrador / secretaria / auditor
+function RutasTenantPrivadas({ ruta }) {
+  // Administrador / secretaria / auditor
   if (ruta === '/dashboard')                        return <DashboardTenant />
   if (ruta.startsWith('/clientes'))                 return <Clientes />
   if (ruta.startsWith('/prestamos'))                return <Prestamos />
@@ -61,7 +58,7 @@ function RutasTenant({ ruta }) {
   if (ruta.startsWith('/reportes'))                 return <Reportes />
   if (ruta.startsWith('/configuracion'))            return <Configuracion />
 
-  // Panel privado — cobrador
+  // Cobrador
   if (ruta.startsWith('/mis-cobros'))               return <MisCobros />
   if (ruta.startsWith('/historial'))                return <Historial />
   if (ruta.startsWith('/caja/gastos'))              return <GastosCampo />
@@ -70,8 +67,67 @@ function RutasTenant({ ruta }) {
   return null
 }
 
+function RutasTenant({ ruta }) {
+  // Auth pública
+  if (ruta.startsWith('/login'))                    return <LoginTenant />
+  if (ruta.startsWith('/recuperar-contrasena'))     return <RecuperarContrasena />
+  if (ruta.startsWith('/restablecer-contrasena'))   return <RestablecerContrasena />
+
+  // Panel privado — un solo layout persistente entre navegaciones
+  return (
+    <LayoutTenant>
+      <RutasTenantPrivadas ruta={ruta} />
+    </LayoutTenant>
+  )
+}
+
+// Navegación tipo SPA sin librería de routing: intercepta clics en <a> internos
+// para evitar la recarga completa del navegador ("flash") en cada cambio de página.
+function useRutaActual() {
+  const [ruta, setRuta] = useState(window.location.pathname)
+
+  useEffect(() => {
+    function actualizarRuta() {
+      setRuta(window.location.pathname)
+    }
+
+    function interceptarClicks(e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+
+      const enlace = e.target.closest('a')
+      if (!enlace) return
+
+      const href = enlace.getAttribute('href')
+      if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return
+      if (enlace.target === '_blank' || enlace.hasAttribute('download')) return
+
+      const destino = new URL(enlace.href, window.location.href)
+      if (destino.origin !== window.location.origin) return
+
+      e.preventDefault()
+      if (destino.pathname + destino.search !== window.location.pathname + window.location.search) {
+        window.history.pushState({}, '', destino.pathname + destino.search)
+        window.dispatchEvent(new Event('navegacion-spa'))
+        window.scrollTo(0, 0)
+      }
+    }
+
+    window.addEventListener('popstate', actualizarRuta)
+    window.addEventListener('navegacion-spa', actualizarRuta)
+    document.addEventListener('click', interceptarClicks)
+
+    return () => {
+      window.removeEventListener('popstate', actualizarRuta)
+      window.removeEventListener('navegacion-spa', actualizarRuta)
+      document.removeEventListener('click', interceptarClicks)
+    }
+  }, [])
+
+  return ruta
+}
+
 function Rutas() {
-  const ruta = window.location.pathname
+  const ruta = useRutaActual()
 
   if (ruta.startsWith('/activar')) return <Activar />
 
