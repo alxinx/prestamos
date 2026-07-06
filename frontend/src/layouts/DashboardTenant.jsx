@@ -58,14 +58,14 @@ export default function DashboardTenant({ children }) {
         rol={infoUsuario.rol}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 ${esMobil ? '' : 'overflow-hidden'}`}>
         <TopbarTenant
           esMobil={esMobil}
           onToggleMenu={() => setMenuAbierto(v => !v)}
           nombreNegocio={infoUsuario.nombreNegocio}
           rol={infoUsuario.rol}
         />
-        <main className="flex-1 overflow-y-auto tenant-main">{children}</main>
+        <main className={`flex-1 tenant-main ${esMobil ? '' : 'overflow-y-auto'}`}>{children}</main>
       </div>
     </div>
   )

@@ -45,7 +45,7 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
 
   return (
     <header
-      className={`h-[60px] bg-surface-lowest border-b border-outline-variant/40 flex items-center justify-between sticky top-0 z-10 shrink-0 gap-3 ${esMobil ? 'px-4' : 'px-7'}`}
+      className={`h-[60px] bg-surface-lowest border-b border-outline-variant/40 flex items-center justify-between z-10 shrink-0 gap-3 ${esMobil ? 'px-4' : 'px-7 sticky top-0'}`}
     >
       {/* Izquierda */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
