@@ -3,6 +3,7 @@
 const bcrypt = require('bcrypt')
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../lib/prisma')
+const { sembrarRolesYPermisosTenant } = require('../tenant/permisos/permisos.seed')
 
 async function verificarToken({ token, email }) {
   const tenant = await prisma.tenant.findFirst({
@@ -33,21 +34,9 @@ async function completarActivacion({ token, email, nombreCompleto, password }) {
   })
   if (empleadoExistente) return { error: 'Esta cuenta ya fue activada.', status: 409 }
 
-  // Crear o reusar el rol ADMINISTRADOR del tenant
-  let rol = await prisma.rol.findFirst({
-    where: { tenantId: tenant.id, nombre: 'ADMINISTRADOR' },
-  })
-  if (!rol) {
-    rol = await prisma.rol.create({
-      data: {
-        id:           uuidv7(),
-        tenantId:     tenant.id,
-        nombre:       'ADMINISTRADOR',
-        esPredefinido: true,
-        descripcion:  'Administrador principal del tenant',
-      },
-    })
-  }
+  // Crear (si faltan) los 4 roles predefinidos del tenant y sus permisos base
+  const roles = await sembrarRolesYPermisosTenant(tenant.id)
+  const rol = roles.ADMINISTRADOR
 
   const passwordHash = await bcrypt.hash(password, 12)
 

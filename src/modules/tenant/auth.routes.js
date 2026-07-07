@@ -4,7 +4,7 @@ const { Router } = require('express')
 const { authLimiter, refreshLimiter } = require('../../middleware/rateLimiter')
 const { validarLogin, validarSolicitarRecuperacion, validarRestablecerContrasena } = require('./auth.validator')
 const authTenant = require('../../middleware/authTenant')
-const { manejarLogin, manejarRefresh, manejarLogout, manejarSolicitarRecuperacion, manejarRestablecerContrasena, manejarMe } = require('./auth.controller')
+const { manejarLogin, manejarRefresh, manejarLogout, manejarSolicitarRecuperacion, manejarRestablecerContrasena, manejarMe, manejarMisPermisos } = require('./auth.controller')
 
 const router = Router()
 
@@ -14,5 +14,6 @@ router.post('/logout',             manejarLogout)
 router.post('/recuperar',          authLimiter,    validarSolicitarRecuperacion,   manejarSolicitarRecuperacion)
 router.post('/restablecer',        authLimiter,    validarRestablecerContrasena,   manejarRestablecerContrasena)
 router.get('/me',                  authTenant,                                    manejarMe)
+router.get('/permisos',            authTenant,                                    manejarMisPermisos)
 
 module.exports = router

@@ -89,4 +89,14 @@
   #root {
     min-height: 100svh;
   }
+
+  /* Tailwind resetea el cursor de los <button> a "default" — lo restauramos
+     a "pointer" globalmente para todos los botones y links de la app. */
+  button:not(:disabled), [role="button"]:not(:disabled), a, select, summary {
+    cursor: pointer;
+  }
+
+  button:disabled, [role="button"]:disabled {
+    cursor: not-allowed;
+  }
 }

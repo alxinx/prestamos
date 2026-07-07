@@ -5,12 +5,13 @@ require('dotenv').config()
 const { PrismaClient } = require('@prisma/client')
 const bcrypt = require('bcrypt')
 const { v7: uuidv7 } = require('uuid')
+const { sembrarCatalogoPermisos, sembrarRolesYPermisosTenant } = require('../src/modules/tenant/permisos/permisos.seed')
 
 const prisma = new PrismaClient()
 
 const planes = [
   {
-    nombre: 'Básico',
+    nombre: 'Básicos',
     precio: 80000,
     limitePrestamos: 150,
     limiteColaboradores: 5,
@@ -20,6 +21,7 @@ const planes = [
     tienePortalCliente: false,
     tieneFirmaDigital: false,
     precioPréstamoAdicional: 0,
+    precioColaboradorAdicional: 350000,
     estado: 'ACTIVO',
   },
   {
@@ -33,6 +35,7 @@ const planes = [
     tienePortalCliente: true,
     tieneFirmaDigital: false,
     precioPréstamoAdicional: 0,
+    precioColaboradorAdicional: 500000,
     estado: 'ACTIVO',
   },
   {
@@ -46,6 +49,7 @@ const planes = [
     tienePortalCliente: true,
     tieneFirmaDigital: true,
     precioPréstamoAdicional: 0,
+    precioColaboradorAdicional: 0,
     estado: 'ACTIVO',
   },
 ]
@@ -90,6 +94,15 @@ async function main() {
   }
 
   await seedPlanes()
+
+  console.log('[Seed] Sembrando catálogo de permisos...')
+  await sembrarCatalogoPermisos()
+
+  const tenants = await prisma.tenant.findMany({ select: { id: true, nombreNegocio: true } })
+  for (const tenant of tenants) {
+    await sembrarRolesYPermisosTenant(tenant.id)
+    console.log(`[Seed] Roles y permisos sembrados para tenant: ${tenant.nombreNegocio}`)
+  }
 }
 
 main()
