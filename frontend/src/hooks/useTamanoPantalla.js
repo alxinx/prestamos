@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 
-export default function useTamanoPantalla() {
-  const [esMobil, setEsMobil] = useState(() => window.innerWidth < 768)
+export default function useTamanoPantalla(breakpoint = 768) {
+  const [esReducido, setEsReducido] = useState(() => window.innerWidth <= breakpoint)
   useEffect(() => {
-    const actualizar = () => setEsMobil(window.innerWidth < 768)
+    const actualizar = () => setEsReducido(window.innerWidth <= breakpoint)
+    actualizar()
     window.addEventListener('resize', actualizar)
     return () => window.removeEventListener('resize', actualizar)
-  }, [])
-  return esMobil
+  }, [breakpoint])
+  return esReducido
 }

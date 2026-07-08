@@ -1,59 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '../../context/AuthContext'
-
-function IconoCandado() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  )
-}
-
-function IconoOjo({ visible }) {
-  return visible ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-      <line x1="2" x2="22" y1="2" y2="22" />
-    </svg>
-  )
-}
-
-function IconoCheck() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 6 9 17l-5-5" />
-    </svg>
-  )
-}
-
-function IconoX() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  )
-}
+import { IcoCandado, IcoOjo, IcoOjoTachado, IcoCheck, IcoX } from '../iconos'
+import { reglasContrasena, contrasenaEsValida } from '../../lib/validacionContrasena'
+import { apiFetch } from '../../lib/api'
+import { useMostrarContrasena } from '../../hooks/useMostrarContrasena'
 
 function ReglasPassword({ valor }) {
-  const reglas = [
-    { texto: 'Mínimo 8 caracteres', ok: valor.length >= 8 },
-    { texto: 'Al menos una mayúscula', ok: /[A-Z]/.test(valor) },
-    { texto: 'Al menos un número', ok: /[0-9]/.test(valor) },
-  ]
+  const reglas = reglasContrasena(valor)
   if (!valor) return null
   return (
     <div className="mt-2 flex flex-col gap-1">
       {reglas.map(r => (
         <div key={r.texto} className={`flex items-center gap-1.5 text-[12px] ${r.ok ? 'text-admin-accent' : 'text-slate-500'}`}>
           <span className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center ${r.ok ? 'bg-[rgba(0,201,130,0.15)] text-admin-accent' : 'bg-white/[0.05] text-slate-600'}`}>
-            {r.ok ? <IconoCheck /> : <span className="text-[8px]">●</span>}
+            {r.ok ? <IcoCheck /> : <span className="text-[8px]">●</span>}
           </span>
           {r.texto}
         </div>
@@ -63,7 +24,7 @@ function ReglasPassword({ valor }) {
 }
 
 function CampoPassword({ id, label, valor, onChange, placeholder }) {
-  const [visible, setVisible] = useState(false)
+  const [visible, alternarVisible] = useMostrarContrasena()
   const [enfocado, setEnfocado] = useState(false)
 
   return (
@@ -73,7 +34,7 @@ function CampoPassword({ id, label, valor, onChange, placeholder }) {
       </label>
       <div className="relative">
         <span className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none transition-colors duration-150 ${enfocado ? 'text-admin-accent' : 'text-slate-600'}`}>
-          <IconoCandado />
+          <IcoCandado />
         </span>
         <input
           id={id}
@@ -92,11 +53,11 @@ function CampoPassword({ id, label, valor, onChange, placeholder }) {
         />
         <button
           type="button"
-          onClick={() => setVisible(v => !v)}
+          onClick={alternarVisible}
           tabIndex={-1}
           className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-slate-600 flex items-center p-1"
         >
-          <IconoOjo visible={visible} />
+          {visible ? <IcoOjoTachado /> : <IcoOjo />}
         </button>
       </div>
     </div>
@@ -126,10 +87,7 @@ export default function ModalConfigUsuario({ onCerrar }) {
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  const passwordValido =
-    nuevaContrasena.length >= 8 &&
-    /[A-Z]/.test(nuevaContrasena) &&
-    /[0-9]/.test(nuevaContrasena)
+  const passwordValido = contrasenaEsValida(nuevaContrasena)
 
   const coinciden = nuevaContrasena === confirmarContrasena && confirmarContrasena !== ''
 
@@ -143,15 +101,12 @@ export default function ModalConfigUsuario({ onCerrar }) {
 
     setEnviando(true)
     try {
-      const res = await fetch('/api/master-admin/auth/cambiar-password', {
+      const { ok, datos } = await apiFetch('/api/master-admin/auth/cambiar-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ contrasenaActual, nuevaContrasena, confirmarContrasena }),
+        body: { contrasenaActual, nuevaContrasena, confirmarContrasena },
       })
 
-      const datos = await res.json()
-      if (!res.ok) {
+      if (!ok) {
         setError(datos.error || 'Error al cambiar la contraseña.')
         return
       }
@@ -192,7 +147,7 @@ export default function ModalConfigUsuario({ onCerrar }) {
             onClick={onCerrar}
             className="w-8 h-8 rounded-lg bg-white/[0.05] border-none text-slate-500 cursor-pointer flex items-center justify-center transition-all duration-150 hover:bg-white/10 hover:text-slate-50"
           >
-            <IconoX />
+            <IcoX />
           </button>
         </div>
 
@@ -242,7 +197,7 @@ export default function ModalConfigUsuario({ onCerrar }) {
                   />
                   {confirmarContrasena && (
                     <p className={`mt-1.5 text-[12px] flex items-center gap-1.5 ${coinciden ? 'text-admin-accent' : 'text-red-400'}`}>
-                      {coinciden ? <><IconoCheck /> Las contraseñas coinciden</> : '✗ Las contraseñas no coinciden'}
+                      {coinciden ? <><IcoCheck /> Las contraseñas coinciden</> : '✗ Las contraseñas no coinciden'}
                     </p>
                   )}
                 </div>

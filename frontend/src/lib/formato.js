@@ -2,6 +2,17 @@ export function formatearPrecio(valor) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(Number(valor))
 }
 
+// Los límites de plan usan -1 como valor centinela de "ilimitado" (ver schema de Prisma).
+export const LIMITE_ILIMITADO = -1
+
+export function formatearLimite(valor) {
+  return Number(valor) === LIMITE_ILIMITADO ? '∞' : new Intl.NumberFormat('es-CO').format(Number(valor))
+}
+
+export function esIlimitado(valor) {
+  return Number(valor) === LIMITE_ILIMITADO
+}
+
 export function formatearFecha(fecha) {
   if (!fecha) return '—'
   return new Date(fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })

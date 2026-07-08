@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import TenantAuthLayout from '../../layouts/TenantAuthLayout'
 import CampoPassword from '../../components/ui/CampoPassword'
+import { reglasContrasena, contrasenaEsValida } from '../../lib/validacionContrasena'
+import { apiFetch } from '../../lib/api'
 
 function tokenDeUrl() {
   return new URLSearchParams(window.location.search).get('token') ?? ''
@@ -27,11 +29,9 @@ export default function RestablecerContrasena() {
   const [exito, setExito]         = useState(false)
   const [cuenta, setCuenta]       = useState(5)
 
-  const r1 = password.length >= 8
-  const r2 = /[A-Z]/.test(password)
-  const r3 = /[0-9]/.test(password)
+  const reglas = reglasContrasena(password)
   const coinciden = password === confirmar && confirmar !== ''
-  const listo = r1 && r2 && r3 && coinciden
+  const listo = contrasenaEsValida(password) && coinciden
 
   useEffect(() => {
     if (!exito) return
@@ -46,13 +46,11 @@ export default function RestablecerContrasena() {
     setError('')
     setEnviando(true)
     try {
-      const res = await fetch('/api/tenant/auth/restablecer', {
+      const { ok, datos } = await apiFetch('/api/tenant/auth/restablecer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: { token, password },
       })
-      const datos = await res.json()
-      if (!res.ok) { setError(datos.error || 'Error al restablecer.'); return }
+      if (!ok) { setError(datos.error || 'Error al restablecer.'); return }
       setExito(true)
     } catch {
       setError('Error de conexión. Intenta nuevamente.')
@@ -130,9 +128,7 @@ export default function RestablecerContrasena() {
 
             {password && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
-                <Regla ok={r1} texto="Mínimo 8 caracteres" />
-                <Regla ok={r2} texto="Al menos una mayúscula" />
-                <Regla ok={r3} texto="Al menos un número" />
+                {reglas.map(r => <Regla key={r.texto} ok={r.ok} texto={r.texto} />)}
               </div>
             )}
 

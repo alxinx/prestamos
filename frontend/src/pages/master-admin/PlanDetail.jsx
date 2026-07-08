@@ -3,7 +3,9 @@ import DashboardMasterAdmin from '../../layouts/DashboardMasterAdmin'
 import { useAuth } from '../../context/AuthContext'
 import ChipEstado from '../../components/ui/ChipEstado'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
-import { formatearPrecio, formatearFecha } from '../../lib/formato'
+import { formatearPrecio, formatearFecha, formatearLimite, esIlimitado } from '../../lib/formato'
+import { apiFetch } from '../../lib/api'
+import { claseTarjeta } from '../../lib/estilos'
 
 function idDesdePath() {
   const partes = window.location.pathname.split('/')
@@ -48,16 +50,12 @@ function CheckFeature({ etiqueta, activo }) {
 
 function TarjetaStat({ titulo, valor, sub, color = '#aac7fd' }) {
   return (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl px-5 py-4">
+    <div className={`${claseTarjeta} px-5 py-4`}>
       <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.06em] m-0 mb-2">{titulo}</p>
       <p className="text-[28px] font-bold m-0 leading-none" style={{ color }}>{valor}</p>
       {sub && <p className="text-[11px] text-slate-600 m-0 mt-1.5">{sub}</p>}
     </div>
   )
-}
-
-function mostrarLimite(valor) {
-  return Number(valor) === -1 ? 'Ilimitado' : new Intl.NumberFormat('es-CO').format(valor)
 }
 
 export default function PlanDetail() {
@@ -72,11 +70,10 @@ export default function PlanDetail() {
   useEffect(() => {
     if (authCargando || !autenticado) return
     setCargando(true)
-    fetch(`/api/master-admin/planes/${planId}`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => {
-        if (d.error) { setError(d.error); return }
-        setDatos(d)
+    apiFetch(`/api/master-admin/planes/${planId}`)
+      .then(({ datos }) => {
+        if (datos.error) { setError(datos.error); return }
+        setDatos(datos)
       })
       .catch(() => setError('Error de conexión.'))
       .finally(() => setCargando(false))
@@ -120,7 +117,7 @@ export default function PlanDetail() {
           <div className="flex flex-col gap-6">
 
             {/* Hero del plan */}
-            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+            <div className={`${claseTarjeta} overflow-hidden`}>
               <div className="px-6 py-5 flex items-start justify-between gap-4 flex-wrap">
                 <div>
                   <div className="flex items-center gap-2.5 mb-1">
@@ -173,22 +170,22 @@ export default function PlanDetail() {
             <div className={`grid gap-6 ${esMobil ? 'grid-cols-1' : 'grid-cols-[1fr_1fr]'}`}>
 
               {/* Límites del plan */}
-              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+              <div className={`${claseTarjeta} overflow-hidden`}>
                 <div className="px-5 py-4 border-b border-white/[0.06]">
                   <h2 className="text-[14px] font-bold text-slate-200 m-0">Límites</h2>
                 </div>
                 <div className="px-5 py-2">
-                  <FilaFeature icono="📋" etiqueta="Préstamos activos"    valor={mostrarLimite(plan.limitePrestamos)}   destacado={plan.limitePrestamos === -1} />
-                  <FilaFeature icono="👥" etiqueta="Colaboradores"        valor={mostrarLimite(plan.limiteColaboradores)}  destacado={plan.limiteColaboradores === -1} />
-                  <FilaFeature icono="💬" etiqueta="Mensajes WhatsApp/mes" valor={mostrarLimite(plan.limiteMensajesWsp)} destacado={plan.limiteMensajesWsp === -1} />
-                  <FilaFeature icono="📊" etiqueta="Consultas de score/mes" valor={mostrarLimite(plan.consultasScore)}  destacado={plan.consultasScore === -1} />
+                  <FilaFeature icono="📋" etiqueta="Préstamos activos"    valor={formatearLimite(plan.limitePrestamos)}   destacado={esIlimitado(plan.limitePrestamos)} />
+                  <FilaFeature icono="👥" etiqueta="Colaboradores"        valor={formatearLimite(plan.limiteColaboradores)}  destacado={esIlimitado(plan.limiteColaboradores)} />
+                  <FilaFeature icono="💬" etiqueta="Mensajes WhatsApp/mes" valor={formatearLimite(plan.limiteMensajesWsp)} destacado={esIlimitado(plan.limiteMensajesWsp)} />
+                  <FilaFeature icono="📊" etiqueta="Consultas de score/mes" valor={formatearLimite(plan.consultasScore)}  destacado={esIlimitado(plan.consultasScore)} />
                   <FilaFeature icono="➕" etiqueta="Precio préstamo adicional"     valor={formatearPrecio(plan.precioPréstamoAdicional ?? 0)} />
                   <FilaFeature icono="➕" etiqueta="Precio colaborador adicional"  valor={formatearPrecio(plan.precioColaboradorAdicional ?? 0)} />
                 </div>
               </div>
 
               {/* Funcionalidades */}
-              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+              <div className={`${claseTarjeta} overflow-hidden`}>
                 <div className="px-5 py-4 border-b border-white/[0.06]">
                   <h2 className="text-[14px] font-bold text-slate-200 m-0">Funcionalidades</h2>
                 </div>
@@ -234,7 +231,7 @@ export default function PlanDetail() {
 
             {/* Últimos tenants */}
             {ultimosTenants?.length > 0 && (
-              <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+              <div className={`${claseTarjeta} overflow-hidden`}>
                 <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
                   <h2 className="text-[14px] font-bold text-slate-200 m-0">Últimos tenants en este plan</h2>
                   <button

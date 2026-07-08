@@ -2,21 +2,13 @@ import { useState } from 'react'
 import { useTenantAuth } from '../../context/TenantAuthContext'
 import TenantAuthLayout from '../../layouts/TenantAuthLayout'
 import CampoPassword from '../../components/ui/CampoPassword'
+import { apiFetch } from '../../lib/api'
 
 function IconoEmail() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
       <polyline points="22,6 12,13 2,6" />
-    </svg>
-  )
-}
-
-function IconoCandado() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
   )
 }
@@ -67,14 +59,11 @@ export default function LoginTenant() {
     setError('')
     setEnviando(true)
     try {
-      const res = await fetch('/api/tenant/auth/login', {
+      const { ok, datos } = await apiFetch('/api/tenant/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: { email, password },
       })
-      const datos = await res.json()
-      if (!res.ok) { setError(datos.error || 'Error al iniciar sesión.'); return }
+      if (!ok) { setError(datos.error || 'Error al iniciar sesión.'); return }
       window.location.href = '/dashboard'
     } catch {
       setError('Error de conexión. Intenta nuevamente.')

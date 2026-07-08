@@ -7,6 +7,7 @@ import ModalAlerta from '../../components/ui/ModalAlerta'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
 import { formatearFecha } from '../../lib/formato'
 import { claseInput, claseLabel } from '../../lib/estilos'
+import { apiFetch } from '../../lib/api'
 
 function hoyISO() {
   return new Date().toISOString().split('T')[0]
@@ -264,10 +265,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
     try {
       const params = new URLSearchParams({ email: valor })
       if (modoEdicion && tenantEditando?.id) params.append('excluirId', tenantEditando.id)
-      const res = await fetch(`/api/master-admin/tenants/verificar-email?${params}`, {
-        credentials: 'include',
-      })
-      const d = await res.json()
+      const { datos: d } = await apiFetch(`/api/master-admin/tenants/verificar-email?${params}`)
       if (!d.disponible) {
         setEmailEstado('ocupado')
         setForm(prev => ({ ...prev, email: '' }))
@@ -306,14 +304,8 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
         fechaInicio: new Date(form.fechaInicio + 'T00:00:00').toISOString(),
       }
       const url = modoEdicion ? `/api/master-admin/tenants/${tenantEditando.id}` : '/api/master-admin/tenants'
-      const res = await fetch(url, {
-        method: modoEdicion ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(cuerpo),
-      })
-      const datos = await res.json()
-      if (!res.ok) { setError(datos.error || 'Error al guardar.'); setConfirming(false); return }
+      const { ok, datos } = await apiFetch(url, { method: modoEdicion ? 'PUT' : 'POST', body: cuerpo })
+      if (!ok) { setError(datos.error || 'Error al guardar.'); setConfirming(false); return }
       setConfirming(false)
       onGuardado()
     } catch {
@@ -359,7 +351,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
         />
       )}
 
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+      <div className={`${claseTarjeta} overflow-hidden`}>
         <div className="px-6 py-5 border-b border-white/[0.06] flex items-center gap-2.5">
           <IconoTenants />
           <h2 className="text-[15px] font-bold text-slate-50 m-0 flex-1">
@@ -529,8 +521,8 @@ export default function Tenants() {
 
   const cargarPlanes = useCallback(async () => {
     if (!autenticado) return
-    const res = await fetch('/api/master-admin/planes', { credentials: 'include' })
-    if (res.ok) { const d = await res.json(); setPlanes(d.planes) }
+    const { ok, datos } = await apiFetch('/api/master-admin/planes')
+    if (ok) setPlanes(datos.planes)
   }, [autenticado])
 
   const cargarTenants = useCallback(async () => {
@@ -538,11 +530,10 @@ export default function Tenants() {
     setCargandoTabla(true)
     try {
       const params = new URLSearchParams({ busqueda, pagina, porPagina: 10 })
-      const res = await fetch(`/api/master-admin/tenants?${params}`, { credentials: 'include' })
-      if (!res.ok) return
-      const d = await res.json()
-      setTenants(d.tenants)
-      setPaginacion({ total: d.total, totalPaginas: d.totalPaginas })
+      const { ok, datos } = await apiFetch(`/api/master-admin/tenants?${params}`)
+      if (!ok) return
+      setTenants(datos.tenants)
+      setPaginacion({ total: datos.total, totalPaginas: datos.totalPaginas })
     } finally {
       setCargandoTabla(false)
     }
@@ -557,9 +548,8 @@ export default function Tenants() {
   useEffect(() => {
     const editarId = new URLSearchParams(window.location.search).get('editar')
     if (!editarId || !autenticado || authCargando) return
-    fetch(`/api/master-admin/tenants/${editarId}`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => { if (d.tenant) alEditar(d.tenant) })
+    apiFetch(`/api/master-admin/tenants/${editarId}`)
+      .then(({ datos }) => { if (datos.tenant) alEditar(datos.tenant) })
     window.history.replaceState(null, '', '/master-admin/tenants')
   }, [authCargando, autenticado])
 
@@ -580,17 +570,13 @@ export default function Tenants() {
   }
 
   async function eliminarUltimo() {
-    const res = await fetch('/api/master-admin/tenants/dev/ultimo', {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-    const d = await res.json()
-    if (res.ok) cargarTenants()
-    else alert(d.error)
+    const { ok, datos } = await apiFetch('/api/master-admin/tenants/dev/ultimo', { method: 'DELETE' })
+    if (ok) cargarTenants()
+    else alert(datos.error)
   }
 
   const panelLista = (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+    <div className={`${claseTarjeta} overflow-hidden`}>
       <div className="px-6 py-5 border-b border-white/[0.06] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <IconoTenants />

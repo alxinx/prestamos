@@ -9,17 +9,18 @@ import InputMoneda from '../../components/ui/InputMoneda'
 import ChipEstado from '../../components/ui/ChipEstado'
 import Toggle from '../../components/ui/Toggle'
 import { useAuth } from '../../context/AuthContext'
-import { formatearPrecio, formatearFecha } from '../../lib/formato'
+import { formatearPrecio, formatearFecha, formatearLimite, esIlimitado, LIMITE_ILIMITADO } from '../../lib/formato'
+import { apiFetch } from '../../lib/api'
+import { claseTarjeta, claseInput } from '../../lib/estilos'
 
 function diasRestantes(fecha) {
   if (!fecha) return 0
   return Math.ceil((new Date(fecha) - new Date()) / 86400000)
 }
 
-const tarjeta = 'bg-white/[0.03] border border-white/[0.07] rounded-xl p-5'
+const tarjeta = `${claseTarjeta} p-5`
 const claseLabel = 'text-[10px] font-bold text-slate-600 uppercase tracking-[0.08em] mb-3'
 const claseLabelForm = 'text-[11px] font-bold text-slate-600 uppercase tracking-[0.07em]'
-const claseInput = 'w-full px-3 py-2.5 rounded-lg bg-white/[0.06] border border-white/10 text-slate-50 text-sm font-sans outline-none box-border'
 
 const COLORES_FACTURA = {
   PAGADO:    { bg: 'rgba(0,201,130,0.12)',  color: '#00C982', label: 'PAGADO' },
@@ -70,7 +71,7 @@ function WidgetPrestamos({ plan, actividad }) {
             {actual.toLocaleString('es-CO')}
           </p>
           <p className="text-[12px] text-slate-600 m-0 mt-1.5">
-            Límite: {limite === -1 ? '∞' : limite.toLocaleString('es-CO')}
+            Límite: {formatearLimite(limite)}
           </p>
         </div>
       </div>
@@ -124,7 +125,7 @@ function WidgetMensajesWA({ plan }) {
       <p className="text-[20px] font-bold text-slate-50 m-0 mb-1">
         {actual.toLocaleString('es-CO')}
         <span className="text-[13px] text-slate-600 font-normal ml-1.5">
-          de {limite === -1 ? '∞' : limite.toLocaleString('es-CO')}
+          de {formatearLimite(limite)}
         </span>
       </p>
       <div className="h-1.5 bg-white/[0.07] rounded-full overflow-hidden my-3">
@@ -162,10 +163,10 @@ function TarjetaPlan({ plan, seleccionado, esActual, onSeleccionar }) {
       </p>
       <div className="flex flex-col gap-[3px]">
         <span className="text-[11px] text-slate-400">
-          {plan.limitePrestamos === -1 ? '∞' : plan.limitePrestamos} préstamos
+          {formatearLimite(plan.limitePrestamos)} préstamos
         </span>
         <span className="text-[11px] text-slate-400">
-          {plan.limiteColaboradores === -1 ? '∞' : plan.limiteColaboradores} colaboradores
+          {formatearLimite(plan.limiteColaboradores)} colaboradores
         </span>
       </div>
     </div>
@@ -181,9 +182,8 @@ function ModalCambiarPlan({ tenant, onCerrar, onPlanCambiado }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetch('/api/master-admin/planes', { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => setPlanes((d.planes ?? []).filter(p => p.estado === 'ACTIVO')))
+    apiFetch('/api/master-admin/planes')
+      .then(({ datos }) => setPlanes((datos.planes ?? []).filter(p => p.estado === 'ACTIVO')))
       .catch(() => setError('No se pudieron cargar los planes'))
       .finally(() => setCargando(false))
   }, [])
@@ -192,11 +192,9 @@ function ModalCambiarPlan({ tenant, onCerrar, onPlanCambiado }) {
     setGuardando(true)
     setError('')
     try {
-      const res = await fetch(`/api/master-admin/tenants/${tenant.id}`, {
+      const { ok, datos } = await apiFetch(`/api/master-admin/tenants/${tenant.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
+        body: {
           planId: planSeleccionado.id,
           nombreNegocio: tenant.nombreNegocio,
           tipoPersona: tenant.tipoPersona,
@@ -208,14 +206,13 @@ function ModalCambiarPlan({ tenant, onCerrar, onPlanCambiado }) {
           telefono: tenant.telefono ?? null,
           estado: tenant.estado,
           ...(tenant.fechaInicio && { fechaInicio: new Date(tenant.fechaInicio).toISOString() }),
-        }),
+        },
       })
-      if (res.ok) {
+      if (ok) {
         onPlanCambiado()
         onCerrar()
       } else {
-        const d = await res.json()
-        setError(d.error || 'Error al cambiar el plan')
+        setError(datos.error || 'Error al cambiar el plan')
         setPaso(1)
       }
     } catch {
@@ -396,7 +393,7 @@ function WidgetSuscripcion({ tenant, dias, onCambiarPlan }) {
 
 function HistorialFacturacion({ facturas }) {
   return (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+    <div className={`${claseTarjeta} overflow-hidden`}>
       <div className="px-6 py-[18px] border-b border-white/[0.06] flex justify-between items-center">
         <h3 className="text-sm font-bold text-slate-50 m-0">Historial de facturación</h3>
         <button className="text-[12px] text-on-tertiary-container bg-transparent border-none cursor-pointer font-sans">
@@ -514,19 +511,19 @@ function ConfiguracionAvanzada({ tenant, onGuardado }) {
   const plan = tenant.plan
 
   const precioBase = Number(plan?.precio ?? 0)
-  const limitePrestamosBase = plan?.limitePrestamos === -1 ? Infinity : (plan?.limitePrestamos ?? 0)
-  const limiteColaboradoresBase = plan?.limiteColaboradores === -1 ? Infinity : (plan?.limiteColaboradores ?? 0)
+  const limitePrestamosBase = esIlimitado(plan?.limitePrestamos) ? Infinity : (plan?.limitePrestamos ?? 0)
+  const limiteColaboradoresBase = esIlimitado(plan?.limiteColaboradores) ? Infinity : (plan?.limiteColaboradores ?? 0)
 
   const [cfg, setCfg] = useState({
     precio: Number(plan?.precio ?? 0),
-    prestamos: plan?.limitePrestamos === -1 ? 0 : (plan?.limitePrestamos ?? 0),
-    prestamosIlimitado: plan?.limitePrestamos === -1,
-    colaboradores: plan?.limiteColaboradores === -1 ? 0 : (plan?.limiteColaboradores ?? 0),
-    colaboradoresIlimitado: plan?.limiteColaboradores === -1,
-    mensajesWsp: plan?.limiteMensajesWsp === -1 ? 0 : (plan?.limiteMensajesWsp ?? 0),
-    mensajesWspIlimitado: plan?.limiteMensajesWsp === -1,
-    consultasScore: plan?.consultasScore === -1 ? 0 : (plan?.consultasScore ?? 0),
-    consultasScoreIlimitado: plan?.consultasScore === -1,
+    prestamos: esIlimitado(plan?.limitePrestamos) ? 0 : (plan?.limitePrestamos ?? 0),
+    prestamosIlimitado: esIlimitado(plan?.limitePrestamos),
+    colaboradores: esIlimitado(plan?.limiteColaboradores) ? 0 : (plan?.limiteColaboradores ?? 0),
+    colaboradoresIlimitado: esIlimitado(plan?.limiteColaboradores),
+    mensajesWsp: esIlimitado(plan?.limiteMensajesWsp) ? 0 : (plan?.limiteMensajesWsp ?? 0),
+    mensajesWspIlimitado: esIlimitado(plan?.limiteMensajesWsp),
+    consultasScore: esIlimitado(plan?.consultasScore) ? 0 : (plan?.consultasScore ?? 0),
+    consultasScoreIlimitado: esIlimitado(plan?.consultasScore),
     precioAdicional: Number(plan?.precioPréstamoAdicional ?? 0),
     precioColaboradorAdicional: Number(plan?.precioColaboradorAdicional ?? 0),
   })
@@ -575,27 +572,24 @@ function ConfiguracionAvanzada({ tenant, onGuardado }) {
     setGuardando(true)
     setErrorGuardado('')
     try {
-      const res = await fetch(`/api/master-admin/planes/${plan.id}/config`, {
+      const { ok, datos } = await apiFetch(`/api/master-admin/planes/${plan.id}/config`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
+        body: {
           precio: cfg.precio,
-          limitePrestamos: cfg.prestamosIlimitado ? -1 : cfg.prestamos,
-          limiteColaboradores: cfg.colaboradoresIlimitado ? -1 : cfg.colaboradores,
-          limiteMensajesWsp: cfg.mensajesWspIlimitado ? -1 : cfg.mensajesWsp,
-          consultasScore: cfg.consultasScoreIlimitado ? -1 : cfg.consultasScore,
+          limitePrestamos: cfg.prestamosIlimitado ? LIMITE_ILIMITADO : cfg.prestamos,
+          limiteColaboradores: cfg.colaboradoresIlimitado ? LIMITE_ILIMITADO : cfg.colaboradores,
+          limiteMensajesWsp: cfg.mensajesWspIlimitado ? LIMITE_ILIMITADO : cfg.mensajesWsp,
+          consultasScore: cfg.consultasScoreIlimitado ? LIMITE_ILIMITADO : cfg.consultasScore,
           precioPrestamoAdicional: cfg.precioAdicional,
           precioColaboradorAdicional: cfg.precioColaboradorAdicional,
-        }),
+        },
       })
-      if (res.ok) {
+      if (ok) {
         setGuardado(true)
         setTimeout(() => setGuardado(false), 3000)
         if (onGuardado) onGuardado()
       } else {
-        const d = await res.json()
-        setErrorGuardado(d.error || 'Error al guardar')
+        setErrorGuardado(datos.error || 'Error al guardar')
       }
     } catch {
       setErrorGuardado('Error de conexión')
@@ -608,7 +602,7 @@ function ConfiguracionAvanzada({ tenant, onGuardado }) {
   const propsCampo = { rawLimites, cambiarRaw, confirmarRaw, cfg, cambiar, claseInputRef: claseInputGrande }
 
   return (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+    <div className={`${claseTarjeta} overflow-hidden`}>
       <div className="px-6 py-[18px] border-b border-white/[0.06]">
         <h3 className="text-sm font-bold text-slate-50 m-0">Configuración avanzada</h3>
         <p className="text-[12px] text-slate-600 m-0 mt-[3px]">
@@ -694,11 +688,8 @@ export default function TenantPanel() {
     if (!autenticado) return
     setCargando(true)
     try {
-      const res = await fetch(`/api/master-admin/tenants/${tenantId}`, { credentials: 'include' })
-      if (res.ok) {
-        const d = await res.json()
-        setTenant(d.tenant)
-      }
+      const { ok, datos } = await apiFetch(`/api/master-admin/tenants/${tenantId}`)
+      if (ok) setTenant(datos.tenant)
     } finally {
       setCargando(false)
     }

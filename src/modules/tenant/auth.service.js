@@ -57,7 +57,8 @@ async function iniciarSesion(req) {
     include: { rol: { select: { nombre: true } } },
   })
 
-  const hashAComparar = empleado ? empleado.passwordHash : HASH_FICTICIO
+  // passwordHash es null mientras el colaborador no ha completado su activación por email
+  const hashAComparar = empleado?.passwordHash || HASH_FICTICIO
   const contrasenaValida = await bcrypt.compare(password, hashAComparar)
 
   if (!empleado || !contrasenaValida) {
@@ -179,17 +180,19 @@ async function restablecerContrasena({ token, password }) {
 async function obtenerPerfil(req) {
   const { id: empleadoId, tenantId } = req.empleado
 
-  const empleado = await prisma.empleado.findFirst({
-    where: { id: empleadoId, tenantId },
-    select: {
-      id:            true,
-      nombreCompleto: true,
-      email:         true,
-      esSuperAdmin:  true,
-      rol:           { select: { nombre: true } },
-      tenant:        { select: { nombreNegocio: true } },
-    },
-  })
+  const [empleado, tenant] = await Promise.all([
+    prisma.empleado.findFirst({
+      where: { id: empleadoId, tenantId },
+      select: {
+        id:            true,
+        nombreCompleto: true,
+        email:         true,
+        esSuperAdmin:  true,
+        rol:           { select: { nombre: true } },
+      },
+    }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { nombreNegocio: true } }),
+  ])
 
   if (!empleado) return { error: 'Empleado no encontrado', status: 404 }
 
@@ -199,7 +202,7 @@ async function obtenerPerfil(req) {
     email:          empleado.email,
     rol:            empleado.rol.nombre,
     esSuperAdmin:   empleado.esSuperAdmin,
-    nombreNegocio:  empleado.tenant.nombreNegocio,
+    nombreNegocio:  tenant?.nombreNegocio ?? '',
   }
 }
 

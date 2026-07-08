@@ -6,8 +6,9 @@ import ModalAlerta from '../../components/ui/ModalAlerta'
 import ChipEstado from '../../components/ui/ChipEstado'
 import Toggle from '../../components/ui/Toggle'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
-import { formatearPrecio } from '../../lib/formato'
-import { claseInput, claseLabel } from '../../lib/estilos'
+import { formatearPrecio, formatearLimite, LIMITE_ILIMITADO as ILIMITADO } from '../../lib/formato'
+import { claseInput, claseLabel, claseTarjeta } from '../../lib/estilos'
+import { apiFetch } from '../../lib/api'
 
 const VACIO = {
   nombre: '',
@@ -22,12 +23,6 @@ const VACIO = {
   precioPrestamoAdicional: 0,
   precioColaboradorAdicional: 0,
   estado: 'ACTIVO',
-}
-
-const ILIMITADO = -1
-
-function mostrarLimite(valor) {
-  return Number(valor) === ILIMITADO ? '∞' : valor
 }
 
 function IconoCheck({ ok }) {
@@ -150,14 +145,8 @@ function FormularioPlan({ planEditando, onGuardado }) {
         estado: form.estado,
       }
       const url = modoEdicion ? `/api/master-admin/planes/${planEditando.id}` : '/api/master-admin/planes'
-      const res = await fetch(url, {
-        method: modoEdicion ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(cuerpo),
-      })
-      const datos = await res.json()
-      if (!res.ok) { setError(datos.error || 'Error al guardar el plan.'); return }
+      const { ok, datos } = await apiFetch(url, { method: modoEdicion ? 'PUT' : 'POST', body: cuerpo })
+      if (!ok) { setError(datos.error || 'Error al guardar el plan.'); return }
       onGuardado()
     } catch {
       setError('Error de conexión. Intenta nuevamente.')
@@ -181,7 +170,7 @@ function FormularioPlan({ planEditando, onGuardado }) {
       }
 
   return (
-    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+    <div className={`${claseTarjeta} overflow-hidden`}>
       <div className="px-6 py-5 border-b border-white/[0.06] flex items-center gap-2.5">
         <IconoPlan />
         <h2 className="text-[15px] font-bold text-slate-50 m-0">
@@ -307,9 +296,8 @@ export default function Plans() {
     if (!autenticado) return
     setCargandoTabla(true)
     try {
-      const res = await fetch('/api/master-admin/planes', { credentials: 'include' })
-      if (!res.ok) return
-      const datos = await res.json()
+      const { ok, datos } = await apiFetch('/api/master-admin/planes')
+      if (!ok) return
       setPlanes(datos.planes)
     } finally {
       setCargandoTabla(false)
@@ -369,7 +357,7 @@ export default function Plans() {
         ) : (
           <div className={`${esMobil ? 'flex flex-col' : 'grid grid-cols-[3fr_2fr]'} gap-6 items-start`}>
             {/* Panel izquierdo: tabla */}
-            <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl overflow-hidden">
+            <div className={`${claseTarjeta} overflow-hidden`}>
               <div className="px-6 py-5 border-b border-white/[0.06] flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <IconoPlan />
@@ -418,13 +406,13 @@ export default function Plans() {
                             {formatearPrecio(plan.precio)}
                           </td>
                           <td className="px-4 py-3.5 text-[13px] text-slate-400 text-center">
-                            {mostrarLimite(plan.limitePrestamos)}
+                            {formatearLimite(plan.limitePrestamos)}
                           </td>
                           <td className="px-4 py-3.5 text-[13px] text-slate-400 text-center">
-                            {mostrarLimite(plan.limiteColaboradores)}
+                            {formatearLimite(plan.limiteColaboradores)}
                           </td>
                           <td className="px-4 py-3.5 text-[13px] text-slate-400 text-center whitespace-nowrap">
-                            {mostrarLimite(plan.limiteMensajesWsp)} / {mostrarLimite(plan.consultasScore)}
+                            {formatearLimite(plan.limiteMensajesWsp)} / {formatearLimite(plan.consultasScore)}
                           </td>
                           <td className="px-4 py-3.5 text-center">
                             <div className="flex gap-1.5 justify-center">

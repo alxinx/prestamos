@@ -67,7 +67,10 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
               <span className="text-outline-variant text-[12px]">/</span>
             </>
           )}
-          <span className="text-sm font-semibold text-on-background">{nombreSeccion}</span>
+          <span className="text-sm font-semibold text-on-background truncate">{nombreSeccion}</span>
+          {esMobil && (
+            <img src="/isotipo.webp" alt="GotaPay" className="h-5 w-auto shrink-0 select-none" />
+          )}
         </div>
       </div>
 

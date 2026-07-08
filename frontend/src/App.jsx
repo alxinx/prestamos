@@ -12,6 +12,7 @@ import TenantPanel from './pages/master-admin/TenantPanel'
 
 // Tenant — auth pública
 import Activar from './pages/Activar'
+import ActivarColaborador from './pages/tenant/ActivarColaborador'
 import LoginTenant from './pages/tenant/Login'
 import RecuperarContrasena from './pages/tenant/RecuperarContrasena'
 import RestablecerContrasena from './pages/tenant/RestablecerContrasena'
@@ -129,6 +130,7 @@ function useRutaActual() {
 function Rutas() {
   const ruta = useRutaActual()
 
+  if (ruta.startsWith('/activar-colaborador')) return <ActivarColaborador />
   if (ruta.startsWith('/activar')) return <Activar />
 
   if (esMasterAdmin(ruta)) {

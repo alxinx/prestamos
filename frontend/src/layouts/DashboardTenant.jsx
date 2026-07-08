@@ -3,6 +3,7 @@ import { useTenantAuth } from '../context/TenantAuthContext'
 import SidebarTenant from '../components/tenant/Sidebar'
 import TopbarTenant from '../components/tenant/Topbar'
 import useTamanoPantalla from '../hooks/useTamanoPantalla'
+import { apiFetch } from '../lib/api'
 
 export default function DashboardTenant({ children }) {
   const { autenticado, cargando } = useTenantAuth()
@@ -14,9 +15,8 @@ export default function DashboardTenant({ children }) {
 
   useEffect(() => {
     if (!autenticado) return
-    fetch('/api/tenant/auth/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d) setInfoUsuario({ rol: d.rol, nombreNegocio: d.nombreNegocio }) })
+    apiFetch('/api/tenant/auth/me')
+      .then(({ ok, datos }) => { if (ok) setInfoUsuario({ rol: datos.rol, nombreNegocio: datos.nombreNegocio }) })
       .catch(() => {})
   }, [autenticado])
 
@@ -52,10 +52,9 @@ export default function DashboardTenant({ children }) {
 
       <SidebarTenant
         rutaActiva={rutaActiva}
-        esMobil={esMobil}
+        rol={infoUsuario.rol}
         menuAbierto={menuAbierto}
         onCerrar={() => setMenuAbierto(false)}
-        rol={infoUsuario.rol}
       />
 
       <div className={`flex-1 flex flex-col min-w-0 ${esMobil ? '' : 'overflow-hidden'}`}>

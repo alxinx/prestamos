@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import DashboardMasterAdmin from '../../layouts/DashboardMasterAdmin'
 import { useAuth } from '../../context/AuthContext'
+import { apiFetch } from '../../lib/api'
 
 const kpisBase = [
   {
@@ -199,9 +200,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (authCargando || !autenticado) return
-    fetch('/api/master-admin/tenants/stats', { credentials: 'include' })
-      .then(r => r.json())
-      .then(d => { if (!d.error) setStats(d) })
+    apiFetch('/api/master-admin/tenants/stats')
+      .then(({ datos }) => { if (!datos.error) setStats(datos) })
       .catch(() => {})
   }, [authCargando, autenticado])
 

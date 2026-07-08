@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTenantAuth } from '../../context/TenantAuthContext'
+import useTamanoPantalla from '../../hooks/useTamanoPantalla'
 import { IcoConfiguracion } from './iconos'
 
 // ─── Íconos SVG inline ───────────────────────────────────────────────────────
@@ -118,6 +119,18 @@ function IcoChevron({ abierto }) {
   )
 }
 
+// Alterna el sidebar entre expandido (con etiquetas) y colapsado (solo íconos) —
+// la flecha interna cambia de sentido según el estado.
+function IcoAlternarSidebar({ colapsado }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <line x1="9" y1="4" x2="9" y2="20" />
+      {colapsado ? <path d="M12 9l2 3-2 3" /> : <path d="M13 9l-2 3 2 3" />}
+    </svg>
+  )
+}
+
 function IcoCerrar() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -138,47 +151,55 @@ function IcoCerrarSesion() {
 
 // ─── Ítem de nav simple ───────────────────────────────────────────────────────
 
-function ItemNav({ icono, etiqueta, ruta, rutaActiva, onClick }) {
+function ItemNav({ icono, etiqueta, ruta, rutaActiva, onClick, colapsado }) {
   const activo = rutaActiva === ruta || rutaActiva.startsWith(ruta + '/')
 
   return (
     <a
       href={ruta}
       onClick={onClick}
+      title={colapsado ? etiqueta : undefined}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] no-underline text-sm transition-all duration-150 cursor-pointer
+        ${colapsado ? 'justify-center' : ''}
         ${activo
           ? 'text-secondary-container bg-secondary-container/10 shadow-[0_0_0_1px_rgba(86,251,171,0.15)] font-semibold'
           : 'text-slate-400 font-normal hover:bg-white/[0.05] hover:text-slate-50'
         }`}
     >
       <span className={`shrink-0 ${activo ? 'opacity-100' : 'opacity-70'}`}>{icono}</span>
-      {etiqueta}
+      {!colapsado && etiqueta}
     </a>
   )
 }
 
 // ─── Ítem desplegable (para "Caja") ──────────────────────────────────────────
 
-function ItemDesplegable({ icono, etiqueta, subitems, rutaActiva, onClick }) {
+function ItemDesplegable({ icono, etiqueta, subitems, rutaActiva, onClick, colapsado, onExpandirSidebar }) {
   const algunActivo = subitems.some(s => rutaActiva === s.ruta || rutaActiva.startsWith(s.ruta))
   const [abierto, setAbierto] = useState(algunActivo)
 
   return (
     <div>
       <button
-        onClick={() => setAbierto(v => !v)}
+        onClick={() => (colapsado ? onExpandirSidebar() : setAbierto(v => !v))}
+        title={colapsado ? etiqueta : undefined}
         className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] bg-transparent border-none text-sm cursor-pointer font-sans text-left transition-all duration-150
+          ${colapsado ? 'justify-center' : ''}
           ${algunActivo
             ? 'text-secondary-container bg-secondary-container/10 shadow-[0_0_0_1px_rgba(86,251,171,0.15)]'
             : 'text-slate-400 hover:bg-white/[0.05] hover:text-slate-50'
           }`}
       >
         <span className={`shrink-0 ${algunActivo ? 'opacity-100' : 'opacity-70'}`}>{icono}</span>
-        <span className="flex-1">{etiqueta}</span>
-        <IcoChevron abierto={abierto} />
+        {!colapsado && (
+          <>
+            <span className="flex-1">{etiqueta}</span>
+            <IcoChevron abierto={abierto} />
+          </>
+        )}
       </button>
 
-      {abierto && (
+      {!colapsado && abierto && (
         <div className="mt-1 ml-6 flex flex-col gap-0.5 border-l border-white/[0.08] pl-3">
           {subitems.map(s => {
             const activo = rutaActiva === s.ruta
@@ -227,28 +248,39 @@ const subitemsCaja = [
   { etiqueta: 'Cierre de caja',  ruta: '/caja/cierre' },
 ]
 
-export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerrar, rol }) {
+export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }) {
   const { cerrarSesion } = useTenantAuth()
   const esCobrador = rol === 'COBRADOR'
 
+  // ≤768px (celular): cajón deslizable clásico, controlado por el hamburguesa del topbar.
+  // 769–1024px (tablet): sidebar fijo, colapsado a solo íconos por defecto, con botón propio
+  // para expandir/contraer. >1024px: siempre expandido.
+  const esMobil = useTamanoPantalla(768)
+  const esTablet = useTamanoPantalla(1024) && !esMobil
+  const [expandido, setExpandido] = useState(false)
+  const colapsado = esTablet && !expandido
+
   return (
     <aside className={`
-      w-[260px] h-screen flex flex-col shrink-0
+      ${esMobil || !colapsado ? 'w-[260px]' : 'w-[76px]'}
+      h-screen flex flex-col shrink-0
       bg-gradient-to-b from-primary to-primary-dark
       border-r border-white/[0.06]
       ${esMobil
         ? 'fixed top-0 left-0 z-50 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform'
-        : 'sticky top-0'
+        : 'sticky top-0 transition-[width] duration-300 ease-in-out'
       }
       ${esMobil ? (menuAbierto ? 'translate-x-0' : '-translate-x-full') : ''}
     `}>
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5 border-b border-white/[0.06] flex items-center justify-between">
+      <div className={`px-5 pt-6 pb-5 border-b border-white/[0.06] flex items-center ${colapsado ? 'justify-center px-0' : 'justify-between'}`}>
         <a href="/dashboard" className="flex items-center gap-2.5 no-underline">
-          <img src="/isotipo.webp" alt="GotaPay" className="h-8 w-auto" />
-          <span className="text-lg font-bold text-slate-50 tracking-[-0.02em]">
-            Gota<span className="text-secondary-container">Pay</span>
-          </span>
+          <img src="/isotipo.webp" alt="GotaPay" className="h-8 w-auto shrink-0" />
+          {!colapsado && (
+            <span className="text-lg font-bold text-slate-50 tracking-[-0.02em] whitespace-nowrap">
+              Gota<span className="text-secondary-container">Pay</span>
+            </span>
+          )}
         </a>
 
         {esMobil && (
@@ -260,10 +292,32 @@ export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerr
             <IcoCerrar />
           </button>
         )}
+
+        {esTablet && !colapsado && (
+          <button
+            onClick={() => setExpandido(false)}
+            aria-label="Colapsar menú"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.06] border-none text-slate-400 cursor-pointer shrink-0"
+          >
+            <IcoAlternarSidebar colapsado={false} />
+          </button>
+        )}
       </div>
 
+      {esTablet && colapsado && (
+        <div className="px-3 pt-3">
+          <button
+            onClick={() => setExpandido(true)}
+            aria-label="Expandir menú"
+            className="flex items-center justify-center w-full h-9 rounded-lg bg-white/[0.06] border-none text-slate-400 cursor-pointer"
+          >
+            <IcoAlternarSidebar colapsado />
+          </button>
+        </div>
+      )}
+
       {/* Navegación */}
-      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
         {!esCobrador && navAdmin.map(el => (
           <ItemNav
             key={el.ruta}
@@ -271,6 +325,7 @@ export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerr
             etiqueta={el.etiqueta}
             ruta={el.ruta}
             rutaActiva={rutaActiva}
+            colapsado={colapsado}
             onClick={esMobil ? onCerrar : undefined}
           />
         ))}
@@ -284,6 +339,7 @@ export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerr
                 etiqueta={el.etiqueta}
                 ruta={el.ruta}
                 rutaActiva={rutaActiva}
+                colapsado={colapsado}
                 onClick={esMobil ? onCerrar : undefined}
               />
             ))}
@@ -292,7 +348,9 @@ export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerr
               etiqueta="Caja"
               subitems={subitemsCaja}
               rutaActiva={rutaActiva}
+              colapsado={colapsado}
               onClick={esMobil ? onCerrar : undefined}
+              onExpandirSidebar={() => setExpandido(true)}
             />
           </>
         )}
@@ -302,10 +360,11 @@ export default function SidebarTenant({ rutaActiva, esMobil, menuAbierto, onCerr
       <div className="px-3 pb-6 pt-4 border-t border-white/[0.06]">
         <button
           onClick={cerrarSesion}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] bg-transparent border-none text-slate-400 text-sm cursor-pointer font-sans transition-all duration-150 hover:bg-[rgba(249,115,22,0.1)] hover:text-[#F97316] text-left"
+          title={colapsado ? 'Cerrar sesión' : undefined}
+          className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-[10px] bg-transparent border-none text-slate-400 text-sm cursor-pointer font-sans transition-all duration-150 hover:bg-[rgba(249,115,22,0.1)] hover:text-[#F97316] text-left ${colapsado ? 'justify-center' : ''}`}
         >
           <IcoCerrarSesion />
-          Cerrar sesión
+          {!colapsado && 'Cerrar sesión'}
         </button>
       </div>
     </aside>

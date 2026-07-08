@@ -1,31 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { IcoOjo, IcoOjoTachado } from '../components/iconos'
+import { reglasContrasena, contrasenaEsValida } from '../lib/validacionContrasena'
+import { apiFetch } from '../lib/api'
+import { useMostrarContrasena } from '../hooks/useMostrarContrasena'
 
 function tokenDeUrl() {
   return new URLSearchParams(window.location.search).get('token') ?? ''
 }
 
-function IconoOjo({ visible }) {
-  return visible ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-      <line x1="2" x2="22" y1="2" y2="22" />
-    </svg>
-  )
-}
-
 function ReglasPassword({ valor }) {
   if (!valor) return null
-  const reglas = [
-    { texto: 'Mínimo 8 caracteres',   ok: valor.length >= 8 },
-    { texto: 'Al menos una mayúscula', ok: /[A-Z]/.test(valor) },
-    { texto: 'Al menos un número',     ok: /[0-9]/.test(valor) },
-  ]
+  const reglas = reglasContrasena(valor)
   return (
     <div className="mt-2 flex flex-col gap-1">
       {reglas.map(r => (
@@ -42,7 +27,7 @@ function ReglasPassword({ valor }) {
 }
 
 function CampoTexto({ id, label, valor, onChange, placeholder, tipo = 'text', autoComplete, disabled }) {
-  const [visible, setVisible] = useState(false)
+  const [visible, alternarVisible] = useMostrarContrasena()
   const [enfocado, setEnfocado] = useState(false)
   const esPassword = tipo === 'password'
   const tipoFinal = esPassword ? (visible ? 'text' : 'password') : tipo
@@ -74,11 +59,11 @@ function CampoTexto({ id, label, valor, onChange, placeholder, tipo = 'text', au
         {esPassword && (
           <button
             type="button"
-            onClick={() => setVisible(v => !v)}
+            onClick={alternarVisible}
             tabIndex={-1}
             className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[#747780] flex items-center p-0.5"
           >
-            <IconoOjo visible={visible} />
+            {visible ? <IcoOjoTachado /> : <IcoOjo />}
           </button>
         )}
       </div>
@@ -101,7 +86,7 @@ export default function Activar() {
   // Si no hay token en la URL, mostrar error inmediato
   const sinToken = !token
 
-  const passwordValido = password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)
+  const passwordValido = contrasenaEsValida(password)
   const coinciden = password === confirmar && confirmar !== ''
 
   async function verificarEmail(e) {
@@ -109,13 +94,11 @@ export default function Activar() {
     setError('')
     setEnviando(true)
     try {
-      const res = await fetch('/api/activar/verificar', {
+      const { ok, datos } = await apiFetch('/api/activar/verificar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, email }),
+        body: { token, email },
       })
-      const datos = await res.json()
-      if (!res.ok) { setError(datos.error || 'Error al verificar.'); return }
+      if (!ok) { setError(datos.error || 'Error al verificar.'); return }
       setInfo({ nombreNegocio: datos.nombreNegocio, plan: datos.plan })
       setPaso(2)
     } catch {
@@ -134,13 +117,11 @@ export default function Activar() {
 
     setEnviando(true)
     try {
-      const res = await fetch('/api/activar/completar', {
+      const { ok, datos } = await apiFetch('/api/activar/completar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, email, nombreCompleto, password }),
+        body: { token, email, nombreCompleto, password },
       })
-      const datos = await res.json()
-      if (!res.ok) { setError(datos.error || 'Error al activar.'); return }
+      if (!ok) { setError(datos.error || 'Error al activar.'); return }
       setPaso(3)
     } catch {
       setError('Error de conexión. Intenta nuevamente.')

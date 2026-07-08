@@ -1,39 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-
-const IconoCorreo = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="2" />
-    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-  </svg>
-)
-
-const IconoCandado = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="11" width="18" height="11" rx="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-)
-
-const IconoOjo = ({ abierto }) => abierto ? (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-) : (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
-    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
-    <line x1="2" x2="22" y1="2" y2="22" />
-  </svg>
-)
-
-const IconoCheck = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-)
+import { IcoCorreo, IcoCandado, IcoOjo, IcoOjoTachado, IcoCheck } from '../../components/iconos'
+import { apiFetch } from '../../lib/api'
+import { useMostrarContrasena } from '../../hooks/useMostrarContrasena'
 
 const IconoIngreso = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -47,7 +16,7 @@ export default function LoginMasterAdmin() {
   useAuth()
   const [correo, setCorreo] = useState('')
   const [contrasena, setContrasena] = useState('')
-  const [mostrarContrasena, setMostrarContrasena] = useState(false)
+  const [mostrarContrasena, alternarMostrarContrasena] = useMostrarContrasena()
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
 
@@ -57,16 +26,12 @@ export default function LoginMasterAdmin() {
     setCargando(true)
 
     try {
-      const res = await fetch('/api/master-admin/auth/login', {
+      const { ok, datos } = await apiFetch('/api/master-admin/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: correo, password: contrasena }),
+        body: { email: correo, password: contrasena },
       })
 
-      const datos = await res.json()
-
-      if (!res.ok) {
+      if (!ok) {
         setError(datos.error || 'Error al iniciar sesión')
         return
       }
@@ -110,7 +75,7 @@ export default function LoginMasterAdmin() {
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
-                  <IconoCorreo />
+                  <IcoCorreo />
                 </span>
                 <input
                   id="correo"
@@ -131,7 +96,7 @@ export default function LoginMasterAdmin() {
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
-                  <IconoCandado />
+                  <IcoCandado />
                 </span>
                 <input
                   id="contrasena"
@@ -145,11 +110,11 @@ export default function LoginMasterAdmin() {
                 />
                 <button
                   type="button"
-                  onClick={() => setMostrarContrasena(v => !v)}
+                  onClick={alternarMostrarContrasena}
                   aria-label={mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-outline p-0 flex items-center"
                 >
-                  <IconoOjo abierto={mostrarContrasena} />
+                  {mostrarContrasena ? <IcoOjoTachado /> : <IcoOjo />}
                 </button>
               </div>
             </div>
@@ -180,7 +145,7 @@ export default function LoginMasterAdmin() {
             {['Encriptación Bancaria', 'Velocidad Fintech'].map(etiqueta => (
               <span key={etiqueta} className="flex items-center gap-1.5 text-[13px] text-on-secondary-container font-medium">
                 <span className="bg-secondary-container rounded-full w-5 h-5 flex items-center justify-center text-on-secondary-container">
-                  <IconoCheck />
+                  <IcoCheck />
                 </span>
                 {etiqueta}
               </span>

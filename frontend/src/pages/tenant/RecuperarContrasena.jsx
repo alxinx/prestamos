@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import TenantAuthLayout from '../../layouts/TenantAuthLayout'
+import { apiFetch } from '../../lib/api'
 
 export default function RecuperarContrasena() {
   const [email, setEmail]       = useState('')
@@ -12,11 +13,7 @@ export default function RecuperarContrasena() {
     setError('')
     setEnviando(true)
     try {
-      await fetch('/api/tenant/auth/recuperar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
+      await apiFetch('/api/tenant/auth/recuperar', { method: 'POST', body: { email } })
       setEnviado(true)
     } catch {
       setError('Error de conexión. Intenta nuevamente.')

@@ -1,11 +1,5 @@
 import ChipEstado from './ChipEstado'
-
-const ETIQUETAS_ROL = {
-  ADMINISTRADOR: 'Administrador',
-  SECRETARIA: 'Secretaria',
-  AUDITOR: 'Auditor',
-  COBRADOR: 'Cobrador',
-}
+import { ETIQUETAS_ROL } from '../../lib/roles'
 
 function iniciales(nombre) {
   return nombre.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()

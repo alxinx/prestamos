@@ -19,6 +19,7 @@ const masterAdminPlanesRouter = require('./src/modules/masterAdmin/planes.routes
 const masterAdminTenantsRouter = require('./src/modules/masterAdmin/tenants.routes')
 const masterAdminDatosSaasRouter = require('./src/modules/masterAdmin/datosSaas.routes')
 const activacionRouter           = require('./src/modules/activacion/activacion.routes')
+const activacionColaboradorRouter = require('./src/modules/activacionColaborador/activacionColaborador.routes')
 const tenantAuthRouter           = require('./src/modules/tenant/auth.routes')
 const tenantColaboradoresRouter  = require('./src/modules/tenant/colaboradores/colaboradores.routes')
 
@@ -79,6 +80,7 @@ app.use('/api/master-admin/planes', masterAdminPlanesRouter)
 app.use('/api/master-admin/tenants', masterAdminTenantsRouter)
 app.use('/api/master-admin/datos-saas', masterAdminDatosSaasRouter)
 app.use('/api/activar',      activacionRouter)
+app.use('/api/activar-colaborador', activacionColaboradorRouter)
 app.use('/api/tenant/auth', tenantAuthRouter)
 app.use('/api/tenant/colaboradores', tenantColaboradoresRouter)
 
