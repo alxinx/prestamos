@@ -1,29 +1,12 @@
 import { useState } from 'react'
 import { IcoOjo, IcoOjoTachado } from '../components/iconos'
-import { reglasContrasena, contrasenaEsValida } from '../lib/validacionContrasena'
+import ListaReglasContrasena from '../components/tenant/ListaReglasContrasena'
+import { contrasenaEsValida } from '../lib/validacionContrasena'
 import { apiFetch } from '../lib/api'
 import { useMostrarContrasena } from '../hooks/useMostrarContrasena'
 
 function tokenDeUrl() {
   return new URLSearchParams(window.location.search).get('token') ?? ''
-}
-
-function ReglasPassword({ valor }) {
-  if (!valor) return null
-  const reglas = reglasContrasena(valor)
-  return (
-    <div className="mt-2 flex flex-col gap-1">
-      {reglas.map(r => (
-        <div key={r.texto} className={`flex items-center gap-1.5 text-[12px] ${r.ok ? 'text-[#00C982]' : 'text-[#64748B]'}`}>
-          <span className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[9px]
-            ${r.ok ? 'bg-[rgba(0,201,130,0.15)]' : 'bg-white/[0.05]'}`}>
-            {r.ok ? '✓' : '●'}
-          </span>
-          {r.texto}
-        </div>
-      ))}
-    </div>
-  )
 }
 
 function CampoTexto({ id, label, valor, onChange, placeholder, tipo = 'text', autoComplete, disabled }) {
@@ -269,7 +252,7 @@ export default function Activar() {
                         tipo="password"
                         autoComplete="new-password"
                       />
-                      <ReglasPassword valor={password} />
+                      <ListaReglasContrasena valor={password} />
                     </div>
 
                     <div>

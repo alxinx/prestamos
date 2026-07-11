@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react'
 import CampoContrasena from '../../components/tenant/CampoContrasena'
 import BotonAccion from '../../components/tenant/BotonAccion'
-import { reglasContrasena, contrasenaEsValida } from '../../lib/validacionContrasena'
+import ListaReglasContrasena from '../../components/tenant/ListaReglasContrasena'
+import { contrasenaEsValida } from '../../lib/validacionContrasena'
 import { apiFetch } from '../../lib/api'
 
 function datosDeUrl() {
   const params = new URLSearchParams(window.location.search)
   return { token: params.get('token') ?? '', email: params.get('email') ?? '' }
-}
-
-function Regla({ ok, texto }) {
-  return (
-    <div className={`flex items-center gap-2 text-[12px] ${ok ? 'text-secondary' : 'text-on-surface-variant/60'}`}>
-      <span className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center text-[9px] ${ok ? 'bg-secondary-container/40' : 'bg-outline-variant/20'}`}>
-        {ok ? '✓' : '·'}
-      </span>
-      {texto}
-    </div>
-  )
 }
 
 export default function ActivarColaborador() {
@@ -115,11 +105,7 @@ export default function ActivarColaborador() {
                   requerido
                 />
 
-                {password && (
-                  <div className="flex flex-col gap-1.5 px-3.5 py-3 bg-surface-default rounded-lg">
-                    {reglasContrasena(password).map(r => <Regla key={r.texto} ok={r.ok} texto={r.texto} />)}
-                  </div>
-                )}
+                <ListaReglasContrasena valor={password} />
 
                 <div>
                   <CampoContrasena

@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useTenantAuth } from '../context/TenantAuthContext'
+import { PermisosProvider } from '../context/PermisosContext'
 import SidebarTenant from '../components/tenant/Sidebar'
 import TopbarTenant from '../components/tenant/Topbar'
+import AvisoInactividad from '../components/tenant/AvisoInactividad'
 import useTamanoPantalla from '../hooks/useTamanoPantalla'
+import useInactividad from '../hooks/useInactividad'
 import { apiFetch } from '../lib/api'
 
+// Roles de oficina: se cierran por inactividad. Los cobradores operan en campo
+// todo el día y no deben perder la sesión por no tocar la pantalla.
+const ROLES_CON_CIERRE_POR_INACTIVIDAD = ['ADMINISTRADOR', 'SECRETARIA']
+
 export default function DashboardTenant({ children }) {
-  const { autenticado, cargando } = useTenantAuth()
+  const { autenticado, cargando, cerrarSesion } = useTenantAuth()
   const rutaActiva = window.location.pathname
   const esMobil = useTamanoPantalla()
   const [menuAbierto, setMenuAbierto] = useState(false)
@@ -19,6 +26,11 @@ export default function DashboardTenant({ children }) {
       .then(({ ok, datos }) => { if (ok) setInfoUsuario({ rol: datos.rol, nombreNegocio: datos.nombreNegocio }) })
       .catch(() => {})
   }, [autenticado])
+
+  const { mostrarAviso, segundosRestantes, continuarTrabajando } = useInactividad({
+    activo: autenticado && ROLES_CON_CIERRE_POR_INACTIVIDAD.includes(infoUsuario.rol),
+    alExpirar: cerrarSesion,
+  })
 
   useEffect(() => {
     if (!esMobil) setMenuAbierto(false)
@@ -42,30 +54,36 @@ export default function DashboardTenant({ children }) {
   if (!autenticado) return null
 
   return (
-    <div className="flex min-h-screen font-sans bg-tenant-bg">
-      {esMobil && menuAbierto && (
-        <div
-          onClick={() => setMenuAbierto(false)}
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
-        />
-      )}
+    <PermisosProvider>
+      <div className="flex min-h-screen font-sans bg-tenant-bg">
+        {esMobil && menuAbierto && (
+          <div
+            onClick={() => setMenuAbierto(false)}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
+          />
+        )}
 
-      <SidebarTenant
-        rutaActiva={rutaActiva}
-        rol={infoUsuario.rol}
-        menuAbierto={menuAbierto}
-        onCerrar={() => setMenuAbierto(false)}
-      />
-
-      <div className={`flex-1 flex flex-col min-w-0 ${esMobil ? '' : 'overflow-hidden'}`}>
-        <TopbarTenant
-          esMobil={esMobil}
-          onToggleMenu={() => setMenuAbierto(v => !v)}
-          nombreNegocio={infoUsuario.nombreNegocio}
+        <SidebarTenant
+          rutaActiva={rutaActiva}
           rol={infoUsuario.rol}
+          menuAbierto={menuAbierto}
+          onCerrar={() => setMenuAbierto(false)}
         />
-        <main className={`flex-1 tenant-main ${esMobil ? '' : 'overflow-y-auto'}`}>{children}</main>
+
+        <div className={`flex-1 flex flex-col min-w-0 ${esMobil ? '' : 'overflow-hidden'}`}>
+          <TopbarTenant
+            esMobil={esMobil}
+            onToggleMenu={() => setMenuAbierto(v => !v)}
+            nombreNegocio={infoUsuario.nombreNegocio}
+            rol={infoUsuario.rol}
+          />
+          <main className={`flex-1 tenant-main ${esMobil ? '' : 'overflow-y-auto'}`}>{children}</main>
+        </div>
       </div>
-    </div>
+
+      {mostrarAviso && (
+        <AvisoInactividad segundosRestantes={segundosRestantes} onContinuar={continuarTrabajando} />
+      )}
+    </PermisosProvider>
   )
 }

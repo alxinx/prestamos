@@ -5,3 +5,11 @@ export const ETIQUETAS_ROL = {
   AUDITOR: 'Auditor',
   COBRADOR: 'Cobrador',
 }
+
+// Variante corta — para espacios chicos como el pill de rol en el Topbar.
+export const ETIQUETAS_ROL_CORTO = {
+  ADMINISTRADOR: 'Admin',
+  SECRETARIA: 'Secretaria',
+  AUDITOR: 'Auditor',
+  COBRADOR: 'Cobrador',
+}

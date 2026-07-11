@@ -1,5 +1,5 @@
-import BarraProgreso from '../../components/tenant/BarraProgreso'
 import TarjetaPanel from '../../components/tenant/TarjetaPanel'
+import TarjetaStat from '../../components/tenant/TarjetaStat'
 import FilaDato from '../../components/tenant/FilaDato'
 import MedidorSemicircular from '../../components/tenant/MedidorSemicircular'
 import GraficoBarras from '../../components/tenant/GraficoBarras'
@@ -7,7 +7,8 @@ import AnilloProgreso from '../../components/tenant/AnilloProgreso'
 import FilaActividad from '../../components/tenant/FilaActividad'
 import FilaVencimiento from '../../components/tenant/FilaVencimiento'
 import BotonAccion from '../../components/tenant/BotonAccion'
-import { IcoMas } from '../../components/tenant/iconos'
+import ConPermiso from '../../components/tenant/ConPermiso'
+import { IcoMas, IcoCalendario, IcoMoneda, IcoReloj } from '../../components/tenant/iconos'
 import { formatearPrecio } from '../../lib/formato'
 
 // ── Iconos para los badges pequeños ─────────────────────────────────────────
@@ -17,34 +18,6 @@ function IcoTendencia() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
       <polyline points="16 7 22 7 22 13" />
-    </svg>
-  )
-}
-
-function IcoCalendario() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  )
-}
-
-function IcoMoneda() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="1" x2="12" y2="23" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
-  )
-}
-
-function IcoReloj() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
     </svg>
   )
 }
@@ -63,74 +36,6 @@ function IcoAlerta() {
       <path d="M12 9v4" /><path d="M12 17h.01" />
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
     </svg>
-  )
-}
-
-// ── Componente DRY: tarjeta de estadística ───────────────────────────────────
-
-function TarjetaStat({ titulo, subtitulo, valor, imagen3d, badge, delta, href, peligro, planUso }) {
-  return (
-    <div className="relative bg-surface-lowest border border-outline-variant/50 rounded-2xl overflow-hidden flex flex-col min-h-[178px] shadow-card">
-
-      {/* Ilustración 3D — derecha, centrada verticalmente */}
-      <img
-        src={imagen3d}
-        alt=""
-        className="absolute top-1/2 -translate-y-1/2 right-3 w-[107px] h-[107px] sm:w-[125px] sm:h-[125px] object-contain pointer-events-none select-none"
-      />
-
-      {/* Contenido principal */}
-      <div className="flex-1 p-5 pr-[123px] sm:pr-[141px]">
-
-        {/* Badge + título */}
-        <div className="flex items-center gap-2 mb-0.5">
-          <span className={`w-[26px] h-[26px] rounded-[7px] flex items-center justify-center shrink-0 ${badge.clases}`}>
-            {badge.icono}
-          </span>
-          <span className="text-on-surface-variant text-[13px] font-semibold leading-tight line-clamp-1">
-            {titulo}
-          </span>
-        </div>
-        <p className="text-[11px] text-on-surface-variant mb-4 pl-[34px]">{subtitulo}</p>
-
-        {/* Valor principal */}
-        <p className={`font-bold tracking-tight leading-none mb-2 ${
-          peligro
-            ? 'text-[38px] sm:text-[44px] text-error animate-[brillo-rojo_2s_ease-in-out_infinite]'
-            : 'text-[30px] sm:text-[33px] text-on-background'
-        }`}>
-          {valor}
-        </p>
-
-        {/* Delta */}
-        {delta && (
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[12px] font-bold ${delta.positivo ? 'text-secondary' : 'text-error'}`}>
-              {delta.sube ? '↑' : '↓'} {delta.porcentaje}%
-            </span>
-            <span className="text-[11px] text-on-surface-variant">{delta.texto}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Footer — Ver detalle */}
-      {href && (
-        <a
-          href={href}
-          className="flex items-center justify-between px-5 py-3 border-t border-outline-variant/50 text-[12px] text-on-surface-variant hover:text-on-tertiary-container hover:bg-surface-low transition-all duration-150 shrink-0"
-        >
-          Ver detalle
-          <span className="text-sm">→</span>
-        </a>
-      )}
-
-      {/* Footer — Uso del plan */}
-      {planUso && (
-        <div className="px-5 py-3 border-t border-outline-variant/50 shrink-0">
-          <BarraProgreso usados={planUso.usados} limite={planUso.limite} />
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -252,9 +157,11 @@ export default function Dashboard() {
             </h1>
           </div>
 
-          <BotonAccion href="/prestamos/nuevo" icono={<IcoMas />}>
-            Crear nuevo préstamo
-          </BotonAccion>
+          <ConPermiso permiso="creditos.crear" compacto>
+            <BotonAccion href="/prestamos/nuevo" icono={<IcoMas />}>
+              Crear nuevo préstamo
+            </BotonAccion>
+          </ConPermiso>
         </div>
 
         {/* Grid de stats — 1 col mobile / 2 cols tablet / 4 cols desktop */}

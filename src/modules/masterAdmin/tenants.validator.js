@@ -1,13 +1,15 @@
 'use strict'
 
 const { z } = require('zod')
-const { crearValidador } = require('../../lib/validar')
+const { crearValidador, esquemaNombrePersona } = require('../../lib/validar')
 
 const esquemaTenant = z.object({
   planId: z.string().uuid('Plan inválido'),
+  // nombreNegocio y razonSocial NO se normalizan a Título: pueden llevar mayúsculas
+  // intencionales o siglas legales (ej. "S.A.S.") que ese transform rompería.
   nombreNegocio: z.string().min(2, 'El nombre del negocio es requerido').max(150),
   tipoPersona: z.enum(['NATURAL', 'JURIDICA']),
-  nombreCompleto: z.string().min(2, 'El nombre completo es requerido').max(200),
+  nombreCompleto: esquemaNombrePersona('El nombre completo es requerido', 200, 2),
   razonSocial: z.string().max(200).optional().nullable(),
   tipoIdentificacion: z.enum(['NIT', 'CC', 'CE', 'PASAPORTE']),
   numeroIdentificacion: z.string().min(3, 'El número de identificación es requerido').max(30),

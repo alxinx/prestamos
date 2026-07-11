@@ -7,12 +7,6 @@ function formatear(numero) {
   return new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(n)
 }
 
-function parsear(texto) {
-  const limpio = texto.replace(/\./g, '').trim()
-  const n = parseInt(limpio, 10)
-  return isNaN(n) ? 0 : n
-}
-
 /**
  * Input para valores monetarios en COP.
  * Props:

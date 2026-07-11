@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import usePermisos from '../../hooks/usePermisos'
 import { IcoMas, IcoConfiguracion } from './iconos'
 
 function IcoPersonaMas() {
@@ -11,14 +12,17 @@ function IcoPersonaMas() {
 }
 
 const OPCIONES_CREAR = [
-  { etiqueta: 'Crear nuevo préstamo', icono: <IcoMas size={15} />, href: '/prestamos/nuevo' },
-  { etiqueta: 'Crear nuevo cliente', icono: <IcoPersonaMas />, href: '/clientes/nuevo' },
+  { etiqueta: 'Crear nuevo préstamo', icono: <IcoMas size={15} />, href: '/prestamos/nuevo', permiso: 'creditos.crear' },
+  { etiqueta: 'Crear nuevo cliente', icono: <IcoPersonaMas />, href: '/clientes/nuevo', permiso: 'clientes.crear' },
 ]
 
 // Menú desplegable DRY del avatar de usuario — cierra al hacer clic fuera.
+// Las opciones de "crear" se ocultan si el colaborador no tiene el permiso correspondiente.
 export default function MenuUsuario({ iniciales }) {
   const [abierto, setAbierto] = useState(false)
   const ref = useRef(null)
+  const { tienePermiso, cargando: cargandoPermisos } = usePermisos()
+  const opcionesCrear = cargandoPermisos ? [] : OPCIONES_CREAR.filter(op => tienePermiso(op.permiso))
 
   useEffect(() => {
     function cerrarAlClickExterno(e) {
@@ -40,21 +44,25 @@ export default function MenuUsuario({ iniciales }) {
 
       {abierto && (
         <div className="absolute top-[calc(100%+10px)] right-0 w-[240px] bg-surface-lowest border border-outline-variant/50 rounded-xl shadow-card-hover overflow-hidden z-[100] animate-[slideDown_0.15s_ease]">
-          <div className="p-1.5">
-            {OPCIONES_CREAR.map(op => (
-              <a
-                key={op.etiqueta}
-                href={op.href}
-                onClick={() => setAbierto(false)}
-                className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-on-surface-variant text-[13px] no-underline transition-colors duration-100 hover:bg-primary hover:text-secondary-container"
-              >
-                <span className="text-secondary shrink-0 group-hover:text-secondary-container">{op.icono}</span>
-                {op.etiqueta}
-              </a>
-            ))}
-          </div>
+          {opcionesCrear.length > 0 && (
+            <>
+              <div className="p-1.5">
+                {opcionesCrear.map(op => (
+                  <a
+                    key={op.etiqueta}
+                    href={op.href}
+                    onClick={() => setAbierto(false)}
+                    className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-on-surface-variant text-[13px] no-underline transition-colors duration-100 hover:bg-primary hover:text-secondary-container"
+                  >
+                    <span className="text-secondary shrink-0 group-hover:text-secondary-container">{op.icono}</span>
+                    {op.etiqueta}
+                  </a>
+                ))}
+              </div>
 
-          <div className="h-[3px] bg-outline-variant/60" />
+              <div className="h-[3px] bg-outline-variant/60" />
+            </>
+          )}
 
           <div className="p-1.5">
             <a

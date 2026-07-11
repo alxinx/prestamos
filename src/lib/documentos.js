@@ -81,7 +81,7 @@ async function subirDocumentoEmpleado({ tenantId, empleadoId, subidoPorId, nombr
 
   await subirArchivoR2(bufferFinal, ruta, contentType)
 
-  return prisma.documento.create({
+  const documento = await prisma.documento.create({
     data: {
       id: documentoId,
       tenantId,
@@ -95,6 +95,8 @@ async function subirDocumentoEmpleado({ tenantId, empleadoId, subidoPorId, nombr
     },
     select: { id: true, nombreArchivo: true, tamanioBytes: true, createdAt: true },
   })
+
+  return { ...documento, extension: extensionFinal }
 }
 
-module.exports = { subirDocumentoEmpleado, ErrorDocumento, EXTENSIONES_PERMITIDAS, EXTENSIONES_IMAGEN, MAX_IMAGEN_BYTES, MAX_DOCUMENTO_BYTES }
+module.exports = { subirDocumentoEmpleado, ErrorDocumento, extensionDe, EXTENSIONES_PERMITIDAS, EXTENSIONES_IMAGEN, MAX_IMAGEN_BYTES, MAX_DOCUMENTO_BYTES }

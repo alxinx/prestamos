@@ -1,17 +1,22 @@
 'use strict'
 
-const crypto = require('crypto')
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../../lib/prisma')
 const { registrarAuditoria } = require('../../../lib/auditoria')
-const { subirDocumentoEmpleado, ErrorDocumento } = require('../../../lib/documentos')
+const { subirDocumentoEmpleado, ErrorDocumento, extensionDe } = require('../../../lib/documentos')
 const { enviarEmail } = require('../../../lib/email')
 const { emailActivacionColaborador } = require('../../../emails/activacionColaborador')
+const { generarTokenActivacion, calcularExpiracionActivacion } = require('../../../lib/tokenActivacion')
+const { publicarCambioPermisos, publicarCuentaDesactivada } = require('../../../lib/eventosEmpleado')
+const { eliminarArchivoR2, generarUrlDescargaR2 } = require('../../../lib/r2Client')
 
-const EXPIRACION_TOKEN_ACTIVACION_MS = 72 * 60 * 60 * 1000
+// `url` se selecciona solo para derivar la extensión del archivo real (la imagen se sube
+// convertida a webp, por lo que la extensión no siempre coincide con el nombre visible) —
+// nunca se envía al frontend (CLAUDE.md §9: el cliente nunca recibe la ruta directa de R2).
+const SELECT_DOCUMENTO = { id: true, nombreArchivo: true, tamanioBytes: true, createdAt: true, url: true }
 
-function generarTokenActivacion() {
-  return crypto.randomBytes(32).toString('hex')
+function serializarDocumento({ url, ...resto }) {
+  return { ...resto, extension: extensionDe(url) }
 }
 
 function enviarEmailActivacionColaborador({ colaborador, nombreNegocio, rolNombre, tokenActivacion }) {
@@ -96,7 +101,7 @@ async function crearColaborador(req) {
 
   const id = uuidv7()
   const tokenActivacion = generarTokenActivacion()
-  const tokenActivacionExpira = new Date(Date.now() + EXPIRACION_TOKEN_ACTIVACION_MS)
+  const tokenActivacionExpira = calcularExpiracionActivacion()
 
   const colaborador = await prisma.empleado.create({
     data: {
@@ -150,6 +155,76 @@ async function crearColaborador(req) {
   return { colaborador, documentos, documentosFallidos }
 }
 
+async function obtenerColaborador(req) {
+  const { tenantId } = req.empleado
+  const { id } = req.params
+
+  const colaborador = await prisma.empleado.findFirst({ where: { id, tenantId }, select: SELECT_COLABORADOR })
+  if (!colaborador) return { error: 'Colaborador no encontrado', status: 404 }
+
+  return { colaborador }
+}
+
+async function actualizarColaborador(req) {
+  const { tenantId, id: autorId } = req.empleado
+  const { id } = req.params
+  const datos = req.body
+
+  const colaboradorActual = await prisma.empleado.findFirst({ where: { id, tenantId } })
+  if (!colaboradorActual) return { error: 'Colaborador no encontrado', status: 404 }
+
+  const rol = await prisma.rol.findFirst({ where: { id: datos.rolId, tenantId } })
+  if (!rol) return { error: 'Rol inválido', status: 400 }
+
+  const emailExistente = await prisma.empleado.findFirst({
+    where: { tenantId, email: datos.email, NOT: { id } },
+  })
+  if (emailExistente) return { error: 'Ya existe otro colaborador con ese correo', status: 409 }
+
+  const colaborador = await prisma.empleado.update({
+    where: { id },
+    data: {
+      rolId:          datos.rolId,
+      nombreCompleto: datos.nombreCompleto,
+      cedula:         datos.cedula,
+      telefono:       datos.telefono,
+      email:          datos.email,
+      cargo:          datos.cargo || null,
+    },
+    select: SELECT_COLABORADOR,
+  })
+
+  await registrarAuditoria({
+    tenantId,
+    empleadoId: autorId,
+    accion: 'COLABORADOR_EDITADO',
+    entidadTipo: 'Empleado',
+    entidadId: id,
+    valorAnterior: {
+      nombreCompleto: colaboradorActual.nombreCompleto,
+      cedula: colaboradorActual.cedula,
+      telefono: colaboradorActual.telefono,
+      email: colaboradorActual.email,
+      cargo: colaboradorActual.cargo,
+      rolId: colaboradorActual.rolId,
+    },
+    valorNuevo: {
+      nombreCompleto: colaborador.nombreCompleto,
+      cedula: colaborador.cedula,
+      telefono: colaborador.telefono,
+      email: colaborador.email,
+      cargo: colaborador.cargo,
+      rolId: datos.rolId,
+    },
+  })
+
+  // El rol cambia los permisos efectivos (RolPermiso) — avisa en tiempo real igual que
+  // un ajuste individual de permisos.
+  if (datos.rolId !== colaboradorActual.rolId) publicarCambioPermisos(id)
+
+  return { colaborador }
+}
+
 async function cambiarEstadoColaborador(req) {
   const { tenantId, id: autorId } = req.empleado
   const { id } = req.params
@@ -179,7 +254,116 @@ async function cambiarEstadoColaborador(req) {
     valorNuevo: { estado: nuevoEstado },
   })
 
+  if (nuevoEstado === 'INACTIVO') publicarCuentaDesactivada(id)
+
   return { colaborador: actualizado }
 }
 
-module.exports = { listarColaboradores, listarRolesDisponibles, crearColaborador, cambiarEstadoColaborador }
+// Confirma que el colaborador exista y pertenezca al tenant del request — usado por
+// las 4 funciones de documentos para no repetir la misma validación de aislamiento.
+async function buscarColaboradorDelTenant({ tenantId, empleadoId }) {
+  return prisma.empleado.findFirst({ where: { id: empleadoId, tenantId }, select: { id: true } })
+}
+
+async function listarDocumentosColaborador(req) {
+  const { tenantId } = req.empleado
+  const { id: empleadoId } = req.params
+
+  const colaborador = await buscarColaboradorDelTenant({ tenantId, empleadoId })
+  if (!colaborador) return { error: 'Colaborador no encontrado', status: 404 }
+
+  const documentos = await prisma.documento.findMany({
+    where: { tenantId, entidadTipo: 'EMPLEADO', entidadId: empleadoId },
+    select: SELECT_DOCUMENTO,
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return { documentos: documentos.map(serializarDocumento) }
+}
+
+async function subirDocumentoAColaborador(req) {
+  const { tenantId, id: autorId } = req.empleado
+  const { id: empleadoId } = req.params
+  const nombre = req.body.nombre
+  const archivo = req.file
+
+  const colaborador = await buscarColaboradorDelTenant({ tenantId, empleadoId })
+  if (!colaborador) return { error: 'Colaborador no encontrado', status: 404 }
+  if (!archivo) return { error: 'Selecciona un archivo', status: 400 }
+  if (!nombre || !nombre.trim()) return { error: 'El documento debe tener un nombre', status: 400 }
+
+  let documento
+  try {
+    documento = await subirDocumentoEmpleado({
+      tenantId,
+      empleadoId,
+      subidoPorId: autorId,
+      nombreArchivo: nombre.trim(),
+      archivo,
+    })
+  } catch (err) {
+    if (!(err instanceof ErrorDocumento)) throw err
+    return { error: err.message, status: 422 }
+  }
+
+  await registrarAuditoria({
+    tenantId,
+    empleadoId: autorId,
+    accion: 'COLABORADOR_DOCUMENTO_SUBIDO',
+    entidadTipo: 'Empleado',
+    entidadId: empleadoId,
+    valorNuevo: { documentoId: documento.id, nombreArchivo: documento.nombreArchivo },
+  })
+
+  return { documento }
+}
+
+async function eliminarDocumentoColaborador(req) {
+  const { tenantId, id: autorId } = req.empleado
+  const { id: empleadoId, documentoId } = req.params
+
+  const documento = await prisma.documento.findFirst({
+    where: { id: documentoId, tenantId, entidadTipo: 'EMPLEADO', entidadId: empleadoId },
+  })
+  if (!documento) return { error: 'Documento no encontrado', status: 404 }
+
+  await eliminarArchivoR2(documento.url)
+  await prisma.documento.delete({ where: { id: documentoId } })
+
+  await registrarAuditoria({
+    tenantId,
+    empleadoId: autorId,
+    accion: 'COLABORADOR_DOCUMENTO_ELIMINADO',
+    entidadTipo: 'Empleado',
+    entidadId: empleadoId,
+    valorAnterior: { documentoId: documento.id, nombreArchivo: documento.nombreArchivo },
+  })
+
+  return { ok: true }
+}
+
+async function obtenerUrlDescargaDocumento(req) {
+  const { tenantId } = req.empleado
+  const { id: empleadoId, documentoId } = req.params
+
+  const documento = await prisma.documento.findFirst({
+    where: { id: documentoId, tenantId, entidadTipo: 'EMPLEADO', entidadId: empleadoId },
+  })
+  if (!documento) return { error: 'Documento no encontrado', status: 404 }
+
+  const url = await generarUrlDescargaR2(documento.url)
+  return { url }
+}
+
+module.exports = {
+  listarColaboradores,
+  listarRolesDisponibles,
+  crearColaborador,
+  obtenerColaborador,
+  actualizarColaborador,
+  cambiarEstadoColaborador,
+  listarDocumentosColaborador,
+  subirDocumentoAColaborador,
+  eliminarDocumentoColaborador,
+  obtenerUrlDescargaDocumento,
+}

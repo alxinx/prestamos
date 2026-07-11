@@ -6,9 +6,7 @@ function iniciales(nombre) {
 }
 
 // Tarjeta DRY de colaborador — pensada para listas mobile-first (sin tabla ancha, sin scroll horizontal).
-export default function TarjetaColaborador({ colaborador, onCambiarEstado, cambiando }) {
-  const activo = colaborador.estado === 'ACTIVO'
-
+export default function TarjetaColaborador({ colaborador }) {
   return (
     <div className="flex items-center gap-3 p-3.5 rounded-xl border border-outline-variant/50 bg-surface-lowest">
       <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[13px] shrink-0">
@@ -27,17 +25,12 @@ export default function TarjetaColaborador({ colaborador, onCambiarEstado, cambi
         <p className="text-[12px] text-on-surface-variant truncate">{colaborador.email}</p>
       </div>
 
-      {!colaborador.esSuperAdmin && (
-        <button
-          onClick={() => onCambiarEstado(colaborador.id)}
-          disabled={cambiando}
-          className={`shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors disabled:opacity-50 ${
-            activo ? 'bg-error/10 text-error hover:bg-error/15' : 'bg-secondary/10 text-secondary hover:bg-secondary/15'
-          }`}
-        >
-          {cambiando ? '...' : activo ? 'Desactivar' : 'Activar'}
-        </button>
-      )}
+      <a
+        href={`/colaboradores/${colaborador.id}/panel`}
+        className="shrink-0 px-4 py-2.5 rounded-lg text-[13px] font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors no-underline"
+      >
+        Ver Panel
+      </a>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 const { Router } = require('express')
 const { z } = require('zod')
-const { crearValidador } = require('../../lib/validar')
+const { crearValidador, esquemaContrasena } = require('../../lib/validar')
 const { controlar } = require('../../lib/controlador')
 const { verificarToken, completarActivacion } = require('./activacion.service')
 
@@ -15,10 +15,7 @@ const validarCompletar = crearValidador(z.object({
   token:          z.string().min(1),
   email:          z.string().email(),
   nombreCompleto: z.string().min(1, 'El nombre es requerido'),
-  password:       z.string()
-    .min(8,    'La contraseña debe tener al menos 8 caracteres')
-    .regex(/[A-Z]/, 'Debe incluir al menos una mayúscula')
-    .regex(/[0-9]/, 'Debe incluir al menos un número'),
+  password:       esquemaContrasena,
 }))
 
 const router = Router()

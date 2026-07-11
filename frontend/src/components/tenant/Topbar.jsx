@@ -1,4 +1,6 @@
 import MenuUsuario from './MenuUsuario'
+import { navAdmin, navCobrador, subitemsCaja } from './Sidebar'
+import { ETIQUETAS_ROL_CORTO } from '../../lib/roles'
 
 function IconoHamburguesa() {
   return (
@@ -17,28 +19,11 @@ function IconoCampana() {
   )
 }
 
-const etiquetasRuta = {
-  '/dashboard':     'Dashboard',
-  '/clientes':      'Clientes',
-  '/prestamos':     'Préstamos',
-  '/cobros':        'Cobros',
-  '/colaboradores': 'Colaboradores',
-  '/capital':       'Capital',
-  '/tesoreria':     'Tesorería',
-  '/reportes':      'Reportes',
-  '/configuracion': 'Configuración',
-  '/mis-cobros':    'Mis cobros',
-  '/historial':     'Historial',
-  '/caja/gastos':   'Gastos de campo',
-  '/caja/cierre':   'Cierre de caja',
-}
-
-const etiquetasRol = {
-  ADMINISTRADOR: 'Admin',
-  SECRETARIA:    'Secretaria',
-  AUDITOR:       'Auditor',
-  COBRADOR:      'Cobrador',
-}
+// Deriva ruta → etiqueta desde la misma fuente que usa el sidebar, para no
+// mantener un segundo mapa de navegación que se desincroniza en silencio.
+const etiquetasRuta = Object.fromEntries(
+  [...navAdmin, ...navCobrador, ...subitemsCaja].map(({ ruta, etiqueta }) => [ruta, etiqueta])
+)
 
 export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol }) {
   const ruta = window.location.pathname
@@ -87,7 +72,7 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
             <div className="flex items-center gap-2">
               {rol && (
                 <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-secondary/10 text-secondary">
-                  {etiquetasRol[rol] ?? rol}
+                  {ETIQUETAS_ROL_CORTO[rol] ?? rol}
                 </span>
               )}
               <MenuUsuario iniciales={iniciales} />

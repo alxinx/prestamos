@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useTenantAuth } from '../../context/TenantAuthContext'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
-import { IcoConfiguracion } from './iconos'
+import usePermisos from '../../hooks/usePermisos'
+import { IcoConfiguracion, IcoPersonas } from './iconos'
 
 // ─── Íconos SVG inline ───────────────────────────────────────────────────────
 
@@ -10,15 +11,6 @@ function IcoDashboard() {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="8" height="8" rx="1" /><rect x="13" y="3" width="8" height="8" rx="1" />
       <rect x="3" y="13" width="8" height="8" rx="1" /><rect x="13" y="13" width="8" height="8" rx="1" />
-    </svg>
-  )
-}
-
-function IcoClientes() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   )
 }
@@ -226,31 +218,33 @@ function ItemDesplegable({ icono, etiqueta, subitems, rutaActiva, onClick, colap
 
 // ─── Sidebar principal ────────────────────────────────────────────────────────
 
-const navAdmin = [
+export const navAdmin = [
   { etiqueta: 'Dashboard',      ruta: '/dashboard',      icono: <IcoDashboard /> },
-  { etiqueta: 'Clientes',       ruta: '/clientes',       icono: <IcoClientes /> },
+  { etiqueta: 'Clientes',       ruta: '/clientes',       icono: <IcoPersonas size={18} /> },
   { etiqueta: 'Préstamos',      ruta: '/prestamos',      icono: <IcoPrestamos /> },
   { etiqueta: 'Cobros',         ruta: '/cobros',         icono: <IcoCobros /> },
   { etiqueta: 'Colaboradores',  ruta: '/colaboradores',  icono: <IcoColaboradores /> },
-  { etiqueta: 'Capital',        ruta: '/capital',        icono: <IcoCapital /> },
+  { etiqueta: 'Capital y Socios',        ruta: '/capital',        icono: <IcoCapital /> },
   { etiqueta: 'Tesorería',      ruta: '/tesoreria',      icono: <IcoTesoreria /> },
   { etiqueta: 'Reportes',       ruta: '/reportes',       icono: <IcoReportes /> },
   { etiqueta: 'Configuración',  ruta: '/configuracion',  icono: <IcoConfiguracion /> },
 ]
 
-const navCobrador = [
+export const navCobrador = [
   { etiqueta: 'Mis cobros', ruta: '/mis-cobros', icono: <IcoMisCobros /> },
   { etiqueta: 'Historial',  ruta: '/historial',  icono: <IcoHistorial /> },
 ]
 
-const subitemsCaja = [
-  { etiqueta: 'Gastos de campo', ruta: '/caja/gastos' },
-  { etiqueta: 'Cierre de caja',  ruta: '/caja/cierre' },
+export const subitemsCaja = [
+  { etiqueta: 'Gastos de campo', ruta: '/caja/gastos', permiso: 'caja.registrar_gasto' },
+  { etiqueta: 'Cierre de caja',  ruta: '/caja/cierre',  permiso: 'caja.cerrar_individual' },
 ]
 
 export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }) {
   const { cerrarSesion } = useTenantAuth()
+  const { tienePermiso, cargando: cargandoPermisos } = usePermisos()
   const esCobrador = rol === 'COBRADOR'
+  const subitemsCajaPermitidos = cargandoPermisos ? [] : subitemsCaja.filter(s => tienePermiso(s.permiso))
 
   // ≤768px (celular): cajón deslizable clásico, controlado por el hamburguesa del topbar.
   // 769–1024px (tablet): sidebar fijo, colapsado a solo íconos por defecto, con botón propio
@@ -263,7 +257,7 @@ export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }
   return (
     <aside className={`
       ${esMobil || !colapsado ? 'w-[260px]' : 'w-[76px]'}
-      h-screen flex flex-col shrink-0
+      h-dvh flex flex-col shrink-0
       bg-gradient-to-b from-primary to-primary-dark
       border-r border-white/[0.06]
       ${esMobil
@@ -343,15 +337,17 @@ export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }
                 onClick={esMobil ? onCerrar : undefined}
               />
             ))}
-            <ItemDesplegable
-              icono={<IcoCaja />}
-              etiqueta="Caja"
-              subitems={subitemsCaja}
-              rutaActiva={rutaActiva}
-              colapsado={colapsado}
-              onClick={esMobil ? onCerrar : undefined}
-              onExpandirSidebar={() => setExpandido(true)}
-            />
+            {subitemsCajaPermitidos.length > 0 && (
+              <ItemDesplegable
+                icono={<IcoCaja />}
+                etiqueta="Caja"
+                subitems={subitemsCajaPermitidos}
+                rutaActiva={rutaActiva}
+                colapsado={colapsado}
+                onClick={esMobil ? onCerrar : undefined}
+                onExpandirSidebar={() => setExpandido(true)}
+              />
+            )}
           </>
         )}
       </nav>

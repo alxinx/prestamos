@@ -1,7 +1,7 @@
 'use strict'
 
 const { z } = require('zod')
-const { crearValidador } = require('../../lib/validar')
+const { crearValidador, esquemaContrasena } = require('../../lib/validar')
 
 const esquemaLogin = z.object({
   email:    z.string().email('Correo electrónico inválido').toLowerCase(),
@@ -16,10 +16,7 @@ const validarSolicitarRecuperacion = crearValidador(z.object({
 
 const validarRestablecerContrasena = crearValidador(z.object({
   token:    z.string().min(1, 'Token requerido'),
-  password: z.string()
-    .min(8,    'Mínimo 8 caracteres')
-    .regex(/[A-Z]/, 'Debe incluir al menos una mayúscula')
-    .regex(/[0-9]/, 'Debe incluir al menos un número'),
+  password: esquemaContrasena,
 }))
 
 module.exports = { validarLogin, validarSolicitarRecuperacion, validarRestablecerContrasena }

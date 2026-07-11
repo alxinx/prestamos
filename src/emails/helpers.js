@@ -46,6 +46,28 @@ function generarFilasCaracteristicas(plan) {
     </tr>`).join('')
 }
 
+// Botón CTA de ancho automático usado en los emails transaccionales (activación, recuperación).
+function botonCTA({ url, texto, colorFondo = '#001430', colorTexto = '#ffffff' }) {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td style="border-radius:10px;background:${colorFondo};">
+          <a href="${url}"
+            style="display:inline-block;padding:16px 36px;color:${colorTexto};font-size:15px;font-weight:700;text-decoration:none;border-radius:10px;letter-spacing:0.01em;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+            ${texto}
+          </a>
+        </td>
+      </tr>
+    </table>`
+}
+
+// Nota de expiración de enlaces de activación/recuperación.
+function notaExpiracion(horas) {
+  return `<p style="font-size:12px;color:#94a3b8;margin:14px 0 0;line-height:1.5;">
+    🔒 Este enlace es personal e intransferible. Expira en <strong>${horas} horas</strong>.
+  </p>`
+}
+
 /**
  * Envuelve el contenido en el shell de email completo (outer table, header con logo, footer).
  * @param {string} accentColor  Color del borde inferior del encabezado
@@ -111,4 +133,4 @@ function htmlBase({ accentColor = '#001430', filas }) {
 </html>`
 }
 
-module.exports = { formatearPrecio, formatearLimite, generarFilasCaracteristicas, htmlBase }
+module.exports = { formatearPrecio, formatearLimite, generarFilasCaracteristicas, botonCTA, notaExpiracion, htmlBase }

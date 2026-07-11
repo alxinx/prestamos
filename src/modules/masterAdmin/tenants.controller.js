@@ -15,9 +15,9 @@ const manejarListar = controlar(req => {
 })
 
 const manejarObtener           = controlar(req => obtenerTenant(req.params.id))
-const manejarCrear             = controlar(req => crearTenant(req.body), { crear: true })
-const manejarActualizar        = controlar(req => actualizarTenant(req.params.id, req.body))
-const manejarReenviarActivacion = controlar(req => reenviarActivacion(req.params.id))
+const manejarCrear             = controlar(req => crearTenant(req.body, req.masterAdmin.id), { crear: true })
+const manejarActualizar        = controlar(req => actualizarTenant(req.params.id, req.body, req.masterAdmin.id))
+const manejarReenviarActivacion = controlar(req => reenviarActivacion(req.params.id, req.masterAdmin.id))
 
 const manejarVerificarEmail = controlar(req => {
   const { email, excluirId } = req.query

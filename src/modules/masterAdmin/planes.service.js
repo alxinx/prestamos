@@ -3,19 +3,27 @@
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../lib/prisma')
 
-function camposPlane(datos) {
+// Campos de precio/límites — comunes entre la edición completa del plan (camposPlane)
+// y la edición rápida de configuración (actualizarConfigPlan), que no toca nombre/features/estado.
+function camposConfigPlan(datos) {
   return {
-    nombre: datos.nombre,
     precio: datos.precio,
     limitePrestamos: datos.limitePrestamos,
     limiteColaboradores: datos.limiteColaboradores,
     limiteMensajesWsp: datos.limiteMensajesWsp,
     consultasScore: datos.consultasScore,
+    precioPréstamoAdicional: datos.precioPrestamoAdicional,
+    precioColaboradorAdicional: datos.precioColaboradorAdicional,
+  }
+}
+
+function camposPlane(datos) {
+  return {
+    nombre: datos.nombre,
+    ...camposConfigPlan(datos),
     tieneBot: datos.tieneBot,
     tienePortalCliente: datos.tienePortalCliente,
     tieneFirmaDigital: datos.tieneFirmaDigital,
-    precioPréstamoAdicional: datos.precioPrestamoAdicional,
-    precioColaboradorAdicional: datos.precioColaboradorAdicional,
     estado: datos.estado,
   }
 }
@@ -82,18 +90,7 @@ async function actualizarConfigPlan(id, datos) {
   const existe = await prisma.plan.findUnique({ where: { id } })
   if (!existe) return { error: 'Plan no encontrado', status: 404 }
 
-  const plan = await prisma.plan.update({
-    where: { id },
-    data: {
-      precio: datos.precio,
-      limitePrestamos: datos.limitePrestamos,
-      limiteColaboradores: datos.limiteColaboradores,
-      limiteMensajesWsp: datos.limiteMensajesWsp,
-      consultasScore: datos.consultasScore,
-      precioPréstamoAdicional: datos.precioPrestamoAdicional,
-      precioColaboradorAdicional: datos.precioColaboradorAdicional,
-    },
-  })
+  const plan = await prisma.plan.update({ where: { id }, data: camposConfigPlan(datos) })
   return { plan }
 }
 

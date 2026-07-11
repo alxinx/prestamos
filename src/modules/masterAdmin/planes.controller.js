@@ -1,7 +1,5 @@
 'use strict'
 
-'use strict'
-
 const { listarPlanes, obtenerPlan, crearPlan, actualizarPlan, cambiarEstadoPlan, actualizarConfigPlan } = require('./planes.service')
 const { controlar } = require('../../lib/controlador')
 

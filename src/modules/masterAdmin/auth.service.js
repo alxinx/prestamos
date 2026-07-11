@@ -1,21 +1,17 @@
 'use strict'
 
 const bcrypt = require('bcrypt')
-const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../lib/prisma')
-const { redis } = require('../../lib/redis')
-const {
-  generarAccessToken,
-  generarRefreshToken,
-  verificarRefreshToken,
-  REFRESH_TTL_SECONDS,
-} = require('../../lib/jwt')
+const { HASH_FICTICIO, crearControlIntentos, emitirTokens, rotarRefreshToken, cerrarSesionComun } = require('../../lib/sesion')
 
-const HASH_FICTICIO = '$2b$12$invalidhashfortimingattackpreventionxxxxxxxxxxxxxxxxxxxxxxx'
 const COOKIE_REFRESH = 'ma_refresh'
+const PREFIJO = 'masterAdmin'
 
 const MAX_INTENTOS_EMAIL  = Number(process.env.LOGIN_MAX_INTENTOS_EMAIL) || 5
 const BLOQUEO_SEGUNDOS    = Number(process.env.LOGIN_BLOQUEO_SEGUNDOS)   || 15 * 60
+
+const { estaBloqueado: estaBloqueadoPorEmail, registrarFallo, resetearIntentos } =
+  crearControlIntentos(PREFIJO, { maxIntentos: MAX_INTENTOS_EMAIL, bloqueoSegundos: BLOQUEO_SEGUNDOS })
 
 function extraerIp(req) {
   const reenviada = req.headers['x-forwarded-for']
@@ -23,35 +19,12 @@ function extraerIp(req) {
   return cruda.replace(/^::ffff:/, '')
 }
 
-function claveRefresh(jti) {
-  return `masterAdmin:rt:${jti}`
-}
-
-function claveIntentos(email) {
-  return `masterAdmin:login:fallos:${email.toLowerCase()}`
-}
-
-async function estaBloquedoPorEmail(email) {
-  const intentos = await redis.get(claveIntentos(email))
-  return intentos !== null && Number(intentos) >= MAX_INTENTOS_EMAIL
-}
-
-async function registrarFallo(email) {
-  const clave = claveIntentos(email)
-  const intentos = await redis.incr(clave)
-  if (intentos === 1) await redis.expire(clave, BLOQUEO_SEGUNDOS)
-}
-
-async function resetearIntentos(email) {
-  await redis.del(claveIntentos(email))
-}
-
 async function iniciarSesion(req) {
   const { email, password } = req.body
   const ip = extraerIp(req)
 
   // Bloqueo por cuenta: independiente de la IP de origen
-  if (await estaBloquedoPorEmail(email)) {
+  if (await estaBloqueadoPorEmail(email)) {
     return { error: 'Demasiados intentos fallidos. Intente de nuevo más tarde.', status: 429 }
   }
 
@@ -77,12 +50,11 @@ async function iniciarSesion(req) {
   // Login exitoso: limpiar contador de fallos
   await resetearIntentos(email)
 
-  const jti = uuidv7()
-  const cargaToken = { sub: admin.id, role: 'MASTER_ADMIN' }
-  const accessToken = generarAccessToken(cargaToken)
-  const refreshToken = generarRefreshToken({ ...cargaToken, jti })
-
-  await redis.set(claveRefresh(jti), admin.id, 'EX', REFRESH_TTL_SECONDS)
+  const { accessToken, refreshToken } = await emitirTokens({
+    prefijo: PREFIJO,
+    carga: { sub: admin.id, role: 'MASTER_ADMIN' },
+    idSujeto: admin.id,
+  })
 
   prisma.masterAdmin
     .update({ where: { id: admin.id }, data: { ultimoAcceso: new Date() } })
@@ -92,42 +64,18 @@ async function iniciarSesion(req) {
 }
 
 async function renovarToken(req) {
-  const token = req.cookies?.[COOKIE_REFRESH]
-  if (!token) return { error: 'Refresh token requerido', status: 401 }
-
-  let carga
-  try {
-    carga = verificarRefreshToken(token)
-  } catch {
-    return { error: 'Token inválido o expirado', status: 401 }
-  }
-
-  const idAdmin = await redis.get(claveRefresh(carga.jti))
-  if (!idAdmin) return { error: 'Sesión expirada', status: 401 }
-
-  // Rotar: eliminar jti anterior y emitir uno nuevo
-  await redis.del(claveRefresh(carga.jti))
-
-  const nuevoJti = uuidv7()
-  const nuevaCarga = { sub: carga.sub, role: 'MASTER_ADMIN' }
-  const accessToken = generarAccessToken(nuevaCarga)
-  const refreshToken = generarRefreshToken({ ...nuevaCarga, jti: nuevoJti })
-
-  await redis.set(claveRefresh(nuevoJti), idAdmin, 'EX', REFRESH_TTL_SECONDS)
-
-  return { accessToken, refreshToken, nombreCookie: COOKIE_REFRESH }
+  const resultado = await rotarRefreshToken({
+    req,
+    cookieNombre: COOKIE_REFRESH,
+    prefijo: PREFIJO,
+    construirCarga: carga => ({ sub: carga.sub, role: 'MASTER_ADMIN' }),
+  })
+  if (resultado.error) return resultado
+  return { ...resultado, nombreCookie: COOKIE_REFRESH }
 }
 
 async function cerrarSesion(req) {
-  const token = req.cookies?.[COOKIE_REFRESH]
-  if (token) {
-    try {
-      const carga = verificarRefreshToken(token)
-      await redis.del(claveRefresh(carga.jti))
-    } catch {
-      // Token ya inválido — igual limpiar la cookie
-    }
-  }
+  await cerrarSesionComun({ req, cookieNombre: COOKIE_REFRESH, prefijo: PREFIJO })
   return { nombreCookie: COOKIE_REFRESH }
 }
 

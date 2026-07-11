@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
+import usePermisos from '../../hooks/usePermisos'
 import TarjetaPanel from '../../components/tenant/TarjetaPanel'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import CampoTexto from '../../components/tenant/CampoTexto'
 import CampoSelect from '../../components/tenant/CampoSelect'
 import SelectorDocumentos from '../../components/tenant/SelectorDocumentos'
 import TarjetaColaborador from '../../components/tenant/TarjetaColaborador'
+import ConPermiso from '../../components/tenant/ConPermiso'
 import { IcoMas, IcoCorreo } from '../../components/tenant/iconos'
 import { ETIQUETAS_ROL } from '../../lib/roles'
 import { apiFetch } from '../../lib/api'
@@ -23,6 +25,7 @@ const FORM_INICIAL = { nombreCompleto: '', cedula: '', telefono: '', email: '', 
 
 export default function Colaboradores() {
   const esMobil = useTamanoPantalla()
+  const { tienePermiso: tienePermisoUsuario, cargando: cargandoPermisos } = usePermisos()
   const [mostrarFormMobil, setMostrarFormMobil] = useState(false)
   const [roles, setRoles] = useState([])
   const [colaboradores, setColaboradores] = useState([])
@@ -34,7 +37,6 @@ export default function Colaboradores() {
   const [enviando, setEnviando] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [sinPermiso, setSinPermiso] = useState(false)
-  const [cambiandoId, setCambiandoId] = useState(null)
 
   useEffect(() => {
     async function cargarDatos() {
@@ -95,16 +97,6 @@ export default function Colaboradores() {
     }
   }
 
-  async function manejarCambiarEstado(id) {
-    setCambiandoId(id)
-    try {
-      const { ok, datos } = await apiFetch(`/api/tenant/colaboradores/${id}/estado`, { method: 'PATCH' })
-      if (ok) setColaboradores(c => c.map(col => (col.id === id ? datos.colaborador : col)))
-    } finally {
-      setCambiandoId(null)
-    }
-  }
-
   if (sinPermiso) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 pt-7 pb-12 min-h-full">
@@ -116,6 +108,7 @@ export default function Colaboradores() {
   }
 
   const formulario = (
+    <ConPermiso permiso="empleados.crear">
     <TarjetaPanel
       icono={<IcoMas />}
       iconoClases="bg-secondary/10 text-secondary"
@@ -189,6 +182,7 @@ export default function Colaboradores() {
         </BotonAccion>
       </form>
     </TarjetaPanel>
+    </ConPermiso>
   )
 
   const listado = (
@@ -205,12 +199,7 @@ export default function Colaboradores() {
       ) : (
         <div className="flex flex-col gap-3">
           {colaboradores.map(c => (
-            <TarjetaColaborador
-              key={c.id}
-              colaborador={c}
-              onCambiarEstado={manejarCambiarEstado}
-              cambiando={cambiandoId === c.id}
-            />
+            <TarjetaColaborador key={c.id} colaborador={c} />
           ))}
         </div>
       )}
@@ -226,7 +215,7 @@ export default function Colaboradores() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1 text-secondary">Panel</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-on-background tracking-tight">Colaboradores</h1>
         </div>
-        {esMobil && !mostrarFormMobil && (
+        {esMobil && !mostrarFormMobil && !cargandoPermisos && tienePermisoUsuario('empleados.crear') && (
           <BotonAccion onClick={() => setMostrarFormMobil(true)} icono={<IcoMas />}>
             Crear colaborador
           </BotonAccion>

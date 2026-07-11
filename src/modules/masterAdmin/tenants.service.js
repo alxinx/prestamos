@@ -1,18 +1,13 @@
 'use strict'
 
-const crypto = require('crypto')
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../lib/prisma')
 const { enviarEmail } = require('../../lib/email')
+const { registrarAuditoria } = require('../../lib/auditoria')
 const { emailActivacionTenant } = require('../../emails/activacionTenant')
 const { emailCambioEstado }     = require('../../emails/cambioEstado')
 const { emailCambioPlan }       = require('../../emails/cambioPlan')
-
-const EXPIRACION_TOKEN_ACTIVACION_MS = 72 * 60 * 60 * 1000
-
-function generarToken() {
-  return crypto.randomBytes(32).toString('hex')
-}
+const { generarTokenActivacion: generarToken, calcularExpiracionActivacion } = require('../../lib/tokenActivacion')
 
 function enviarEmailActivacion(tenant, tokenActivacion) {
   const urlActivacion = `${process.env.APP_URL}/activar?token=${tokenActivacion}`
@@ -87,7 +82,7 @@ async function listarTenants({ busqueda = '', pagina = 1, porPagina = 10 } = {})
   return { tenants, total, pagina, porPagina, totalPaginas: Math.ceil(total / porPagina) }
 }
 
-async function crearTenant(datos) {
+async function crearTenant(datos, masterAdminId) {
   const plan = await prisma.plan.findUnique({ where: { id: datos.planId } })
   if (!plan) return { error: 'Plan no encontrado', status: 404 }
   if (plan.estado !== 'ACTIVO') return { error: 'El plan seleccionado no está activo', status: 422 }
@@ -100,7 +95,7 @@ async function crearTenant(datos) {
   fechaVencimiento.setDate(fechaVencimiento.getDate() + 30)
 
   const tokenActivacion = generarToken()
-  const tokenActivacionExpira = new Date(Date.now() + EXPIRACION_TOKEN_ACTIVACION_MS)
+  const tokenActivacionExpira = calcularExpiracionActivacion()
 
   const tenant = await prisma.tenant.create({
     data: {
@@ -124,11 +119,20 @@ async function crearTenant(datos) {
     include: { plan: true },
   })
 
+  await registrarAuditoria({
+    tenantId: tenant.id,
+    accion: 'TENANT_CREADO',
+    entidadTipo: 'Tenant',
+    entidadId: tenant.id,
+    valorNuevo: { nombreNegocio: tenant.nombreNegocio, email: tenant.email, planId: tenant.planId, estado: tenant.estado },
+    metadata: { masterAdminId },
+  })
+
   enviarEmailActivacion(tenant, tokenActivacion)
   return { tenant }
 }
 
-async function actualizarTenant(id, datos) {
+async function actualizarTenant(id, datos, masterAdminId) {
   const existe = await prisma.tenant.findUnique({
     where: { id },
     include: { plan: true },
@@ -190,6 +194,16 @@ async function actualizarTenant(id, datos) {
     }).catch(err => console.error('[Email] Error enviando cambio de plan a', tenant.email, ':', err.message))
   }
 
+  await registrarAuditoria({
+    tenantId: tenant.id,
+    accion: 'TENANT_EDITADO',
+    entidadTipo: 'Tenant',
+    entidadId: tenant.id,
+    valorAnterior: { nombreNegocio: existe.nombreNegocio, email: existe.email, planId: existe.planId, estado: existe.estado },
+    valorNuevo: { nombreNegocio: tenant.nombreNegocio, email: tenant.email, planId: tenant.planId, estado: tenant.estado },
+    metadata: { masterAdminId },
+  })
+
   return { tenant }
 }
 
@@ -206,16 +220,24 @@ async function obtenerTenant(id) {
   return { tenant }
 }
 
-async function reenviarActivacion(id) {
+async function reenviarActivacion(id, masterAdminId) {
   const tenant = await prisma.tenant.findUnique({ where: { id }, include: { plan: true } })
   if (!tenant) return { error: 'Tenant no encontrado', status: 404 }
 
   const tokenActivacion = generarToken()
-  const tokenActivacionExpira = new Date(Date.now() + EXPIRACION_TOKEN_ACTIVACION_MS)
+  const tokenActivacionExpira = calcularExpiracionActivacion()
 
   await prisma.tenant.update({
     where: { id },
     data: { tokenActivacion, tokenActivacionExpira },
+  })
+
+  await registrarAuditoria({
+    tenantId: tenant.id,
+    accion: 'TENANT_ACTIVACION_REENVIADA',
+    entidadTipo: 'Tenant',
+    entidadId: tenant.id,
+    metadata: { masterAdminId },
   })
 
   enviarEmailActivacion(tenant, tokenActivacion)
