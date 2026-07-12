@@ -68,6 +68,37 @@ function notaExpiracion(horas) {
   </p>`
 }
 
+// Fila de un movimiento de caja para la sección "Últimos movimientos" de los
+// emails de capital (suspensión, reactivación) — compartida entre ambos templates.
+// `esEvento` (SUSPENSION/REACTIVACION) no mueve dinero, se muestra sin signo/color.
+function filaMovimientoCaja(m) {
+  const fecha = new Date(m.fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+
+  if (m.esEvento) {
+    return `
+      <tr>
+        <td colspan="2" style="padding:8px 0;font-size:13px;color:#475569;border-bottom:1px solid #e5eeff;">${m.etiquetaTipo}</td>
+        <td style="padding:8px 0 8px 16px;font-size:12px;color:#94a3b8;text-align:right;border-bottom:1px solid #e5eeff;white-space:nowrap;">${fecha}</td>
+      </tr>`
+  }
+
+  const signo = m.entrada ? '+' : '−'
+  const color = m.entrada ? '#00C982' : '#EF4444'
+  return `
+    <tr>
+      <td style="padding:8px 0;font-size:13px;color:#475569;border-bottom:1px solid #e5eeff;">${m.etiquetaTipo}</td>
+      <td style="padding:8px 0;font-size:13px;color:${color};font-weight:700;text-align:right;border-bottom:1px solid #e5eeff;">${signo} ${formatearPrecio(m.monto)}</td>
+      <td style="padding:8px 0 8px 16px;font-size:12px;color:#94a3b8;text-align:right;border-bottom:1px solid #e5eeff;white-space:nowrap;">${fecha}</td>
+    </tr>`
+}
+
+function generarFilasMovimientos(movimientos) {
+  if (!movimientos.length) {
+    return `<tr><td colspan="3" style="padding:12px 0;font-size:13px;color:#94a3b8;">Sin movimientos registrados.</td></tr>`
+  }
+  return movimientos.map(filaMovimientoCaja).join('')
+}
+
 /**
  * Envuelve el contenido en el shell de email completo (outer table, header con logo, footer).
  * @param {string} accentColor  Color del borde inferior del encabezado
@@ -133,4 +164,4 @@ function htmlBase({ accentColor = '#001430', filas }) {
 </html>`
 }
 
-module.exports = { formatearPrecio, formatearLimite, generarFilasCaracteristicas, botonCTA, notaExpiracion, htmlBase }
+module.exports = { formatearPrecio, formatearLimite, generarFilasCaracteristicas, botonCTA, notaExpiracion, generarFilasMovimientos, htmlBase }

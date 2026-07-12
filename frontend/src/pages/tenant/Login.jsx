@@ -105,7 +105,7 @@ export default function LoginTenant() {
   )
 
   return (
-    <TenantAuthLayout indicador="Red activa" titulo={panelIzq}>
+    <TenantAuthLayout indicador="Red activa" titulo={panelIzq} logoMobilCentrado>
       <div style={{ marginBottom: 32 }}>
         <h2 style={{ fontSize: 26, fontWeight: 700, color: '#ffffff', margin: '0 0 6px', letterSpacing: '-0.01em' }}>
           Acceso al Panel

@@ -2,6 +2,7 @@
 // existentes de `../../components/tenant/iconos` dentro de pages/tenant y components/tenant.
 export {
   IcoMas,
+  IcoMenos,
   IcoConfiguracion,
   IcoOjo,
   IcoOjoTachado,
@@ -17,6 +18,7 @@ export {
   IcoMoneda,
   IcoReloj,
   IcoDescargar,
+  IcoImprimir,
   IcoBasura,
   IcoArchivo,
   IcoArchivoImagen,
@@ -24,4 +26,7 @@ export {
   IcoArchivoWord,
   IcoArchivoExcel,
   IcoArchivoPowerPoint,
+  IcoEdificio,
+  IcoPausa,
+  IcoPlay,
 } from '../iconos'

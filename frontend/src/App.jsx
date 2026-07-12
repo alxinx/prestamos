@@ -13,6 +13,7 @@ import TenantPanel from './pages/master-admin/TenantPanel'
 // Tenant — auth pública
 import Activar from './pages/Activar'
 import ActivarColaborador from './pages/tenant/ActivarColaborador'
+import Verificar from './pages/Verificar'
 import LoginTenant from './pages/tenant/Login'
 import RecuperarContrasena from './pages/tenant/RecuperarContrasena'
 import RestablecerContrasena from './pages/tenant/RestablecerContrasena'
@@ -26,6 +27,7 @@ import Cobros from './pages/tenant/Cobros'
 import Colaboradores from './pages/tenant/Colaboradores'
 import ColaboradorPanel from './pages/tenant/ColaboradorPanel'
 import Capital from './pages/tenant/Capital'
+import CapitalPanel from './pages/tenant/CapitalPanel'
 import Tesoreria from './pages/tenant/Tesoreria'
 import Reportes from './pages/tenant/Reportes'
 import Configuracion from './pages/tenant/Configuracion'
@@ -56,6 +58,7 @@ function RutasTenantPrivadas({ ruta }) {
   if (ruta.startsWith('/cobros'))                   return <Cobros />
   if (/^\/colaboradores\/[^/]+\/panel/.test(ruta))  return <ColaboradorPanel />
   if (ruta.startsWith('/colaboradores'))            return <Colaboradores />
+  if (/^\/capital\/[^/]+\/panel/.test(ruta))        return <CapitalPanel />
   if (ruta.startsWith('/capital'))                  return <Capital />
   if (ruta.startsWith('/tesoreria'))                return <Tesoreria />
   if (ruta.startsWith('/reportes'))                 return <Reportes />
@@ -134,6 +137,7 @@ function Rutas() {
 
   if (ruta.startsWith('/activar-colaborador')) return <ActivarColaborador />
   if (ruta.startsWith('/activar')) return <Activar />
+  if (ruta.startsWith('/verificar')) return <Verificar />
 
   if (esMasterAdmin(ruta)) {
     return (

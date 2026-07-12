@@ -224,7 +224,7 @@ export const navAdmin = [
   { etiqueta: 'Préstamos',      ruta: '/prestamos',      icono: <IcoPrestamos /> },
   { etiqueta: 'Cobros',         ruta: '/cobros',         icono: <IcoCobros /> },
   { etiqueta: 'Colaboradores',  ruta: '/colaboradores',  icono: <IcoColaboradores /> },
-  { etiqueta: 'Capital y Socios',        ruta: '/capital',        icono: <IcoCapital /> },
+  { etiqueta: 'Capital y Socios', ruta: '/capital',       icono: <IcoCapital />, permiso: 'capital.ver' },
   { etiqueta: 'Tesorería',      ruta: '/tesoreria',      icono: <IcoTesoreria /> },
   { etiqueta: 'Reportes',       ruta: '/reportes',       icono: <IcoReportes /> },
   { etiqueta: 'Configuración',  ruta: '/configuracion',  icono: <IcoConfiguracion /> },
@@ -244,6 +244,7 @@ export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }
   const { cerrarSesion } = useTenantAuth()
   const { tienePermiso, cargando: cargandoPermisos } = usePermisos()
   const esCobrador = rol === 'COBRADOR'
+  const navAdminPermitido = cargandoPermisos ? [] : navAdmin.filter(el => !el.permiso || tienePermiso(el.permiso))
   const subitemsCajaPermitidos = cargandoPermisos ? [] : subitemsCaja.filter(s => tienePermiso(s.permiso))
 
   // ≤768px (celular): cajón deslizable clásico, controlado por el hamburguesa del topbar.
@@ -312,7 +313,7 @@ export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }
 
       {/* Navegación */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
-        {!esCobrador && navAdmin.map(el => (
+        {!esCobrador && navAdminPermitido.map(el => (
           <ItemNav
             key={el.ruta}
             icono={el.icono}

@@ -184,6 +184,8 @@ enum TipoMovimientoCaja {
   PRESTAMO_OTORGADO
   PAGO_RECIBIDO
   UTILIDAD_RETIRADA
+  SUSPENSION
+  REACTIVACION
 }
 
 // Módulo 6: Créditos
@@ -934,6 +936,9 @@ model MovimientoCaja {
   registradoPorId        String             @map("registrado_por") @db.Char(36)
   fecha                  DateTime
   observaciones          String?            @db.Text
+  // Token de verificación pública del voucher impreso (QR -> GET /api/verificar/:token)
+  // — solo aporte/retiro manual (agregar/quitar capital) lo generan; ver capital.service.js.
+  tokenVerificacion      String?            @unique @map("token_verificacion") @db.Char(64)
   createdAt              DateTime           @default(now()) @map("created_at")
   updatedAt              DateTime           @updatedAt @map("updated_at")
 
@@ -1195,6 +1200,10 @@ model CierreCajaIndividual {
   fechaAprobacion        DateTime?                  @map("fecha_aprobacion")
   movimientoTesoreriaId  String?                    @map("movimiento_tesoreria_id") @db.Char(36)
   observaciones          String?                    @db.Text
+  // Token aleatorio de 64 hex (32 bytes crypto.randomBytes) para la verificación
+  // pública del voucher impreso (QR -> GET /api/verificar/:token) — no es el UUID
+  // v7 del registro, nunca se expone el id real en el endpoint público.
+  tokenVerificacion      String?                    @unique @map("token_verificacion") @db.Char(64)
   createdAt              DateTime                   @default(now()) @map("created_at")
   updatedAt              DateTime                   @updatedAt @map("updated_at")
 

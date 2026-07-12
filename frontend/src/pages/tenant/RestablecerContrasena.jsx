@@ -65,6 +65,7 @@ export default function RestablecerContrasena() {
       titulo={<>Nueva contraseña<br />para tu <span style={{ color: '#56fbab' }}>cuenta GotaPay.</span></>}
       descripcion="Elige una contraseña fuerte que no uses en ningún otro servicio."
       pieIzq="🔒 Tus contraseñas se guardan cifradas — ni GotaPay puede verlas."
+      logoMobilCentrado
     >
       {!token ? (
         <div style={{ textAlign: 'center', paddingTop: 16 }}>

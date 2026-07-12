@@ -39,4 +39,13 @@ const otpLimiter = crearLimiter({
   mensaje: 'Límite de solicitudes OTP alcanzado. Intente en una hora.',
 })
 
-module.exports = { globalLimiter, authLimiter, refreshLimiter, otpLimiter }
+// Verificación pública de documentos (QR de vouchers, GET /api/verificar/:token):
+// sin autenticación, el endpoint más expuesto del sistema — límite propio, más
+// estricto que el global, no cuenta con `skipSuccessfulRequests` (se cuentan todas
+// las peticiones, exitosas o no, para no dejar hueco a enumeración de tokens).
+const verificacionLimiter = crearLimiter({
+  max: Number(process.env.RATE_LIMIT_MAX_VERIFICACION) || 30,
+  mensaje: 'Demasiadas solicitudes. Intente más tarde.',
+})
+
+module.exports = { globalLimiter, authLimiter, refreshLimiter, otpLimiter, verificacionLimiter }

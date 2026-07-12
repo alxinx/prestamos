@@ -28,6 +28,7 @@ export default function RecuperarContrasena() {
       titulo={<>Recupera el acceso<br />a tu <span style={{ color: '#56fbab' }}>panel GotaPay.</span></>}
       descripcion="Ingresa el correo de tu cuenta y te enviaremos un enlace seguro para que puedas crear una nueva contraseña."
       pieIzq="🔒 El enlace expira en 1 hora y solo puede usarse una vez."
+      logoMobilCentrado
     >
       <a
         href="/login"

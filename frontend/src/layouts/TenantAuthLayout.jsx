@@ -7,8 +7,12 @@
  *   titulo     — JSX o string del headline (puede incluir <span> con color)
  *   descripcion — párrafo de apoyo bajo el título
  *   pieIzq     — nota pequeña al fondo del panel izquierdo
+ *
+ * logoMobilCentrado — en celular (donde el panel izquierdo con el logo completo
+ *   se oculta), muestra el logotipo completo centrado en vez del isotipo chico a
+ *   la izquierda. Por defecto false (comportamiento de Login/RecuperarContrasena).
  */
-export default function TenantAuthLayout({ indicador, titulo, descripcion, pieIzq, children }) {
+export default function TenantAuthLayout({ indicador, titulo, descripcion, pieIzq, logoMobilCentrado = false, children }) {
   return (
     <div
       className="min-h-svh flex flex-col"
@@ -67,14 +71,40 @@ export default function TenantAuthLayout({ indicador, titulo, descripcion, pieIz
           className="flex flex-col justify-between min-h-svh lg:min-h-0"
           style={{ background: '#060f1e', borderLeft: '1px solid rgba(255,255,255,0.06)' }}
         >
-          {/* Logo mobile */}
-          <div className="flex lg:hidden items-center px-6 py-5">
-            <img src="/isotipo.webp" alt="GotaPay" style={{ height: 48, width: 'auto' }} />
-          </div>
+          {/* Logo mobile — isotipo chico a la izquierda (arriba de todo) */}
+          {!logoMobilCentrado && (
+            <div className="flex lg:hidden items-center px-6 py-5">
+              <img src="/isotipo.webp" alt="GotaPay" style={{ height: 48, width: 'auto' }} />
+            </div>
+          )}
 
           {/* Contenido de la página */}
-          <div className="flex-1 flex items-center justify-center px-6 py-10">
+          <div className={`flex-1 flex items-center justify-center px-6 pt-10 ${logoMobilCentrado ? 'pb-6' : 'pb-10'}`}>
             <div className="w-full max-w-[380px]">
+              {/* Logo mobile centrado — vive junto al contenido (no pegado arriba) para que
+                  quede más abajo, a la altura del formulario. Un solo tono verde vía CSS
+                  mask (el archivo trae varios colores; el mask lo convierte en silueta). */}
+              {logoMobilCentrado && (
+                <div className="flex lg:hidden items-center justify-center mb-[52px]">
+                  <div
+                    role="img"
+                    aria-label="GotaPay"
+                    style={{
+                      height: 72,
+                      aspectRatio: '800 / 253',
+                      backgroundColor: '#56fbab',
+                      WebkitMaskImage: 'url(/logotipo_sin%20slogan.webp)',
+                      maskImage: 'url(/logotipo_sin%20slogan.webp)',
+                      WebkitMaskSize: 'contain',
+                      maskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      maskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskPosition: 'center',
+                    }}
+                  />
+                </div>
+              )}
               {children}
             </div>
           </div>

@@ -18,6 +18,13 @@ export function formatearFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+export function formatearFechaHora(fecha) {
+  if (!fecha) return '—'
+  return new Date(fecha).toLocaleString('es-CO', {
+    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
+
 export const COLORES_ESTADO = {
   ACTIVO:         { bg: 'rgba(0,201,130,0.12)',   color: '#00C982', border: 'rgba(0,201,130,0.25)' },
   INACTIVO:       { bg: 'rgba(239,68,68,0.12)',   color: '#EF4444', border: 'rgba(239,68,68,0.25)' },

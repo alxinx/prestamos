@@ -4,6 +4,7 @@ import AnilloProgreso from './AnilloProgreso'
 import FilaDato from './FilaDato'
 import { IcoPersonas, IcoCalendario, IcoMoneda, IcoReloj } from './iconos'
 import { formatearPrecio } from '../../lib/formato'
+import { inicialesDe, claseAvatar } from '../../lib/avatar'
 
 // ── Íconos propios de este panel (sin equivalente compartido) ──────────────
 
@@ -77,8 +78,6 @@ const STATS_COBRADOR = [
   },
 ]
 
-const CLASES_AVATAR = ['bg-secondary/15 text-secondary', 'bg-primary/10 text-primary', 'bg-tertiary-container/25 text-on-tertiary-container', 'bg-error-container text-on-error-container']
-
 const CLIENTES_VISITAR = [
   { id: 1, nombre: 'María López', telefono: '300 123 4567', prestamo: 'PRE-1001', monto: 120000, direccion: 'Cra 15 # 45-20', barrio: 'Barrio Centro', estado: 'Pendiente' },
   { id: 2, nombre: 'Juan Pérez', telefono: '310 987 6543', prestamo: 'PRE-1002', monto: 85000, direccion: 'Cll 10 # 23-15', barrio: 'Barrio La Paz', estado: 'Pendiente' },
@@ -88,10 +87,6 @@ const CLIENTES_VISITAR = [
 ]
 
 const DESEMPENO = { porcentaje: 97, totalIntereses: 245800, totalCapital: 1000000 }
-
-function iniciales(nombre) {
-  return nombre.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase()
-}
 
 // Panel de indicadores para colaboradores con rol COBRADOR — datos ficticios por
 // ahora, ya estructurado para conectarse a un endpoint real de préstamos/cobros.
@@ -133,8 +128,8 @@ export default function PanelCobrador() {
                   <tr key={c.id} className="border-t border-outline-variant/40 hover:bg-surface-default/60 transition-colors">
                     <td className="px-1 py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 ${CLASES_AVATAR[i % CLASES_AVATAR.length]}`}>
-                          {iniciales(c.nombre)}
+                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0 ${claseAvatar(i)}`}>
+                          {inicialesDe(c.nombre)}
                         </span>
                         <div className="min-w-0">
                           <p className="text-on-background font-semibold truncate m-0">{c.nombre}</p>
