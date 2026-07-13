@@ -6,7 +6,7 @@ import ChipEstado from '../../components/ui/ChipEstado'
 import ModalAlerta from '../../components/ui/ModalAlerta'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
 import { formatearFecha } from '../../lib/formato'
-import { claseInput, claseLabel } from '../../lib/estilos'
+import { claseInput, claseLabel, claseTarjeta } from '../../lib/estilos'
 import { apiFetch } from '../../lib/api'
 
 function hoyISO() {
