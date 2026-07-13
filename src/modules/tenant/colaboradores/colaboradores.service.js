@@ -3,7 +3,7 @@
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../../lib/prisma')
 const { registrarAuditoria } = require('../../../lib/auditoria')
-const { subirDocumentoEmpleado, ErrorDocumento, extensionDe } = require('../../../lib/documentos')
+const { subirDocumento, ErrorDocumento, extensionDe } = require('../../../lib/documentos')
 const { enviarEmail } = require('../../../lib/email')
 const { emailActivacionColaborador } = require('../../../emails/activacionColaborador')
 const { generarTokenActivacion, calcularExpiracionActivacion } = require('../../../lib/tokenActivacion')
@@ -127,9 +127,10 @@ async function crearColaborador(req) {
   const documentosFallidos = []
   for (let i = 0; i < archivos.length; i++) {
     try {
-      const documento = await subirDocumentoEmpleado({
+      const documento = await subirDocumento({
         tenantId,
-        empleadoId: id,
+        entidadTipo: 'EMPLEADO',
+        entidadId: id,
         subidoPorId: autorId,
         nombreArchivo: documentosMeta[i].nombre.trim(),
         archivo: archivos[i],
@@ -294,9 +295,10 @@ async function subirDocumentoAColaborador(req) {
 
   let documento
   try {
-    documento = await subirDocumentoEmpleado({
+    documento = await subirDocumento({
       tenantId,
-      empleadoId,
+      entidadTipo: 'EMPLEADO',
+      entidadId: empleadoId,
       subidoPorId: autorId,
       nombreArchivo: nombre.trim(),
       archivo,

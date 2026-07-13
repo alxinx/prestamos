@@ -36,10 +36,21 @@ function firmaBinariaValida(buffer, extension) {
 
 class ErrorDocumento extends Error {}
 
+// Carpeta plural en minúsculas por tipo de entidad — CLAUDE.md §9: ruta obligatoria
+// {tenantId}/{entidad}/{entidadId}/{documentoId}.{ext}.
+const CARPETA_POR_ENTIDAD = {
+  EMPLEADO: 'empleados',
+  CLIENTE: 'clientes',
+  CREDITO: 'creditos',
+  ENTIDAD: 'entidad',
+}
+
 // Valida, procesa (resize + conversión a webp si es imagen) y sube un documento a R2,
 // devolviendo el registro de Documento creado. Lanza ErrorDocumento con mensaje apto
-// para mostrar al usuario si el archivo no pasa alguna validación.
-async function subirDocumentoEmpleado({ tenantId, empleadoId, subidoPorId, nombreArchivo, archivo }) {
+// para mostrar al usuario si el archivo no pasa alguna validación. Genérico por
+// entidadTipo (TipoEntidadDocumento) — usado por colaboradores y clientes, entre
+// otros módulos que necesiten adjuntar archivos.
+async function subirDocumento({ tenantId, entidadTipo, entidadId, subidoPorId, nombreArchivo, archivo }) {
   const extensionOriginal = extensionDe(archivo.originalname)
 
   if (!EXTENSIONES_PERMITIDAS.includes(extensionOriginal)) {
@@ -77,7 +88,8 @@ async function subirDocumentoEmpleado({ tenantId, empleadoId, subidoPorId, nombr
   }
 
   const documentoId = uuidv7()
-  const ruta = `${tenantId}/empleados/${empleadoId}/${documentoId}.${extensionFinal}`
+  const carpeta = CARPETA_POR_ENTIDAD[entidadTipo] ?? 'entidad'
+  const ruta = `${tenantId}/${carpeta}/${entidadId}/${documentoId}.${extensionFinal}`
 
   await subirArchivoR2(bufferFinal, ruta, contentType)
 
@@ -85,8 +97,8 @@ async function subirDocumentoEmpleado({ tenantId, empleadoId, subidoPorId, nombr
     data: {
       id: documentoId,
       tenantId,
-      entidadTipo: 'EMPLEADO',
-      entidadId: empleadoId,
+      entidadTipo,
+      entidadId,
       tipoDocumento: 'OTRO',
       nombreArchivo,
       url: ruta,
@@ -99,4 +111,4 @@ async function subirDocumentoEmpleado({ tenantId, empleadoId, subidoPorId, nombr
   return { ...documento, extension: extensionFinal }
 }
 
-module.exports = { subirDocumentoEmpleado, ErrorDocumento, extensionDe, EXTENSIONES_PERMITIDAS, EXTENSIONES_IMAGEN, MAX_IMAGEN_BYTES, MAX_DOCUMENTO_BYTES }
+module.exports = { subirDocumento, ErrorDocumento, extensionDe, EXTENSIONES_PERMITIDAS, EXTENSIONES_IMAGEN, MAX_IMAGEN_BYTES, MAX_DOCUMENTO_BYTES }

@@ -3,6 +3,7 @@
 export {
   IcoMas,
   IcoMenos,
+  IcoInfo,
   IcoConfiguracion,
   IcoOjo,
   IcoOjoTachado,
@@ -18,6 +19,7 @@ export {
   IcoMoneda,
   IcoReloj,
   IcoDescargar,
+  IcoEditar,
   IcoImprimir,
   IcoBasura,
   IcoArchivo,
@@ -29,4 +31,6 @@ export {
   IcoEdificio,
   IcoPausa,
   IcoPlay,
+  IcoOpciones,
+  IcoEstrella,
 } from '../iconos'

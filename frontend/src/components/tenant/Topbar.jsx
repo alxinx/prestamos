@@ -25,9 +25,19 @@ const etiquetasRuta = Object.fromEntries(
   [...navAdmin, ...navCobrador, ...subitemsCaja].map(({ ruta, etiqueta }) => [ruta, etiqueta])
 )
 
+// Match por prefijo (con límite de "/") para que sub-rutas como /clientes/nuevo
+// sigan mostrando "Clientes" en vez de caer al fallback "Panel". Si hay más de
+// una coincidencia, gana la más específica (la más larga).
+function resolverSeccion(ruta) {
+  const coincidencias = Object.keys(etiquetasRuta).filter(r => ruta === r || ruta.startsWith(`${r}/`))
+  if (coincidencias.length === 0) return 'Panel'
+  const masEspecifica = coincidencias.sort((a, b) => b.length - a.length)[0]
+  return etiquetasRuta[masEspecifica]
+}
+
 export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol }) {
   const ruta = window.location.pathname
-  const nombreSeccion = etiquetasRuta[ruta] ?? 'Panel'
+  const nombreSeccion = resolverSeccion(ruta)
   const iniciales = (nombreNegocio || 'T').substring(0, 2).toUpperCase()
 
   return (
