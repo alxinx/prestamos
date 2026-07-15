@@ -1,9 +1,11 @@
 'use strict'
 
-const { verificarCedula, crearCliente } = require('./clientes.service')
+const { verificarCedula, crearCliente, listarClientes, estadisticasClientes } = require('./clientes.service')
 const { controlar } = require('../../../lib/controlador')
 
+const manejarListar         = controlar(req => listarClientes(req))
+const manejarEstadisticas   = controlar(req => estadisticasClientes(req))
 const manejarVerificarCedula = controlar(req => verificarCedula(req))
 const manejarCrear           = controlar(req => crearCliente(req), { crear: true })
 
-module.exports = { manejarVerificarCedula, manejarCrear }
+module.exports = { manejarListar, manejarEstadisticas, manejarVerificarCedula, manejarCrear }

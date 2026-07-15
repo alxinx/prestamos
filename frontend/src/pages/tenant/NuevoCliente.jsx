@@ -250,25 +250,36 @@ export default function NuevoCliente() {
         </div>
       </div>
 
-      {/* Indicador de pasos */}
+      {/* Indicador de pasos — los ya completados se pueden clickear para saltar
+          directo, sin tener que darle "Anterior" varias veces. Los pendientes
+          (adelante del actual) no son clickeables: todavía no hay nada que
+          revisar ahí y saltarlos se saltaría su validación. */}
       <div className="flex items-start mb-6 max-w-[720px]">
-        {PASOS.map((p, i) => (
-          <div key={p.numero} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1.5 shrink-0 w-20">
-              <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 ${
-                p.numero < paso ? 'bg-secondary text-on-primary' : p.numero === paso ? 'bg-primary text-on-primary' : 'bg-surface-default text-on-surface-variant border border-outline-variant'
-              }`}>
-                {p.numero < paso ? <IcoCheck size={14} /> : p.numero}
-              </span>
-              <span className={`text-[11px] font-semibold text-center leading-tight ${p.numero === paso ? 'text-on-background' : 'text-on-surface-variant'}`}>
-                {p.etiqueta}
-              </span>
+        {PASOS.map((p, i) => {
+          const completado = p.numero < paso
+          return (
+            <div key={p.numero} className="flex items-center flex-1 last:flex-none">
+              <button
+                type="button"
+                onClick={() => completado && setPaso(p.numero)}
+                disabled={!completado}
+                className={`flex flex-col items-center gap-1.5 shrink-0 w-20 bg-transparent border-none p-0 ${completado ? 'cursor-pointer' : 'cursor-default'}`}
+              >
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 transition-transform ${
+                  completado ? 'bg-secondary text-on-primary hover:scale-110' : p.numero === paso ? 'bg-primary text-on-primary' : 'bg-surface-default text-on-surface-variant border border-outline-variant'
+                }`}>
+                  {completado ? <IcoCheck size={14} /> : p.numero}
+                </span>
+                <span className={`text-[11px] font-semibold text-center leading-tight ${p.numero === paso ? 'text-on-background' : 'text-on-surface-variant'}`}>
+                  {p.etiqueta}
+                </span>
+              </button>
+              {i < PASOS.length - 1 && (
+                <div className={`flex-1 h-[2px] mx-1 -mt-5 ${p.numero < paso ? 'bg-secondary' : 'bg-outline-variant'}`} />
+              )}
             </div>
-            {i < PASOS.length - 1 && (
-              <div className={`flex-1 h-[2px] mx-1 -mt-5 ${p.numero < paso ? 'bg-secondary' : 'bg-outline-variant'}`} />
-            )}
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-5 items-start">
@@ -374,21 +385,30 @@ export default function NuevoCliente() {
               />
             </div>
             <div className="flex flex-col">
-              {PASOS.map(p => (
-                <div key={p.numero} className="flex items-start gap-2.5 py-2">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
-                    p.numero < paso ? 'bg-secondary text-on-primary' : p.numero === paso ? 'bg-primary text-on-primary' : 'bg-outline-variant/40 text-on-surface-variant'
-                  }`}>
-                    {p.numero < paso ? <IcoCheck size={11} /> : p.numero}
-                  </span>
-                  <div>
-                    <p className="text-[12.5px] font-semibold text-on-background m-0">{p.etiqueta}</p>
-                    <p className="text-[11px] text-on-surface-variant m-0">
-                      {p.numero < paso ? 'Completado' : p.numero === paso ? 'En progreso' : 'Pendiente'}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {PASOS.map(p => {
+                const completado = p.numero < paso
+                return (
+                  <button
+                    type="button"
+                    key={p.numero}
+                    onClick={() => completado && setPaso(p.numero)}
+                    disabled={!completado}
+                    className={`flex items-start gap-2.5 py-2 bg-transparent border-none text-left w-full ${completado ? 'cursor-pointer hover:opacity-75' : 'cursor-default'}`}
+                  >
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                      completado ? 'bg-secondary text-on-primary' : p.numero === paso ? 'bg-primary text-on-primary' : 'bg-outline-variant/40 text-on-surface-variant'
+                    }`}>
+                      {completado ? <IcoCheck size={11} /> : p.numero}
+                    </span>
+                    <div>
+                      <p className="text-[12.5px] font-semibold text-on-background m-0">{p.etiqueta}</p>
+                      <p className="text-[11px] text-on-surface-variant m-0">
+                        {completado ? 'Completado' : p.numero === paso ? 'En progreso' : 'Pendiente'}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
@@ -431,7 +451,18 @@ export default function NuevoCliente() {
 
       {mostrandoConfirmacion && (
         <ModalConfirmarGuardarCliente
-          nombreCliente={datosPersonales.nombreCompleto}
+          datos={{
+            cedula,
+            nombreCompleto: datosPersonales.nombreCompleto,
+            telefono: datosPersonales.telefono,
+            fechaNacimiento: datosPersonales.fechaNacimiento,
+            zona: zonas.find(z => z.id === infoOperativa.zonaId)?.nombre,
+            cobrador: cobradores.find(c => c.id === infoOperativa.cobradorId)?.nombreCompleto,
+            observaciones: infoOperativa.observaciones,
+            ubicaciones,
+            referencias,
+            consentimientos,
+          }}
           guardando={guardando}
           onCorregir={() => setMostrandoConfirmacion(false)}
           onGuardar={() => guardar(false)}

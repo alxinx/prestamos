@@ -6,6 +6,7 @@ const { registrarAuditoria } = require('../../../lib/auditoria')
 const { subirDocumento, ErrorDocumento } = require('../../../lib/documentos')
 const { normalizarTitulo } = require('../../../lib/validar')
 const { esquemaUbicaciones, esquemaReferencias } = require('./clientes.validator')
+const { ESTADOS_CREDITO_ACTIVOS } = require('../../../lib/creditosConstantes')
 
 // ClienteGlobal es la ÚNICA tabla de este módulo que deliberadamente NO se filtra
 // por tenantId — existe justo para deduplicar personas reales entre tenants por
@@ -252,4 +253,105 @@ async function crearCliente(req) {
   }
 }
 
-module.exports = { verificarCedula, crearCliente }
+// Listado paginado de clientes de este tenant. Préstamos/valores se calculan en
+// tiempo real desde Credito (nunca persistidos, CLAUDE.md §4) — hoy el módulo de
+// Créditos todavía no existe, así que numPrestamos/valorPrestamo salen en 0 para
+// todos (no hay ningún Credito que contar) y valorAdeudado/cuotasFaltantes
+// quedan fijos en 0 hasta que se construya el cálculo real de saldo (mora +
+// intereses + abonos). Nada de esto es dato inventado — es el valor real de un
+// cliente que, hoy, no tiene préstamos.
+async function listarClientes(req) {
+  const { tenantId } = req.empleado
+  const { busqueda = '', pagina = '1', porPagina = '10', estado = '' } = req.query
+
+  const paginaNum = Math.max(1, parseInt(pagina, 10) || 1)
+  const porPaginaNum = Math.min(50, Math.max(1, parseInt(porPagina, 10) || 10))
+
+  const where = {
+    tenantId,
+    ...(estado && { estado }),
+    ...(busqueda && {
+      clienteGlobal: {
+        OR: [
+          { nombreCompleto: { contains: busqueda } },
+          { cedula: { contains: busqueda } },
+          { telefono: { contains: busqueda } },
+        ],
+      },
+    }),
+  }
+
+  const [clientes, total] = await Promise.all([
+    prisma.cliente.findMany({
+      where,
+      include: {
+        clienteGlobal: { select: { nombreCompleto: true, cedula: true, telefono: true } },
+        scoreInterno: { select: { scoreActual: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (paginaNum - 1) * porPaginaNum,
+      take: porPaginaNum,
+    }),
+    prisma.cliente.count({ where }),
+  ])
+
+  const clienteIds = clientes.map(c => c.id)
+  const [sumasPrestamos, conteosPrestamos] = clienteIds.length === 0 ? [[], []] : await Promise.all([
+    prisma.credito.groupBy({
+      by: ['clienteId'],
+      where: { tenantId, clienteId: { in: clienteIds }, estado: { in: ESTADOS_CREDITO_ACTIVOS } },
+      _sum: { montoInicial: true },
+    }),
+    prisma.credito.groupBy({
+      by: ['clienteId'],
+      where: { tenantId, clienteId: { in: clienteIds } },
+      _count: { id: true },
+    }),
+  ])
+
+  const valorPorCliente = new Map(sumasPrestamos.map(s => [s.clienteId, s._sum.montoInicial ?? 0]))
+  const numPorCliente = new Map(conteosPrestamos.map(c => [c.clienteId, c._count.id]))
+
+  const resultado = clientes.map(c => ({
+    id: c.id,
+    nombreCompleto: c.clienteGlobal.nombreCompleto,
+    cedula: c.clienteGlobal.cedula,
+    telefono: c.clienteGlobal.telefono,
+    estado: c.estado,
+    calificacion: c.scoreInterno ? Number(c.scoreInterno.scoreActual) : null,
+    numPrestamos: numPorCliente.get(c.id) ?? 0,
+    valorPrestamo: valorPorCliente.get(c.id) ?? 0,
+    valorAdeudado: 0,
+    cuotasFaltantes: 0,
+  }))
+
+  return {
+    clientes: resultado,
+    total,
+    pagina: paginaNum,
+    porPagina: porPaginaNum,
+    totalPaginas: Math.max(1, Math.ceil(total / porPaginaNum)),
+  }
+}
+
+// "% de clientes al día" y "en mora" usan el estado real del Cliente (no depende
+// de Créditos). "Por finalizar" (1-3 cuotas pendientes) sí depende del módulo de
+// Créditos/Pagos — queda en 0 hasta que exista esa lógica, no se inventa.
+async function estadisticasClientes(req) {
+  const { tenantId } = req.empleado
+
+  const [total, activos, enMora] = await Promise.all([
+    prisma.cliente.count({ where: { tenantId } }),
+    prisma.cliente.count({ where: { tenantId, estado: 'ACTIVO' } }),
+    prisma.cliente.count({ where: { tenantId, estado: 'EN_MORA' } }),
+  ])
+
+  return {
+    total,
+    porcentajeAlDia: total > 0 ? Number(((activos / total) * 100).toFixed(1)) : 0,
+    porFinalizar: 0,
+    enMora,
+  }
+}
+
+module.exports = { verificarCedula, crearCliente, listarClientes, estadisticasClientes }

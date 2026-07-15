@@ -5,7 +5,7 @@ const multer = require('multer')
 const authTenant = require('../../../middleware/authTenant')
 const requierePermiso = require('../../../middleware/requierePermiso')
 const { validarCrearCliente } = require('./clientes.validator')
-const { manejarVerificarCedula, manejarCrear } = require('./clientes.controller')
+const { manejarListar, manejarEstadisticas, manejarVerificarCedula, manejarCrear } = require('./clientes.controller')
 const { MAX_DOCUMENTO_BYTES } = require('../../../lib/documentos')
 
 const subirDocumentos = multer({
@@ -17,8 +17,10 @@ const router = Router()
 
 router.use(authTenant)
 
-// /verificar-cedula debe registrarse antes que cualquier /:id genérico si en el
-// futuro se agrega uno — hoy no hay conflicto de rutas.
+// /verificar-cedula y /estadisticas deben registrarse antes de cualquier /:id
+// genérico si en el futuro se agrega uno — hoy no hay conflicto de rutas.
+router.get('/',                       requierePermiso('clientes.ver'),   manejarListar)
+router.get('/estadisticas',           requierePermiso('clientes.ver'),   manejarEstadisticas)
 router.get('/verificar-cedula/:cedula', requierePermiso('clientes.crear'), manejarVerificarCedula)
 router.post('/', requierePermiso('clientes.crear'), subirDocumentos, validarCrearCliente, manejarCrear)
 

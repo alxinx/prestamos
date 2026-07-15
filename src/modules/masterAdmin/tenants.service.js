@@ -251,11 +251,55 @@ async function verificarEmailDisponible(email, excluirId = null) {
   return { disponible: !existe }
 }
 
+// La mayoría de tablas (empleados, clientes, cajas, etc.) guardan tenantId como
+// columna simple, sin @relation hacia Tenant, así que no tienen FK real — el
+// aislamiento multi-tenant es a nivel de aplicación (CLAUDE.md §3). Pero 4
+// modelos SÍ declaran @relation(fields: [tenantId], references: [id]) y por
+// eso MySQL sí les exige la FK: Factura, Suspension, ImpersonacionTenant y
+// TenantActividadResumen — y PagoManual depende a su vez de Factura. Hay que
+// borrar esa cadena antes que el Tenant o la DB rechaza el DELETE.
+async function borrarDependenciasDeTenants(tx, tenantIds) {
+  const facturas = await tx.factura.findMany({ where: { tenantId: { in: tenantIds } }, select: { id: true } })
+  const facturaIds = facturas.map(f => f.id)
+
+  if (facturaIds.length > 0) {
+    await tx.pagoManual.deleteMany({ where: { facturaId: { in: facturaIds } } })
+  }
+  await tx.factura.deleteMany({ where: { tenantId: { in: tenantIds } } })
+  await tx.suspension.deleteMany({ where: { tenantId: { in: tenantIds } } })
+  await tx.impersonacionTenant.deleteMany({ where: { tenantId: { in: tenantIds } } })
+  await tx.tenantActividadResumen.deleteMany({ where: { tenantId: { in: tenantIds } } })
+}
+
 async function eliminarUltimoTenant() {
   const ultimo = await prisma.tenant.findFirst({ orderBy: { createdAt: 'desc' } })
   if (!ultimo) return { error: 'No hay tenants registrados', status: 404 }
-  await prisma.tenant.delete({ where: { id: ultimo.id } })
+
+  await prisma.$transaction(async tx => {
+    await borrarDependenciasDeTenants(tx, [ultimo.id])
+    await tx.tenant.delete({ where: { id: ultimo.id } })
+  })
+
   return { ok: true, eliminado: ultimo.nombreNegocio }
 }
 
-module.exports = { estadisticasTenants, listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, verificarEmailDisponible }
+// Herramienta de desarrollo: borra en bloque los tenants seleccionados en el
+// checklist de /master-admin/tenants. Sigue siendo un DELETE físico sin
+// cascada hacia las tablas SIN FK (empleados/clientes/cajas/etc. quedan
+// huérfanos) — aceptable solo porque esta ruta está bloqueada en producción
+// (ver manejarEliminarSeleccionados).
+async function eliminarTenants(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return { error: 'Selecciona al menos un tenant', status: 400 }
+  }
+
+  const eliminados = await prisma.$transaction(async tx => {
+    await borrarDependenciasDeTenants(tx, ids)
+    const resultado = await tx.tenant.deleteMany({ where: { id: { in: ids } } })
+    return resultado.count
+  })
+
+  return { ok: true, eliminados }
+}
+
+module.exports = { estadisticasTenants, listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, eliminarTenants, verificarEmailDisponible }

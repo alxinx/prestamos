@@ -13,6 +13,9 @@ const ESTILOS = {
   // se reutiliza el mismo hex en vez de inventar uno nuevo.
   POR_FINALIZAR: 'bg-[#FBBF24]/15 text-[#FBBF24]',
   RETIRADO:   'bg-outline-variant/30 text-on-surface-variant',
+  // BLOQUEADO/FALLECIDO son valores reales del enum EstadoCliente (Prisma).
+  BLOQUEADO:  'bg-error-container text-on-error-container',
+  FALLECIDO:  'bg-outline-variant/30 text-on-surface-variant',
 }
 
 const ETIQUETAS = {
@@ -27,6 +30,8 @@ const ETIQUETAS = {
   EN_MORA: 'En mora',
   POR_FINALIZAR: 'Por finalizar',
   RETIRADO: 'Retirado',
+  BLOQUEADO: 'Bloqueado',
+  FALLECIDO: 'Fallecido',
 }
 
 export default function ChipEstado({ estado }) {
