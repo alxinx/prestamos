@@ -5,13 +5,9 @@ import { useAuth } from '../../context/AuthContext'
 import ChipEstado from '../../components/ui/ChipEstado'
 import ModalAlerta from '../../components/ui/ModalAlerta'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
-import { formatearFecha } from '../../lib/formato'
+import { formatearFecha, fechaHoyISO } from '../../lib/formato'
 import { claseInput, claseLabel, claseTarjeta } from '../../lib/estilos'
 import { apiFetch } from '../../lib/api'
-
-function hoyISO() {
-  return new Date().toISOString().split('T')[0]
-}
 
 function calcularCorte(fechaInicioStr) {
   if (!fechaInicioStr) return null
@@ -20,6 +16,10 @@ function calcularCorte(fechaInicioStr) {
   return d
 }
 
+// fechaInicio no va acá — se calcula al vuelo con fechaHoyISO() donde se usa
+// VACIO (useState inicial y reset del formulario), nunca horneada en este
+// objeto estático: de lo contrario quedaría fija en el día en que se cargó el
+// módulo, no en el día real en que se abre el formulario.
 const VACIO = {
   planId: '',
   nombreNegocio: '',
@@ -31,7 +31,6 @@ const VACIO = {
   email: '',
   telefono: '',
   estado: 'ACTIVO',
-  fechaInicio: hoyISO(),
 }
 
 const NOMBRE_ESTADO = {
@@ -211,7 +210,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
 
 function FormularioTenant({ tenantEditando, onGuardado, planes }) {
   const modoEdicion = tenantEditando !== null
-  const [form, setForm] = useState(VACIO)
+  const [form, setForm] = useState(() => ({ ...VACIO, fechaInicio: fechaHoyISO() }))
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -224,7 +223,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
     if (tenantEditando) {
       const fechaIni = tenantEditando.fechaInicio
         ? new Date(tenantEditando.fechaInicio).toISOString().split('T')[0]
-        : hoyISO()
+        : fechaHoyISO()
       setForm({
         planId: tenantEditando.planId,
         nombreNegocio: tenantEditando.nombreNegocio,
@@ -239,7 +238,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
         fechaInicio: fechaIni,
       })
     } else {
-      setForm(VACIO)
+      setForm({ ...VACIO, fechaInicio: fechaHoyISO() })
     }
     setError('')
     setEmailEstado('idle')

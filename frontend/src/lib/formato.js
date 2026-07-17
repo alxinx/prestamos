@@ -18,6 +18,18 @@ export function formatearFecha(fecha) {
   return new Date(fecha).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+// Fecha de HOY en formato "YYYY-MM-DD" (el que espera <input type="date">) —
+// usa componentes de fecha LOCAL (getFullYear/getMonth/getDate), nunca
+// toISOString() (que convierte a UTC): en Colombia (UTC-5), después de las
+// 7pm locales toISOString() ya cae en el día siguiente en UTC, mostrando
+// "mañana" como fecha por defecto.
+export function fechaHoyISO() {
+  const hoy = new Date()
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+  const dia = String(hoy.getDate()).padStart(2, '0')
+  return `${hoy.getFullYear()}-${mes}-${dia}`
+}
+
 export function formatearFechaHora(fecha) {
   if (!fecha) return '—'
   return new Date(fecha).toLocaleString('es-CO', {
