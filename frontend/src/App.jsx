@@ -24,7 +24,8 @@ import DashboardTenant from './pages/tenant/Dashboard'
 import Clientes from './pages/tenant/Clientes'
 import NuevoCliente from './pages/tenant/NuevoCliente'
 import Prestamos from './pages/tenant/Prestamos'
-import Cobros from './pages/tenant/Cobros'
+import NuevoPrestamo from './pages/tenant/NuevoPrestamo'
+import Intereses from './pages/tenant/Intereses'
 import Colaboradores from './pages/tenant/Colaboradores'
 import ColaboradorPanel from './pages/tenant/ColaboradorPanel'
 import Capital from './pages/tenant/Capital'
@@ -56,8 +57,9 @@ function RutasTenantPrivadas({ ruta }) {
   if (ruta === '/dashboard')                        return <DashboardTenant />
   if (ruta.startsWith('/clientes/nuevo'))            return <NuevoCliente />
   if (ruta.startsWith('/clientes'))                 return <Clientes />
+  if (ruta.startsWith('/prestamos/nuevo'))          return <NuevoPrestamo />
   if (ruta.startsWith('/prestamos'))                return <Prestamos />
-  if (ruta.startsWith('/cobros'))                   return <Cobros />
+  if (ruta.startsWith('/intereses'))                return <Intereses />
   if (/^\/colaboradores\/[^/]+\/panel/.test(ruta))  return <ColaboradorPanel />
   if (ruta.startsWith('/colaboradores'))            return <Colaboradores />
   if (/^\/capital\/[^/]+\/panel/.test(ruta))        return <CapitalPanel />

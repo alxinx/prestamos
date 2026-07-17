@@ -297,3 +297,32 @@ export function IcoEstrella({ size = 13, lleno = true }) {
     </svg>
   )
 }
+
+// Lupa de búsqueda — usada en las cajas de "Buscar..." de cualquier listado.
+export function IcoBuscar({ size = 15 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  )
+}
+
+// Triángulo de alerta — badge de "en mora"/"vencido" en stats y chips de riesgo.
+export function IcoAlerta({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+      <path d="M12 9v4" /><path d="M12 17h.01" />
+    </svg>
+  )
+}
+
+// Flecha ascendente — badge de "tendencia positiva" en stats (conteos, totales).
+export function IcoTendencia({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  )
+}

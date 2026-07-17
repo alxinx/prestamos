@@ -164,4 +164,4 @@ function htmlBase({ accentColor = '#001430', filas }) {
 </html>`
 }
 
-module.exports = { formatearPrecio, formatearLimite, generarFilasCaracteristicas, botonCTA, notaExpiracion, generarFilasMovimientos, htmlBase }
+module.exports = { formatearPrecio, generarFilasCaracteristicas, botonCTA, notaExpiracion, generarFilasMovimientos, htmlBase }

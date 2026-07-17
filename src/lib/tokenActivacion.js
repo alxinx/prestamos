@@ -12,4 +12,4 @@ function calcularExpiracionActivacion() {
   return new Date(Date.now() + EXPIRACION_TOKEN_ACTIVACION_MS)
 }
 
-module.exports = { EXPIRACION_TOKEN_ACTIVACION_MS, generarTokenActivacion, calcularExpiracionActivacion }
+module.exports = { generarTokenActivacion, calcularExpiracionActivacion }

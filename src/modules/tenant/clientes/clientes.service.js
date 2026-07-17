@@ -7,6 +7,7 @@ const { subirDocumento, ErrorDocumento } = require('../../../lib/documentos')
 const { normalizarTitulo } = require('../../../lib/validar')
 const { esquemaUbicaciones, esquemaReferencias } = require('./clientes.validator')
 const { ESTADOS_CREDITO_ACTIVOS } = require('../../../lib/creditosConstantes')
+const { parsearPaginacion } = require('../../../lib/paginacion')
 
 // ClienteGlobal es la ÚNICA tabla de este módulo que deliberadamente NO se filtra
 // por tenantId — existe justo para deduplicar personas reales entre tenants por
@@ -262,10 +263,8 @@ async function crearCliente(req) {
 // cliente que, hoy, no tiene préstamos.
 async function listarClientes(req) {
   const { tenantId } = req.empleado
-  const { busqueda = '', pagina = '1', porPagina = '10', estado = '' } = req.query
-
-  const paginaNum = Math.max(1, parseInt(pagina, 10) || 1)
-  const porPaginaNum = Math.min(50, Math.max(1, parseInt(porPagina, 10) || 10))
+  const { busqueda = '', estado = '' } = req.query
+  const { paginaNum, porPaginaNum } = parsearPaginacion(req.query)
 
   const where = {
     tenantId,
@@ -354,4 +353,57 @@ async function estadisticasClientes(req) {
   }
 }
 
-module.exports = { verificarCedula, crearCliente, listarClientes, estadisticasClientes }
+// GET /clientes/:id — detalle completo de un cliente ya registrado en este
+// tenant, usado por el modal "Ver datos" del wizard de préstamos (y cualquier
+// otra pantalla que necesite el perfil completo). Nunca expone documentos con
+// ruta directa de R2 (CLAUDE.md §9) — este endpoint no los incluye.
+async function obtenerDetalleCliente(req) {
+  const { tenantId } = req.empleado
+  const { id } = req.params
+
+  const cliente = await prisma.cliente.findFirst({
+    where: { id, tenantId },
+    include: {
+      clienteGlobal: { select: { nombreCompleto: true, cedula: true, telefono: true, fechaNacimiento: true } },
+      zona: { select: { id: true, nombre: true } },
+      cobrador: { select: { id: true, nombreCompleto: true } },
+      scoreInterno: { select: { scoreActual: true } },
+      ubicaciones: {
+        where: { activa: true },
+        select: { id: true, tipo: true, direccion: true, barrio: true, ciudad: true, referencia: true, esPrincipal: true },
+        orderBy: { esPrincipal: 'desc' },
+      },
+      referencias: { select: { id: true, nombreCompleto: true, telefono: true, relacionConCliente: true } },
+    },
+  })
+  if (!cliente) return { error: 'Cliente no encontrado', status: 404 }
+
+  const consentimiento = await prisma.consentimiento.findFirst({
+    where: { tenantId, clienteGlobalId: cliente.clienteGlobalId },
+    select: { tratamientoDatos: true, compartirScore: true, recibirNotificacionesWsp: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return {
+    id: cliente.id,
+    cedula: cliente.clienteGlobal.cedula,
+    nombreCompleto: cliente.clienteGlobal.nombreCompleto,
+    telefono: cliente.clienteGlobal.telefono,
+    fechaNacimiento: cliente.clienteGlobal.fechaNacimiento,
+    estado: cliente.estado,
+    observaciones: cliente.observaciones,
+    zona: cliente.zona,
+    cobrador: cliente.cobrador,
+    calificacion: cliente.scoreInterno ? Number(cliente.scoreInterno.scoreActual) : null,
+    ubicaciones: cliente.ubicaciones,
+    referencias: cliente.referencias,
+    consentimientos: {
+      tratamientoDatos: consentimiento?.tratamientoDatos ?? false,
+      compartirScore: consentimiento?.compartirScore ?? false,
+      notificacionesWsp: consentimiento?.recibirNotificacionesWsp ?? false,
+    },
+    createdAt: cliente.createdAt,
+  }
+}
+
+module.exports = { verificarCedula, crearCliente, listarClientes, estadisticasClientes, obtenerDetalleCliente }

@@ -19,11 +19,6 @@ const esquemaTenant = z.object({
   fechaInicio: z.string().datetime({ message: 'Fecha de inicio inválida' }).optional(),
 })
 
-const esquemaActualizarEstado = z.object({
-  estado: z.enum(['ACTIVO', 'PERIODO_GRACIA', 'SUSPENDIDO', 'CANCELADO']),
-})
+const validarTenant = crearValidador(esquemaTenant)
 
-const validarTenant          = crearValidador(esquemaTenant)
-const validarActualizarEstado = crearValidador(esquemaActualizarEstado)
-
-module.exports = { validarTenant, validarActualizarEstado }
+module.exports = { validarTenant }

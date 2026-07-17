@@ -201,6 +201,13 @@ enum EstadoPlantillaCredito {
   INACTIVA
 }
 
+// Base sobre la que se calcula el interés por mora de una plantilla, cuando
+// PlantillaCredito.interesMoraActivo = true.
+enum BaseCalculoMora {
+  INTERES
+  CAPITAL
+}
+
 enum EstadoCredito {
   ACTIVO
   PAGADO
@@ -976,11 +983,21 @@ model PlantillaCredito {
   nombre         String
   plazo          Int                    // en días
   tasaInteres    Decimal                @db.Decimal(15, 2) @map("tasa_interes")
+  // 0 = cuotas indefinidas (sin número fijo de cuotas).
   numeroCuotas   Int                    @map("numero_cuotas")
   frecuenciaPago FrecuenciaPago         @map("frecuencia_pago")
+  // 0 = sin límite (nunca negativo — se valida en el backend).
   montoMinimo    Decimal                @db.Decimal(15, 2) @map("monto_minimo")
   montoMaximo    Decimal                @db.Decimal(15, 2) @map("monto_maximo")
   estado         EstadoPlantillaCredito
+  // Interés por mora: si está activo, porcentajeMora es el % que se cobra,
+  // baseCalculoMora indica si ese % se aplica sobre el interés causado o sobre
+  // el capital, y diasGraciaMora cuántos días de atraso se toleran antes de
+  // empezar a cobrarlo.
+  interesMoraActivo Boolean          @default(false) @map("interes_mora_activo")
+  porcentajeMora    Decimal?         @db.Decimal(15, 2) @map("porcentaje_mora")
+  baseCalculoMora   BaseCalculoMora? @map("base_calculo_mora")
+  diasGraciaMora    Int              @default(0) @map("dias_gracia_mora")
   createdAt      DateTime               @default(now()) @map("created_at")
   updatedAt      DateTime               @updatedAt @map("updated_at")
 
@@ -998,11 +1015,26 @@ model Credito {
   plantillaId           String?       @map("plantilla_id") @db.Char(36)
   montoInicial          Decimal       @db.Decimal(15, 2) @map("monto_inicial")
   tasaInteres           Decimal       @db.Decimal(15, 2) @map("tasa_interes")
+  // 0 = plazo indefinido (crédito de solo intereses, ver numeroCuotas).
   plazo                 Int
+  // 0 = crédito de "solo intereses": se cobra tasaInteres% del capital cada
+  // frecuenciaPago indefinidamente, sin fecha de vencimiento fija — el capital
+  // se paga aparte cuando el cliente decida (decisión 2026-07-16).
   numeroCuotas          Int           @map("numero_cuotas")
   frecuenciaPago        FrecuenciaPago @map("frecuencia_pago")
   fechaInicio           DateTime      @map("fecha_inicio")
-  fechaVencimiento      DateTime      @map("fecha_vencimiento")
+  // Null cuando numeroCuotas = 0 (solo intereses, sin plazo fijo).
+  fechaVencimiento      DateTime?     @map("fecha_vencimiento")
+  // Fecha de la letra de cambio asociada (opcional) — puede quedar vacía al
+  // crear el préstamo y llenarse después, cuando se firme el documento físico.
+  fechaLetra            DateTime?     @map("fecha_letra")
+  // Preferencia elegida al crear el crédito: si el valor de la cuota (o del
+  // interés periódico, en un crédito de solo intereses) se redondea al
+  // múltiplo de 1.000 más cercano. Se persiste porque la cuota NUNCA se
+  // guarda (CLAUDE.md §4, siempre se recalcula en vivo) — sin este flag, cada
+  // recálculo posterior (listados, tabla de mora) mostraría un valor distinto
+  // al que el operador ya le comunicó al cliente al otorgar el préstamo.
+  redondearCuotaMil     Boolean       @default(true) @map("redondear_cuota_mil")
   estado                EstadoCredito
   creditoRefinanciadoId String?       @map("credito_refinanciado_id") @db.Char(36)
   observaciones         String?       @db.Text

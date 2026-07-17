@@ -5,20 +5,15 @@ import ChipEstado from '../../components/tenant/ChipEstado'
 import Paginador from '../../components/tenant/Paginador'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
-import { IcoMas, IcoPersonas, IcoCheck, IcoReloj, IcoChevronAbajo, IcoOpciones, IcoEstrella } from '../../components/tenant/iconos'
+import Estrellas from '../../components/tenant/Estrellas'
+import { IcoMas, IcoPersonas, IcoCheck, IcoReloj, IcoChevronAbajo, IcoOpciones, IcoBuscar, IcoAlerta } from '../../components/tenant/iconos'
 import { formatearPrecio } from '../../lib/formato'
 import { inicialesDe, claseAvatar } from '../../lib/avatar'
 import { apiFetch } from '../../lib/api'
 
-// ── Íconos propios de esta página (sin equivalente compartido) ─────────────
-
-function IcoBuscar() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  )
-}
+// ── Ícono propio de esta página (sin equivalente compartido) ───────────────
+// IcoBuscar/IcoAlerta viven en components/iconos.jsx (compartidos con
+// Dashboard.jsx y Prestamos.jsx).
 
 function IcoFiltro() {
   return (
@@ -28,30 +23,7 @@ function IcoFiltro() {
   )
 }
 
-// Badge pequeño de la tarjeta "Clientes en mora" — mismo triángulo de alerta que
-// usan Dashboard.jsx y CapitalPanel.jsx en sus propios badges/zonas de riesgo,
-// redefinido aquí en vez de compartido (es un ícono de 14px, de un solo uso por página).
-function IcoAlerta({ size = 14 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-      <path d="M12 9v4" /><path d="M12 17h.01" />
-    </svg>
-  )
-}
-
 const POR_PAGINA = 6
-
-function Estrellas({ calificacion }) {
-  if (calificacion == null) return <span className="text-on-surface-variant text-[12px]">—</span>
-  return (
-    <div className="flex items-center gap-0.5 text-[#FBBF24]">
-      {Array.from({ length: 5 }, (_, i) => (
-        <IcoEstrella key={i} lleno={i < Math.round(calificacion)} />
-      ))}
-    </div>
-  )
-}
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([])

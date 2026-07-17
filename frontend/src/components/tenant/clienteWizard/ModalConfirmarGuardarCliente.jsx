@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { IcoCheck, IcoX } from '../iconos'
+import { IcoCheck } from '../iconos'
+import FilaConsentimiento from '../FilaConsentimiento'
 import { formatearFecha } from '../../../lib/formato'
 import { ETIQUETA_TIPO_UBICACION, ETIQUETA_RELACION } from '../../../lib/clienteWizardConstantes'
 
@@ -19,17 +20,6 @@ function Fila({ etiqueta, valor }) {
     <div className="flex items-baseline justify-between gap-4">
       <span className="text-[12.5px] text-on-surface-variant shrink-0">{etiqueta}</span>
       <span className="text-[13px] font-semibold text-on-background text-right">{valor}</span>
-    </div>
-  )
-}
-
-function Consentimiento({ etiqueta, marcado }) {
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-[12.5px] text-on-surface-variant">{etiqueta}</span>
-      <span className={`inline-flex items-center gap-1 text-[12px] font-semibold ${marcado ? 'text-secondary' : 'text-on-surface-variant/70'}`}>
-        {marcado ? <IcoCheck size={12} /> : <IcoX size={12} />} {marcado ? 'Sí' : 'No'}
-      </span>
     </div>
   )
 }
@@ -109,9 +99,9 @@ export default function ModalConfirmarGuardarCliente({ datos, guardando, onCorre
           )}
 
           <Seccion titulo="Consentimientos">
-            <Consentimiento etiqueta="Tratamiento de datos" marcado={consentimientos.tratamientoDatos} />
-            <Consentimiento etiqueta="Compartir score entre tenants" marcado={consentimientos.compartirScore} />
-            <Consentimiento etiqueta="Notificaciones por WhatsApp" marcado={consentimientos.notificacionesWsp} />
+            <FilaConsentimiento etiqueta="Tratamiento de datos" marcado={consentimientos.tratamientoDatos} />
+            <FilaConsentimiento etiqueta="Compartir score entre tenants" marcado={consentimientos.compartirScore} />
+            <FilaConsentimiento etiqueta="Notificaciones por WhatsApp" marcado={consentimientos.notificacionesWsp} />
           </Seccion>
         </div>
 

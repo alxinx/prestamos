@@ -33,4 +33,7 @@ export {
   IcoPlay,
   IcoOpciones,
   IcoEstrella,
+  IcoBuscar,
+  IcoAlerta,
+  IcoTendencia,
 } from '../iconos'

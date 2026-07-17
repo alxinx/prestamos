@@ -48,4 +48,4 @@ function crearManejadoresSesion({ iniciarSesion, renovarToken, cerrarSesion, coo
   return { manejarLogin, manejarRefresh, manejarLogout }
 }
 
-module.exports = { BASE_COOKIE, crearManejadoresSesion }
+module.exports = { crearManejadoresSesion }

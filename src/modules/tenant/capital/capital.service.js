@@ -583,4 +583,4 @@ async function ajustarCapital(req) {
   }
 }
 
-module.exports = { listarCapital, obtenerCapital, obtenerEstadisticasCapital, crearCapital, suspenderCapital, reactivarCapital, ajustarCapital }
+module.exports = { listarCapital, obtenerCapital, obtenerEstadisticasCapital, crearCapital, suspenderCapital, reactivarCapital, ajustarCapital, anexarCalculados }
