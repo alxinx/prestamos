@@ -13,6 +13,15 @@ const ESTILOS = {
   // se reutiliza el mismo hex en vez de inventar uno nuevo.
   POR_FINALIZAR: 'bg-[#FBBF24]/15 text-[#FBBF24]',
   RETIRADO:   'bg-outline-variant/30 text-on-surface-variant',
+  // BLOQUEADO/FALLECIDO son valores reales del enum EstadoCliente (Prisma).
+  BLOQUEADO:  'bg-error-container text-on-error-container',
+  FALLECIDO:  'bg-outline-variant/30 text-on-surface-variant',
+  // PAGADO/VENCIDO/CASTIGADO/REFINANCIADO son valores reales del enum
+  // EstadoCredito (Prisma) — ACTIVO y EN_MORA ya están arriba, compartidos.
+  PAGADO:       'bg-secondary-container/25 text-on-secondary-container',
+  VENCIDO:      'bg-error-container text-on-error-container',
+  CASTIGADO:    'bg-error-container text-on-error-container',
+  REFINANCIADO: 'bg-tertiary-container/25 text-on-tertiary-container',
 }
 
 const ETIQUETAS = {
@@ -27,6 +36,12 @@ const ETIQUETAS = {
   EN_MORA: 'En mora',
   POR_FINALIZAR: 'Por finalizar',
   RETIRADO: 'Retirado',
+  BLOQUEADO: 'Bloqueado',
+  FALLECIDO: 'Fallecido',
+  PAGADO: 'Pagado',
+  VENCIDO: 'Vencido',
+  CASTIGADO: 'Castigado',
+  REFINANCIADO: 'Refinanciado',
 }
 
 export default function ChipEstado({ estado }) {

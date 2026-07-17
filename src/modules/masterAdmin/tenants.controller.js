@@ -1,6 +1,6 @@
 'use strict'
 
-const { estadisticasTenants, listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, verificarEmailDisponible } = require('./tenants.service')
+const { estadisticasTenants, listarTenants, crearTenant, actualizarTenant, obtenerTenant, reenviarActivacion, eliminarUltimoTenant, eliminarTenants, verificarEmailDisponible } = require('./tenants.service')
 const { controlar } = require('../../lib/controlador')
 
 const manejarEstadisticas = controlar(() => estadisticasTenants())
@@ -30,4 +30,9 @@ const manejarEliminarUltimo = controlar(req => {
   return eliminarUltimoTenant()
 })
 
-module.exports = { manejarEstadisticas, manejarListar, manejarObtener, manejarCrear, manejarActualizar, manejarReenviarActivacion, manejarEliminarUltimo, manejarVerificarEmail }
+const manejarEliminarSeleccionados = controlar(req => {
+  if (process.env.NODE_ENV === 'production') return { error: 'Ruta no encontrada', status: 404 }
+  return eliminarTenants(req.body.ids)
+})
+
+module.exports = { manejarEstadisticas, manejarListar, manejarObtener, manejarCrear, manejarActualizar, manejarReenviarActivacion, manejarEliminarUltimo, manejarEliminarSeleccionados, manejarVerificarEmail }

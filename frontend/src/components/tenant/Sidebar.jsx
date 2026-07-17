@@ -222,7 +222,7 @@ export const navAdmin = [
   { etiqueta: 'Dashboard',      ruta: '/dashboard',      icono: <IcoDashboard /> },
   { etiqueta: 'Clientes',       ruta: '/clientes',       icono: <IcoPersonas size={18} /> },
   { etiqueta: 'Préstamos',      ruta: '/prestamos',      icono: <IcoPrestamos /> },
-  { etiqueta: 'Cobros',         ruta: '/cobros',         icono: <IcoCobros /> },
+  { etiqueta: 'Intereses',      ruta: '/intereses',         icono: <IcoCobros /> },
   { etiqueta: 'Colaboradores',  ruta: '/colaboradores',  icono: <IcoColaboradores /> },
   { etiqueta: 'Capital y Socios', ruta: '/capital',       icono: <IcoCapital />, permiso: 'capital.ver' },
   { etiqueta: 'Tesorería',      ruta: '/tesoreria',      icono: <IcoTesoreria /> },

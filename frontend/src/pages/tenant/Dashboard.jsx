@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import TarjetaPanel from '../../components/tenant/TarjetaPanel'
 import TarjetaStat from '../../components/tenant/TarjetaStat'
 import FilaDato from '../../components/tenant/FilaDato'
@@ -8,19 +9,13 @@ import FilaActividad from '../../components/tenant/FilaActividad'
 import FilaVencimiento from '../../components/tenant/FilaVencimiento'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
-import { IcoMas, IcoCalendario, IcoMoneda, IcoReloj } from '../../components/tenant/iconos'
+import { IcoMas, IcoCalendario, IcoMoneda, IcoReloj, IcoAlerta, IcoTendencia } from '../../components/tenant/iconos'
 import { formatearPrecio } from '../../lib/formato'
+import { apiFetch } from '../../lib/api'
 
 // ── Iconos para los badges pequeños ─────────────────────────────────────────
-
-function IcoTendencia() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
-    </svg>
-  )
-}
+// IcoTendencia/IcoAlerta viven en components/iconos.jsx (compartidos con
+// Clientes.jsx y Prestamos.jsx). IcoPulso sigue local: de un solo uso acá.
 
 function IcoPulso() {
   return (
@@ -30,29 +25,11 @@ function IcoPulso() {
   )
 }
 
-function IcoAlerta() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 9v4" /><path d="M12 17h.01" />
-      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-    </svg>
-  )
-}
-
 // ── Datos ficticios (se conectarán a la API en sprint de métricas) ────────────
+// "Créditos activos" ya no vive acá — se arma en el componente con datos reales
+// de GET /api/tenant/dashboard/creditos-activos (ver STATS_FICTICIOS más abajo).
 
-const STATS = [
-  {
-    id: 'creditos-activos',
-    titulo: 'Créditos activos',
-    subtitulo: 'Total actuales',
-    valor: '128',
-    imagen3d: '/iconos/prestamos.webp',
-    badge: { icono: <IcoTendencia />, clases: 'bg-on-tertiary-container/12 text-on-tertiary-container' },
-    delta: { sube: true, positivo: true, porcentaje: '18.6', texto: 'vs mes anterior' },
-    href: null,
-    planUso: { usados: 128, limite: 150 },
-  },
+const STATS_FICTICIOS = [
   {
     id: 'por-recaudar',
     titulo: 'Por recaudar hoy',
@@ -61,7 +38,7 @@ const STATS = [
     imagen3d: '/iconos/calendario.webp',
     badge: { icono: <IcoCalendario />, clases: 'bg-primary/10 text-primary' },
     delta: null,
-    href: '/cobros',
+    href: '/prestamos',
   },
   {
     id: 'recaudado-hoy',
@@ -71,7 +48,7 @@ const STATS = [
     imagen3d: '/iconos/recaudo.webp',
     badge: { icono: <IcoMoneda />, clases: 'bg-secondary/10 text-secondary' },
     delta: { sube: true, positivo: true, porcentaje: '47.3', texto: 'vs ayer' },
-    href: '/cobros',
+    href: '/prestamos',
   },
   {
     id: 'creditos-mora',
@@ -143,6 +120,35 @@ const PROXIMOS_VENCIMIENTOS = [
 // ── Dashboard principal ───────────────────────────────────────────────────────
 
 export default function Dashboard() {
+  // { usados, limite } de créditos activos vs. lo permitido por el plan rentado —
+  // null mientras carga o si el empleado no tiene permiso para verlo (403).
+  const [creditosActivos, setCreditosActivos] = useState(null)
+  const [cargandoCreditos, setCargandoCreditos] = useState(true)
+
+  useEffect(() => {
+    async function cargarCreditosActivos() {
+      const { ok, datos } = await apiFetch('/api/tenant/dashboard/creditos-activos')
+      if (ok) setCreditosActivos(datos)
+      setCargandoCreditos(false)
+    }
+    cargarCreditosActivos()
+  }, [])
+
+  const stats = [
+    {
+      id: 'creditos-activos',
+      titulo: 'Créditos activos',
+      subtitulo: 'Total actuales',
+      valor: cargandoCreditos ? '—' : String(creditosActivos?.usados ?? 0),
+      imagen3d: '/iconos/prestamos.webp',
+      badge: { icono: <IcoTendencia />, clases: 'bg-on-tertiary-container/12 text-on-tertiary-container' },
+      delta: null,
+      href: null,
+      planUso: creditosActivos ? { usados: creditosActivos.usados, limite: creditosActivos.limite } : null,
+    },
+    ...STATS_FICTICIOS,
+  ]
+
   return (
       <div className="px-4 sm:px-6 lg:px-8 pt-7 pb-12 min-h-full">
 
@@ -166,7 +172,7 @@ export default function Dashboard() {
 
         {/* Grid de stats — 1 col mobile / 2 cols tablet / 4 cols desktop */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {STATS.map(stat => (
+          {stats.map(stat => (
             <TarjetaStat key={stat.id} {...stat} />
           ))}
         </div>
@@ -259,7 +265,7 @@ export default function Dashboard() {
             subtitulo="Créditos por cobrar"
             accion={
               <a
-                href="/cobros"
+                href="/prestamos"
                 className="inline-flex items-center px-4 py-2 rounded-full bg-tertiary-container/10 text-on-tertiary-container text-[12px] font-semibold hover:bg-tertiary-container/20 transition-colors shrink-0"
               >
                 Ver todos

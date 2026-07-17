@@ -3,7 +3,7 @@
 const { Router } = require('express')
 const authMasterAdmin = require('../../middleware/authMasterAdmin')
 const { validarTenant } = require('./tenants.validator')
-const { manejarEstadisticas, manejarListar, manejarObtener, manejarCrear, manejarActualizar, manejarReenviarActivacion, manejarEliminarUltimo, manejarVerificarEmail } = require('./tenants.controller')
+const { manejarEstadisticas, manejarListar, manejarObtener, manejarCrear, manejarActualizar, manejarReenviarActivacion, manejarEliminarUltimo, manejarEliminarSeleccionados, manejarVerificarEmail } = require('./tenants.controller')
 
 const router = Router()
 
@@ -17,5 +17,6 @@ router.post('/', validarTenant, manejarCrear)
 router.put('/:id', validarTenant, manejarActualizar)
 router.post('/:id/reenviar-activacion', manejarReenviarActivacion)
 router.delete('/dev/ultimo', manejarEliminarUltimo)
+router.delete('/dev/seleccionados', manejarEliminarSeleccionados)
 
 module.exports = router

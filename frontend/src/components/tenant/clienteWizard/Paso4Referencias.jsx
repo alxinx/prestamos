@@ -3,15 +3,10 @@ import CampoSelect from '../CampoSelect'
 import CampoTextarea from '../CampoTextarea'
 import { IcoInfo, IcoPersonas, IcoBasura, IcoCheck, IcoEditar } from '../iconos'
 import { inicialesDe, claseAvatar } from '../../../lib/avatar'
+import { ETIQUETA_RELACION } from '../../../lib/clienteWizardConstantes'
 
-const RELACIONES = [
-  { value: 'FAMILIAR', label: 'Familiar' },
-  { value: 'AMIGO', label: 'Amigo' },
-  { value: 'COLEGA', label: 'Colega' },
-  { value: 'VECINO', label: 'Vecino' },
-  { value: 'OTRO', label: 'Otro' },
-]
-const ETIQUETA_RELACION = Object.fromEntries(RELACIONES.map(r => [r.value, r.label]))
+// Mismo orden/valores que ETIQUETA_RELACION (fuente única en clienteWizardConstantes.js).
+const RELACIONES = Object.entries(ETIQUETA_RELACION).map(([value, label]) => ({ value, label }))
 
 const MAXIMO_REFERENCIAS = 2
 

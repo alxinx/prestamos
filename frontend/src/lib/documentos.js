@@ -1,7 +1,7 @@
 const EXTENSIONES_IMAGEN = ['jpg', 'jpeg', 'png', 'webp']
 const EXTENSIONES_OFFICE = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']
 const EXTENSIONES_PDF = ['pdf']
-export const EXTENSIONES_PERMITIDAS = [...EXTENSIONES_IMAGEN, ...EXTENSIONES_OFFICE, ...EXTENSIONES_PDF]
+const EXTENSIONES_PERMITIDAS = [...EXTENSIONES_IMAGEN, ...EXTENSIONES_OFFICE, ...EXTENSIONES_PDF]
 export const ACCEPT_DOCUMENTOS = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.webp'
 
 const MAX_IMAGEN_BYTES = 3 * 1024 * 1024

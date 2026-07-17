@@ -60,6 +60,4 @@ module.exports = {
   validarCrearCliente,
   esquemaUbicaciones,
   esquemaReferencias,
-  TIPOS_UBICACION,
-  RELACIONES_PERSONA,
 }

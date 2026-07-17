@@ -5,6 +5,7 @@ import CampoTextarea from '../CampoTextarea'
 import MapaSeleccionUbicacion from '../MapaSeleccionUbicacion'
 import { IcoInfo, IcoBasura, IcoPersonas } from '../iconos'
 import { geocodificarDireccion } from '../../../lib/geocodificacion'
+import { ETIQUETA_TIPO_UBICACION } from '../../../lib/clienteWizardConstantes'
 
 function IcoCasa() {
   return (
@@ -60,7 +61,9 @@ const TIPOS_UBICACION = [
   { value: 'OTRO', label: 'Otro', icono: <IcoPin /> },
 ]
 const ICONO_POR_TIPO = Object.fromEntries(TIPOS_UBICACION.map(t => [t.value, t.icono]))
-const ETIQUETA_POR_TIPO = Object.fromEntries(TIPOS_UBICACION.map(t => [t.value, t.label]))
+// Las etiquetas de texto viven en clienteWizardConstantes.js (fuente única
+// compartida con el modal de confirmación) — acá solo se necesitan los íconos.
+const ETIQUETA_POR_TIPO = ETIQUETA_TIPO_UBICACION
 
 // Paso 3 — lista de tarjetas a la izquierda (una por ubicación agregada) +
 // formulario de detalle de la ubicación activa + mapa para capturar
@@ -193,7 +196,10 @@ export default function Paso3Ubicaciones({ ubicaciones, indiceActivo, onSeleccio
               />
               <div className="grid grid-cols-2 gap-3">
                 <CampoTexto etiqueta="Ciudad *" valor={activa.ciudad} onChange={v => onActualizarActiva('ciudad', v)} placeholder="Ej. Medellín" />
-                <CampoTexto etiqueta="Barrio (opcional)" valor={activa.barrio} onChange={v => onActualizarActiva('barrio', v)} placeholder="Ej. Belén La Palma" />
+                <div>
+                  <CampoTexto etiqueta="Barrio (opcional)" valor={activa.barrio} onChange={v => onActualizarActiva('barrio', v)} placeholder="Ej. Belén La Palma" />
+                  <p className="text-[11px] text-on-surface-variant mt-1">Ayuda a ubicar el pin correcto — hay calles con el mismo nombre en varios barrios.</p>
+                </div>
               </div>
               <CampoTextarea
                 etiqueta="Referencia (cómo llegar, opcional)"
@@ -233,6 +239,10 @@ export default function Paso3Ubicaciones({ ubicaciones, indiceActivo, onSeleccio
                 >
                   <IcoCrosshair /> Capturar mi ubicación
                 </button>
+                <p className="text-[11px] text-on-surface-variant/80 mt-2 leading-relaxed">
+                  La ubicación automática es solo un punto de partida — verifica que el pin quede en el lugar
+                  correcto y arrástralo para ajustarlo si es necesario.
+                </p>
               </div>
             </div>
 

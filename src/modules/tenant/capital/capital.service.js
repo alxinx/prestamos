@@ -13,9 +13,7 @@ const { emailCapitalAsignado } = require('../../../emails/capitalAsignado')
 const { emailCapitalSuspendido } = require('../../../emails/capitalSuspendido')
 const { emailCapitalReactivado } = require('../../../emails/capitalReactivado')
 const { emailCapitalAjustado } = require('../../../emails/capitalAjustado')
-
-// Créditos que todavía comprometen el capital de la caja (aún no pagados/cancelados).
-const ESTADOS_CREDITO_ACTIVOS = ['ACTIVO', 'EN_MORA', 'VENCIDO']
+const { ESTADOS_CREDITO_ACTIVOS } = require('../../../lib/creditosConstantes')
 
 function codigoDe(cajaId) {
   return `CAP-${cajaId.slice(0, 8).toUpperCase()}`
@@ -585,4 +583,4 @@ async function ajustarCapital(req) {
   }
 }
 
-module.exports = { listarCapital, obtenerCapital, obtenerEstadisticasCapital, crearCapital, suspenderCapital, reactivarCapital, ajustarCapital }
+module.exports = { listarCapital, obtenerCapital, obtenerEstadisticasCapital, crearCapital, suspenderCapital, reactivarCapital, ajustarCapital, anexarCalculados }

@@ -6,3 +6,23 @@ export const UBICACION_VACIA = {
 }
 
 export const REFERENCIA_VACIA = { nombreCompleto: '', telefono: '', relacionConCliente: 'FAMILIAR', observaciones: '' }
+
+// Etiquetas legibles de los enums del wizard — fuente única para Paso3/Paso4 (que
+// además llevan su propio ícono por tipo) y para el resumen del modal de
+// confirmación final, que solo necesita el texto.
+export const ETIQUETA_TIPO_UBICACION = {
+  RESIDENCIA: 'Residencia',
+  TRABAJO: 'Trabajo',
+  NEGOCIO_PROPIO: 'Negocio propio',
+  DONDE_SE_FIRMO: 'Donde se firmó',
+  FAMILIAR: 'Familiar',
+  OTRO: 'Otro',
+}
+
+export const ETIQUETA_RELACION = {
+  FAMILIAR: 'Familiar',
+  AMIGO: 'Amigo',
+  COLEGA: 'Colega',
+  VECINO: 'Vecino',
+  OTRO: 'Otro',
+}

@@ -111,4 +111,4 @@ async function subirDocumento({ tenantId, entidadTipo, entidadId, subidoPorId, n
   return { ...documento, extension: extensionFinal }
 }
 
-module.exports = { subirDocumento, ErrorDocumento, extensionDe, EXTENSIONES_PERMITIDAS, EXTENSIONES_IMAGEN, MAX_IMAGEN_BYTES, MAX_DOCUMENTO_BYTES }
+module.exports = { subirDocumento, ErrorDocumento, extensionDe, MAX_DOCUMENTO_BYTES }

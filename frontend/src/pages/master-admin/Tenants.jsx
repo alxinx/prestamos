@@ -5,13 +5,9 @@ import { useAuth } from '../../context/AuthContext'
 import ChipEstado from '../../components/ui/ChipEstado'
 import ModalAlerta from '../../components/ui/ModalAlerta'
 import useTamanoPantalla from '../../hooks/useTamanoPantalla'
-import { formatearFecha } from '../../lib/formato'
+import { formatearFecha, fechaHoyISO } from '../../lib/formato'
 import { claseInput, claseLabel, claseTarjeta } from '../../lib/estilos'
 import { apiFetch } from '../../lib/api'
-
-function hoyISO() {
-  return new Date().toISOString().split('T')[0]
-}
 
 function calcularCorte(fechaInicioStr) {
   if (!fechaInicioStr) return null
@@ -20,6 +16,10 @@ function calcularCorte(fechaInicioStr) {
   return d
 }
 
+// fechaInicio no va acá — se calcula al vuelo con fechaHoyISO() donde se usa
+// VACIO (useState inicial y reset del formulario), nunca horneada en este
+// objeto estático: de lo contrario quedaría fija en el día en que se cargó el
+// módulo, no en el día real en que se abre el formulario.
 const VACIO = {
   planId: '',
   nombreNegocio: '',
@@ -31,7 +31,6 @@ const VACIO = {
   email: '',
   telefono: '',
   estado: 'ACTIVO',
-  fechaInicio: hoyISO(),
 }
 
 const NOMBRE_ESTADO = {
@@ -211,7 +210,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
 
 function FormularioTenant({ tenantEditando, onGuardado, planes }) {
   const modoEdicion = tenantEditando !== null
-  const [form, setForm] = useState(VACIO)
+  const [form, setForm] = useState(() => ({ ...VACIO, fechaInicio: fechaHoyISO() }))
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -224,7 +223,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
     if (tenantEditando) {
       const fechaIni = tenantEditando.fechaInicio
         ? new Date(tenantEditando.fechaInicio).toISOString().split('T')[0]
-        : hoyISO()
+        : fechaHoyISO()
       setForm({
         planId: tenantEditando.planId,
         nombreNegocio: tenantEditando.nombreNegocio,
@@ -239,7 +238,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
         fechaInicio: fechaIni,
       })
     } else {
-      setForm(VACIO)
+      setForm({ ...VACIO, fechaInicio: fechaHoyISO() })
     }
     setError('')
     setEmailEstado('idle')
@@ -518,6 +517,9 @@ export default function Tenants() {
   const [busqueda, setBusqueda] = useState('')
   const [pagina, setPagina] = useState(1)
   const [paginacion, setPaginacion] = useState({ total: 0, totalPaginas: 1 })
+  // Selección múltiple para borrar en bloque — solo dev (ver import.meta.env.DEV
+  // más abajo, mismo criterio que el botón "Borrar último" ya existente).
+  const [seleccionados, setSeleccionados] = useState([])
 
   const cargarPlanes = useCallback(async () => {
     if (!autenticado) return
@@ -534,6 +536,7 @@ export default function Tenants() {
       if (!ok) return
       setTenants(datos.tenants)
       setPaginacion({ total: datos.total, totalPaginas: datos.totalPaginas })
+      setSeleccionados([])
     } finally {
       setCargandoTabla(false)
     }
@@ -575,6 +578,25 @@ export default function Tenants() {
     else alert(datos.error)
   }
 
+  function alternarSeleccion(id) {
+    setSeleccionados(sel => (sel.includes(id) ? sel.filter(s => s !== id) : [...sel, id]))
+  }
+
+  function alternarSeleccionTodos() {
+    setSeleccionados(sel => (sel.length === tenants.length ? [] : tenants.map(t => t.id)))
+  }
+
+  async function eliminarSeleccionados() {
+    if (seleccionados.length === 0) return
+    if (!confirm(`¿Borrar ${seleccionados.length} tenant${seleccionados.length !== 1 ? 's' : ''} seleccionado${seleccionados.length !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`)) return
+    const { ok, datos } = await apiFetch('/api/master-admin/tenants/dev/seleccionados', {
+      method: 'DELETE',
+      body: { ids: seleccionados },
+    })
+    if (ok) { setSeleccionados([]); cargarTenants() }
+    else alert(datos.error)
+  }
+
   const panelLista = (
     <div className={`${claseTarjeta} overflow-hidden`}>
       <div className="px-6 py-5 border-b border-white/[0.06] flex items-center justify-between">
@@ -590,6 +612,15 @@ export default function Tenants() {
               className="px-2.5 py-[5px] rounded-md border border-dashed border-red-500/40 bg-red-500/[0.06] text-red-400 text-[11px] font-semibold cursor-pointer font-sans"
             >
               ⚠ Borrar último
+            </button>
+          )}
+          {import.meta.env.DEV && seleccionados.length > 0 && (
+            <button
+              onClick={eliminarSeleccionados}
+              title="Solo visible en desarrollo"
+              className="px-2.5 py-[5px] rounded-md border border-dashed border-red-500/40 bg-red-500/[0.06] text-red-400 text-[11px] font-semibold cursor-pointer font-sans"
+            >
+              ⚠ Borrar {seleccionados.length} seleccionado{seleccionados.length !== 1 ? 's' : ''}
             </button>
           )}
           {!esMobil && (
@@ -624,6 +655,17 @@ export default function Tenants() {
           <table className="w-full border-collapse min-w-[560px]">
             <thead>
               <tr className="border-b border-white/[0.06]">
+                {import.meta.env.DEV && (
+                  <th className="px-4 py-2.5 text-left w-8">
+                    <input
+                      type="checkbox"
+                      checked={tenants.length > 0 && seleccionados.length === tenants.length}
+                      onChange={alternarSeleccionTodos}
+                      title="Seleccionar todos (solo desarrollo)"
+                      className="cursor-pointer"
+                    />
+                  </th>
+                )}
                 {['Nombre / Razón Social', 'Identificación', 'Plan', 'Estado', 'Operaciones', ''].map(col => (
                   <th key={col} className="px-4 py-2.5 text-left text-[11px] font-semibold text-slate-600 uppercase tracking-[0.05em] whitespace-nowrap">
                     {col}
@@ -637,6 +679,16 @@ export default function Tenants() {
                   key={t.id}
                   className="border-b border-white/[0.04] transition-colors duration-100 hover:bg-white/[0.02]"
                 >
+                  {import.meta.env.DEV && (
+                    <td className="px-4 py-3.5">
+                      <input
+                        type="checkbox"
+                        checked={seleccionados.includes(t.id)}
+                        onChange={() => alternarSeleccion(t.id)}
+                        className="cursor-pointer"
+                      />
+                    </td>
+                  )}
                   <td className="px-4 py-3.5">
                     <p className="text-sm font-semibold text-slate-50 m-0 mb-0.5">{t.nombreNegocio}</p>
                     <p className="text-[12px] text-slate-600 m-0">{t.email}</p>
