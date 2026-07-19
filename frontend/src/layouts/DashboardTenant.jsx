@@ -18,14 +18,29 @@ export default function DashboardTenant({ children }) {
   const esMobil = useTamanoPantalla()
   const [menuAbierto, setMenuAbierto] = useState(false)
 
-  const [infoUsuario, setInfoUsuario] = useState({ rol: '', nombreNegocio: '' })
+  // onboardingCompletado arranca en null ("todavía no sabemos") a propósito —
+  // si arrancara en true, se vería un parpadeo del dashboard real antes de
+  // expulsar al wizard apenas resuelve /auth/me.
+  const [infoUsuario, setInfoUsuario] = useState({ rol: '', nombreNegocio: '', onboardingCompletado: null })
+  const enOnboarding = rutaActiva.startsWith('/configuracion-inicial')
 
   useEffect(() => {
     if (!autenticado) return
     apiFetch('/api/tenant/auth/me')
-      .then(({ ok, datos }) => { if (ok) setInfoUsuario({ rol: datos.rol, nombreNegocio: datos.nombreNegocio }) })
+      .then(({ ok, datos }) => {
+        if (ok) setInfoUsuario({ rol: datos.rol, nombreNegocio: datos.nombreNegocio, onboardingCompletado: datos.onboardingCompletado })
+      })
       .catch(() => {})
   }, [autenticado])
+
+  // Wizard de configuración inicial obligatorio (Capital + Cobrador mínimo):
+  // bloquea todo el panel hasta completarse, y evita reabrir el wizard una vez
+  // completado. Ver src/modules/tenant/onboarding/ en el backend.
+  useEffect(() => {
+    if (infoUsuario.onboardingCompletado === null) return
+    if (!infoUsuario.onboardingCompletado && !enOnboarding) window.location.href = '/configuracion-inicial'
+    if (infoUsuario.onboardingCompletado && enOnboarding) window.location.href = '/dashboard'
+  }, [infoUsuario.onboardingCompletado, enOnboarding])
 
   const { mostrarAviso, segundosRestantes, continuarTrabajando } = useInactividad({
     activo: autenticado && ROLES_CON_CIERRE_POR_INACTIVIDAD.includes(infoUsuario.rol),
@@ -40,7 +55,7 @@ export default function DashboardTenant({ children }) {
     if (!cargando && !autenticado) window.location.href = '/login'
   }, [autenticado, cargando])
 
-  if (cargando) {
+  if (cargando || (autenticado && infoUsuario.onboardingCompletado === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-tenant-bg">
         <div className="text-center">
@@ -52,6 +67,10 @@ export default function DashboardTenant({ children }) {
   }
 
   if (!autenticado) return null
+
+  // Wizard de configuración inicial: pantalla completa, sin sidebar/topbar ni
+  // PermisosProvider (no hace falta ahí, el super admin ya salta todo permiso).
+  if (enOnboarding) return <>{children}</>
 
   return (
     <PermisosProvider>

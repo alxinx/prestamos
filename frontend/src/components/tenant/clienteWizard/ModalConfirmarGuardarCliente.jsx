@@ -37,7 +37,7 @@ export default function ModalConfirmarGuardarCliente({ datos, guardando, onCorre
   }, [onCorregir, guardando])
 
   const {
-    cedula, nombreCompleto, telefono, fechaNacimiento,
+    cedula, nombreCompleto, telefono, email, fechaNacimiento,
     zona, cobrador, observaciones,
     ubicaciones = [], referencias = [], consentimientos,
   } = datos
@@ -64,6 +64,7 @@ export default function ModalConfirmarGuardarCliente({ datos, guardando, onCorre
             <Fila etiqueta="Cédula" valor={cedula} />
             <Fila etiqueta="Nombre completo" valor={nombreCompleto} />
             <Fila etiqueta="Teléfono" valor={telefono} />
+            {email && <Fila etiqueta="Email" valor={email} />}
             <Fila etiqueta="Fecha de nacimiento" valor={fechaNacimiento ? formatearFecha(fechaNacimiento) : null} />
           </Seccion>
 

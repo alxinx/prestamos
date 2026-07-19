@@ -3,9 +3,7 @@
 const { Worker } = require('bullmq')
 const { redisConfig } = require('../../lib/redis')
 const prisma = require('../../lib/prisma')
-
-// Créditos que siguen vigentes (cartera activa)
-const ESTADOS_CREDITO_ACTIVOS = ['ACTIVO', 'EN_MORA', 'VENCIDO', 'REFINANCIADO']
+const { ESTADOS_CREDITO_ACTIVOS } = require('../../lib/creditosConstantes')
 
 function hace30Dias() {
   const d = new Date()

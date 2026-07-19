@@ -83,9 +83,92 @@ async function buscarAjusteCapital(token) {
   }
 }
 
+// Letra de cambio impresa desde un crédito. `esEnBlanco`/`camposEnBlanco` viajan
+// para que quien verifique sepa que esos datos pudieron diligenciarse a mano
+// después de imprimirse (letra en blanco, Art. 622 C.Co.) — no se puede comparar
+// el papel físico 1:1 contra el registro en esos campos.
+async function buscarLetraCambio(token) {
+  const letra = await prisma.letraCambio.findFirst({
+    where: { tokenVerificacion: token },
+    select: {
+      deudorNombre: true,
+      deudorCedula: true,
+      incluyeValor: true,
+      valor: true,
+      incluyeBeneficiario: true,
+      beneficiario: true,
+      incluyeFecha: true,
+      fechaVencimiento: true,
+      esEnBlanco: true,
+      createdAt: true,
+      generadoPor: { select: { nombreCompleto: true } },
+    },
+  })
+  if (!letra) return null
+
+  return {
+    valido: true,
+    tipoDocumento: 'LETRA_CAMBIO',
+    datos: {
+      fecha: letra.createdAt.toISOString(),
+      deudorNombre: letra.deudorNombre,
+      deudorCedula: letra.deudorCedula,
+      valor: letra.incluyeValor ? letra.valor.toNumber() : null,
+      beneficiario: letra.incluyeBeneficiario ? letra.beneficiario : null,
+      fechaVencimiento: letra.incluyeFecha ? letra.fechaVencimiento.toISOString().slice(0, 10) : null,
+      esEnBlanco: letra.esEnBlanco,
+      camposEnBlanco: [
+        !letra.incluyeValor && 'valor',
+        !letra.incluyeBeneficiario && 'beneficiario',
+        !letra.incluyeFecha && 'fecha de vencimiento',
+      ].filter(Boolean),
+      generadoPor: letra.generadoPor.nombreCompleto,
+    },
+  }
+}
+
+// Resumen de préstamo (PDF + email enviados al otorgar el crédito, ver
+// crearCredito en creditos.service.js). El token vive directo en `creditos`
+// (no en una tabla aparte como LetraCambio) porque el resumen es 1:1 con el
+// crédito — no hay "variantes" que generar más de una vez por crédito.
+async function buscarResumenPrestamo(token) {
+  const credito = await prisma.credito.findFirst({
+    where: { tokenVerificacion: token },
+    select: {
+      montoInicial: true,
+      tasaInteres: true,
+      numeroCuotas: true,
+      frecuenciaPago: true,
+      fechaInicio: true,
+      createdAt: true,
+      cliente: { select: { clienteGlobal: { select: { nombreCompleto: true, cedula: true } } } },
+      cobrador: { select: { nombreCompleto: true } },
+    },
+  })
+  if (!credito) return null
+
+  return {
+    valido: true,
+    tipoDocumento: 'RESUMEN_PRESTAMO',
+    datos: {
+      fecha: credito.createdAt.toISOString(),
+      cliente: credito.cliente.clienteGlobal.nombreCompleto,
+      clienteCedula: credito.cliente.clienteGlobal.cedula,
+      cobrador: credito.cobrador.nombreCompleto,
+      montoInicial: credito.montoInicial.toNumber(),
+      tasaInteres: credito.tasaInteres.toNumber(),
+      numeroCuotas: credito.numeroCuotas,
+      frecuenciaPago: credito.frecuenciaPago,
+    },
+  }
+}
+
 async function verificarDocumento(token) {
   try {
-    const encontrado = (await buscarCierreCajaIndividual(token)) ?? (await buscarAjusteCapital(token))
+    const encontrado = (await buscarCierreCajaIndividual(token))
+      ?? (await buscarAjusteCapital(token))
+      ?? (await buscarLetraCambio(token))
+      ?? (await buscarResumenPrestamo(token))
     if (!encontrado) return { error: 'Documento no encontrado', status: 404 }
 
     return { ...encontrado, verificadoEn: new Date().toISOString() }

@@ -149,7 +149,7 @@ async function obtenerPerfil(req) {
         rol:           { select: { nombre: true } },
       },
     }),
-    prisma.tenant.findUnique({ where: { id: tenantId }, select: { nombreNegocio: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { nombreNegocio: true, onboardingCompletado: true } }),
   ])
 
   if (!empleado) return { error: 'Empleado no encontrado', status: 404 }
@@ -161,6 +161,9 @@ async function obtenerPerfil(req) {
     rol:            empleado.rol.nombre,
     esSuperAdmin:   empleado.esSuperAdmin,
     nombreNegocio:  tenant?.nombreNegocio ?? '',
+    // Wizard de configuración inicial obligatorio (Capital + Cobrador mínimo)
+    // — DashboardTenant.jsx redirige a /configuracion-inicial mientras sea false.
+    onboardingCompletado: tenant?.onboardingCompletado ?? true,
   }
 }
 

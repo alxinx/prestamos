@@ -42,6 +42,7 @@ const esquemaCrearCliente = z.object({
   cedula:          z.string().min(1, 'La cédula es requerida').max(30),
   nombreCompleto:  z.string().max(150).optional().or(z.literal('')),
   telefono:        z.string().max(30).optional().or(z.literal('')),
+  email:           z.string().email('Correo inválido').max(150).optional().or(z.literal('')),
   fechaNacimiento: z.string().optional().or(z.literal('')),
   zonaId:          z.string().uuid().optional().or(z.literal('')),
   cobradorId:      z.string().uuid().optional().or(z.literal('')),

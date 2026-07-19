@@ -3,16 +3,22 @@
 const { v7: uuidv7 } = require('uuid')
 const { Prisma } = require('@prisma/client')
 const prisma = require('../../../lib/prisma')
-const { ESTADOS_CREDITO_ACTIVOS, ESTADOS_CREDITO_MORA, DIAS_POR_FRECUENCIA } = require('../../../lib/creditosConstantes')
-const { calcularResumenCredito } = require('../../../lib/calculoCredito')
+const { ESTADOS_CREDITO_ACTIVOS, ESTADOS_CREDITO_MORA, DIAS_POR_FRECUENCIA, UNIDADES_PLAZO } = require('../../../lib/creditosConstantes')
+const { calcularResumenCredito, calcularCronogramaCredito } = require('../../../lib/calculoCredito')
 const { parsearPaginacion } = require('../../../lib/paginacion')
 const { registrarAuditoria } = require('../../../lib/auditoria')
+const { obtenerUsoLimitePrestamos, errorLimiteAlcanzado } = require('../../../lib/limitesPlan')
 const { subirDocumento, ErrorDocumento } = require('../../../lib/documentos')
 const { anexarCalculados: anexarCalculadosCaja } = require('../capital/capital.service')
 const { esquemaGarantia, esquemaDeudorSolidario } = require('./creditos.validator')
+const { generarTokenVerificacion } = require('../../../lib/tokenVerificacion')
+const { generarQrPngBuffer, urlVerificacion } = require('../../../lib/qr')
+const { generarPdfResumenPrestamo } = require('../../../lib/pdf/resumenPrestamo')
+const { emailResumenPrestamo } = require('../../../emails/resumenPrestamo')
+const { enviarEmail } = require('../../../lib/email')
 
 const INCLUDE_CLIENTE_COBRADOR = {
-  cliente: { include: { clienteGlobal: { select: { nombreCompleto: true } } } },
+  cliente: { include: { clienteGlobal: { select: { nombreCompleto: true, cedula: true } } } },
   cobrador: { select: { id: true, nombreCompleto: true } },
 }
 
@@ -135,6 +141,7 @@ async function creditosEnMora(req) {
     .map(c => ({
       id: c.id,
       cliente: c.cliente.clienteGlobal.nombreCompleto,
+      clienteCedula: c.cliente.clienteGlobal.cedula,
       cobrador: c.cobrador.nombreCompleto,
       valorCuota: calcularResumenCredito(c).valorCuota,
       diasMora: diasMoraDe(c),
@@ -186,6 +193,7 @@ async function listarCreditos(req) {
   const resultado = conSaldo.map(c => ({
     id: c.id,
     cliente: c.cliente.clienteGlobal.nombreCompleto,
+    clienteCedula: c.cliente.clienteGlobal.cedula,
     cobrador: c.cobrador.nombreCompleto,
     monto: c.montoInicial,
     saldo: c.saldo,
@@ -244,6 +252,12 @@ async function crearCredito(req) {
     garantia: garantiaJson, deudorSolidario: deudorJson,
   } = req.body
 
+  // Límite de préstamos activos del plan del tenant — validación estricta,
+  // independiente de que el frontend ya haya bloqueado el wizard (ver
+  // src/lib/limitesPlan.js, misma fuente de verdad que el dashboard).
+  const { alcanzado: limiteAlcanzado } = await obtenerUsoLimitePrestamos(tenantId)
+  if (limiteAlcanzado) return errorLimiteAlcanzado('préstamos activos')
+
   let garantiaData
   try {
     garantiaData = esquemaGarantia.parse(JSON.parse(garantiaJson))
@@ -261,7 +275,7 @@ async function crearCredito(req) {
   }
 
   const [cliente, cobrador, caja, plantilla] = await Promise.all([
-    prisma.cliente.findFirst({ where: { id: clienteId, tenantId }, include: { clienteGlobal: { select: { nombreCompleto: true } } } }),
+    prisma.cliente.findFirst({ where: { id: clienteId, tenantId }, include: { clienteGlobal: { select: { nombreCompleto: true, cedula: true, telefono: true, email: true } } } }),
     prisma.empleado.findFirst({ where: { id: cobradorId, tenantId, estado: 'ACTIVO' }, include: { rol: { select: { nombre: true } } } }),
     prisma.caja.findFirst({ where: { id: cajaId, tenantId, estado: 'ACTIVA' }, include: { socio: { select: { id: true, nombreCompleto: true } } } }),
     plantillaId ? prisma.plantillaCredito.findFirst({ where: { id: plantillaId, tenantId } }) : Promise.resolve(null),
@@ -410,6 +424,106 @@ async function crearCredito(req) {
       redondearCuotaMil: redondear,
     },
   })
+
+  // PDF de "Resumen de préstamo" + email al cliente (decisión 2026-07-18): solo
+  // si el cliente tiene email registrado (ClienteGlobal.email es opcional) — si
+  // no lo tiene, el crédito ya se creó igual arriba, sin enviar nada. Nada de
+  // acá puede tumbar la respuesta: el crédito ya es un hecho consumado en este
+  // punto, cualquier error de render/envío solo se registra en consola.
+  if (cliente.clienteGlobal.email) {
+    try {
+      const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { nombreNegocio: true } })
+      const tenantNombre = tenant?.nombreNegocio ?? 'GotaPay'
+
+      const resumen = calcularResumenCredito({ montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil: redondear })
+      const esSoloIntereses = Number(numeroCuotas) === 0
+      const cronograma = calcularCronogramaCredito({ montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil: redondear })
+        .map(c => ({
+          numero: c.numero,
+          fecha: c.fecha.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          capital: c.capital.toNumber(),
+          interes: c.interes.toNumber(),
+          totalCuota: c.totalCuota.toNumber(),
+          saldo: c.saldo.toNumber(),
+        }))
+
+      const tokenVerificacion = generarTokenVerificacion()
+      const urlDoc = urlVerificacion(tokenVerificacion)
+      const qrPngBuffer = await generarQrPngBuffer(urlDoc)
+      const idPrestamo = `GP-${fecha.getFullYear()}-${creditoId.replace(/-/g, '').slice(-6).toUpperCase()}`
+
+      const pdfBuffer = await generarPdfResumenPrestamo({
+        idPrestamo,
+        fechaGeneracion: fecha.toLocaleDateString('es-CO', { day: '2-digit', month: 'long', year: 'numeric' }),
+        tenantNombre,
+        cliente: {
+          nombreCompleto: cliente.clienteGlobal.nombreCompleto,
+          cedula: cliente.clienteGlobal.cedula,
+          telefono: cliente.clienteGlobal.telefono,
+          email: cliente.clienteGlobal.email,
+        },
+        deudorSolidario: deudorData
+          ? {
+              nombreCompleto: deudorData.nombreCompleto,
+              cedula: deudorData.cedula,
+              telefono: deudorData.telefono,
+              relacionConDeudor: deudorData.relacionConDeudor,
+            }
+          : null,
+        montoInicial: Number(montoInicial),
+        tasaInteres: Number(tasaInteres),
+        frecuenciaPago,
+        numeroCuotas,
+        plazoTexto: esSoloIntereses ? null : `${numeroCuotas} ${UNIDADES_PLAZO[frecuenciaPago] || ''}`,
+        valorCuota: resumen.valorCuota ? resumen.valorCuota.toNumber() : null,
+        totalAPagar: esSoloIntereses ? null : resumen.totalAPagar.toNumber(),
+        totalIntereses: esSoloIntereses ? null : resumen.totalIntereses.toNumber(),
+        esSoloIntereses,
+        valorPeriodico: resumen.valorPeriodico ? resumen.valorPeriodico.toNumber() : null,
+        cronograma,
+        urlVerificacion: urlDoc,
+        qrPngDataUri: `data:image/png;base64,${qrPngBuffer.toString('base64')}`,
+      })
+
+      // Token solo se persiste si el PDF de verdad se generó — si algo de lo de
+      // arriba lanza, no queda un token "verificable" para un documento que
+      // nunca se generó ni se envió.
+      await prisma.credito.update({ where: { id: creditoId }, data: { tokenVerificacion } })
+
+      const html = emailResumenPrestamo({
+        nombreCliente: cliente.clienteGlobal.nombreCompleto,
+        nombreNegocio: tenantNombre,
+        montoInicial: Number(montoInicial),
+        tasaInteres: Number(tasaInteres),
+        numeroCuotas,
+        frecuenciaPago,
+        valorCuota: resumen.valorCuota ? resumen.valorCuota.toNumber() : null,
+        valorPeriodico: resumen.valorPeriodico ? resumen.valorPeriodico.toNumber() : null,
+        esSoloIntereses,
+      })
+
+      enviarEmail({
+        destinatario: cliente.clienteGlobal.email,
+        asunto: `Resumen de tu préstamo — ${tenantNombre}`,
+        html,
+        attachments: [{ filename: `resumen-prestamo-${idPrestamo}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }],
+      }).catch(err => console.error('[Email] Error enviando resumen de préstamo a', cliente.clienteGlobal.email, ':', err.message))
+
+      // Copia como Documento del crédito (mismo entidadTipo que los adjuntos de
+      // garantía subidos arriba) — así se puede redescargar desde el panel más
+      // adelante, sin depender de que el correo haya llegado.
+      subirDocumento({
+        tenantId,
+        entidadTipo: 'CREDITO',
+        entidadId: creditoId,
+        subidoPorId: autorId,
+        nombreArchivo: `Resumen de préstamo ${idPrestamo}.pdf`,
+        archivo: { originalname: `resumen-prestamo-${idPrestamo}.pdf`, size: pdfBuffer.length, buffer: pdfBuffer, mimetype: 'application/pdf' },
+      }).catch(err => console.error('[PDF] Error guardando resumen de préstamo como documento:', err.message))
+    } catch (err) {
+      console.error('[PDF] Error generando resumen de préstamo para crédito', creditoId, ':', err.message)
+    }
+  }
 
   return { credito: { id: creditoId, estado: 'ACTIVO' }, documentos, documentosFallidos }
 }

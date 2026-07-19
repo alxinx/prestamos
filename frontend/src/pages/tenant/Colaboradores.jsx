@@ -8,6 +8,8 @@ import CampoSelect from '../../components/tenant/CampoSelect'
 import SelectorDocumentos from '../../components/tenant/SelectorDocumentos'
 import TarjetaColaborador from '../../components/tenant/TarjetaColaborador'
 import ConPermiso from '../../components/tenant/ConPermiso'
+import BloqueLimitePlan from '../../components/tenant/BloqueLimitePlan'
+import useLimitePlan from '../../hooks/useLimitePlan'
 import { IcoMas, IcoCorreo } from '../../components/tenant/iconos'
 import { ETIQUETAS_ROL } from '../../lib/roles'
 import { apiFetch } from '../../lib/api'
@@ -37,6 +39,15 @@ export default function Colaboradores() {
   const [enviando, setEnviando] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [sinPermiso, setSinPermiso] = useState(false)
+
+  // Límite de colaboradores del plan del tenant (mismo patrón que
+  // NuevoPrestamo.jsx con préstamos): si ya lo alcanzó, el formulario se
+  // reemplaza por AvisoLimitePlan. El backend valida lo mismo de forma
+  // estricta en POST /colaboradores (src/lib/limitesPlan.js). `revalidarLimite`
+  // se vuelve a llamar justo después de crear un colaborador, para que el
+  // aviso aparezca de inmediato si con ese registro se llegó al tope, sin
+  // esperar a que se recargue la página.
+  const [estadoLimite, revalidarLimite] = useLimitePlan('colaboradores')
 
   useEffect(() => {
     async function cargarDatos() {
@@ -86,6 +97,7 @@ export default function Colaboradores() {
       setForm(FORM_INICIAL)
       setDocumentos([])
       setExito(true)
+      revalidarLimite()
       if (datos.documentosFallidos?.length) {
         setAvisoDocumentos(`No se pudieron subir: ${datos.documentosFallidos.map(d => d.nombre).join(', ')}.`)
       }
@@ -109,6 +121,7 @@ export default function Colaboradores() {
 
   const formulario = (
     <ConPermiso permiso="empleados.crear">
+    <BloqueLimitePlan alcanzado={estadoLimite.alcanzado} usados={estadoLimite.usados} limite={estadoLimite.limite} recurso="colaboradores">
     <TarjetaPanel
       icono={<IcoMas />}
       iconoClases="bg-secondary/10 text-secondary"
@@ -182,6 +195,7 @@ export default function Colaboradores() {
         </BotonAccion>
       </form>
     </TarjetaPanel>
+    </BloqueLimitePlan>
     </ConPermiso>
   )
 

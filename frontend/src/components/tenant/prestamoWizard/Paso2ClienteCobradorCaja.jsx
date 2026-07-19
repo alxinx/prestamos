@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import CampoSelect from '../CampoSelect'
+import ConPermiso from '../ConPermiso'
 import { IcoMas, IcoPersonas, IcoOjo } from '../iconos'
 import { formatearPrecio } from '../../../lib/formato'
 import { apiFetch } from '../../../lib/api'
@@ -118,7 +119,7 @@ export default function Paso2ClienteCobradorCaja({
   cliente, onSeleccionarCliente,
   cobradorId, onCambiarCobrador, cobradores,
   cajaId, onCambiarCaja, cajas,
-  montoInicial,
+  montoInicial, onCrearCliente,
 }) {
   const cajasDisponibles = cajas.filter(c => c.estado === 'ACTIVA')
   const cajaSeleccionada = cajas.find(c => c.id === cajaId)
@@ -133,12 +134,15 @@ export default function Paso2ClienteCobradorCaja({
             </span>
             <p className="text-[14px] font-bold text-on-background m-0">Cliente *</p>
           </div>
-          <a
-            href="/clientes/nuevo"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary/50 text-secondary text-[12.5px] font-semibold no-underline hover:bg-secondary-container/10 transition-colors"
-          >
-            <IcoMas size={14} /> Crear nuevo cliente
-          </a>
+          <ConPermiso permiso="clientes.crear" compacto>
+            <button
+              type="button"
+              onClick={onCrearCliente}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary/50 text-secondary text-[12.5px] font-semibold cursor-pointer bg-transparent hover:bg-secondary-container/10 transition-colors"
+            >
+              <IcoMas size={14} /> Crear nuevo cliente
+            </button>
+          </ConPermiso>
         </div>
         <p className="text-[12px] text-on-surface-variant mb-3">Busca el cliente por cédula o nombre. Si no existe, podrás crearlo desde aquí.</p>
         <BuscadorCliente cliente={cliente} onSeleccionar={onSeleccionarCliente} />

@@ -29,7 +29,9 @@ const tenantClientesRouter       = require('./src/modules/tenant/clientes/client
 const tenantZonasRouter          = require('./src/modules/tenant/zonas/zonas.routes')
 const tenantDashboardRouter      = require('./src/modules/tenant/dashboard/dashboard.routes')
 const tenantCreditosRouter       = require('./src/modules/tenant/creditos/creditos.routes')
+const tenantPlanRouter           = require('./src/modules/tenant/plan/plan.routes')
 const tenantPlantillasCreditoRouter = require('./src/modules/tenant/plantillasCredito/plantillasCredito.routes')
+const tenantOnboardingRouter     = require('./src/modules/tenant/onboarding/onboarding.routes')
 
 const app = express()
 app.disable('x-powered-by')
@@ -98,7 +100,9 @@ app.use('/api/tenant/clientes', tenantClientesRouter)
 app.use('/api/tenant/zonas-cobertura', tenantZonasRouter)
 app.use('/api/tenant/dashboard', tenantDashboardRouter)
 app.use('/api/tenant/creditos', tenantCreditosRouter)
+app.use('/api/tenant/plan', tenantPlanRouter)
 app.use('/api/tenant/plantillas-credito', tenantPlantillasCreditoRouter)
+app.use('/api/tenant/onboarding', tenantOnboardingRouter)
 
 // ── Manejo global de errores ──────────────────────────────────────────────────
 app.use((err, req, res, next) => {

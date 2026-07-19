@@ -166,9 +166,11 @@ export default function ModalEditarColaborador({ colaborador, onCerrar, onActual
   async function confirmarCambioEstado() {
     setConfirmarEstado(false)
     setCambiandoEstado(true)
+    setError('')
     try {
       const { ok, datos } = await apiFetch(`/api/tenant/colaboradores/${colaborador.id}/estado`, { method: 'PATCH' })
       if (ok) onDesactivado(datos.colaborador)
+      else setError(datos.error || 'No se pudo cambiar el estado del colaborador.')
     } finally {
       setCambiandoEstado(false)
     }

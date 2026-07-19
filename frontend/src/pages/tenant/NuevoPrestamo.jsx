@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import usePermisos from '../../hooks/usePermisos'
+import useLimitePlan from '../../hooks/useLimitePlan'
 import { apiFetch } from '../../lib/api'
 import { navegarA } from '../../lib/navegacion'
 import { IcoMoneda, IcoCheck } from '../../components/tenant/iconos'
@@ -10,6 +11,11 @@ import Paso2ClienteCobradorCaja from '../../components/tenant/prestamoWizard/Pas
 import Paso3GarantiaSolidario from '../../components/tenant/prestamoWizard/Paso3GarantiaSolidario'
 import Paso4ResumenConfirmacion from '../../components/tenant/prestamoWizard/Paso4ResumenConfirmacion'
 import ResumenCreditoCard from '../../components/tenant/prestamoWizard/ResumenCreditoCard'
+import ModalGenerarLetraCambio from '../../components/tenant/ModalGenerarLetraCambio'
+import { escribirDocumentoLetraCambio } from '../../lib/documentoLetraCambio'
+import ModalConfirmacion from '../../components/tenant/ModalConfirmacion'
+import { guardarBorradorPrestamo, obtenerBorradorPrestamo, limpiarBorradorPrestamo } from '../../lib/borradorPrestamo'
+import AvisoLimitePlan from '../../components/tenant/AvisoLimitePlan'
 
 const PASOS = [
   { numero: 1, etiqueta: 'Detalles del préstamo' },
@@ -61,6 +67,25 @@ export default function NuevoPrestamo() {
 
   const [guardando, setGuardando] = useState(false)
   const [errorGuardar, setErrorGuardar] = useState('')
+  // Crédito recién creado, en espera de que el operador decida si genera su
+  // letra de cambio antes de salir del wizard (decisión 2026-07-17: se
+  // pregunta siempre al confirmar, no solo cuando se llenó fechaLetra en el
+  // paso 1 — ese campo es metadato del crédito, la letra es un documento aparte).
+  const [creditoCreado, setCreditoCreado] = useState(null)
+
+  // Confirmación antes de salir a crear un cliente a mitad del wizard (ver
+  // Paso2ClienteCobradorCaja "Crear nuevo cliente" + lib/borradorPrestamo.js).
+  const [mostrarModalCrearCliente, setMostrarModalCrearCliente] = useState(false)
+
+  // Límite de préstamos activos del plan del tenant (decisión 2026-07-18): si
+  // ya lo alcanzó, este wizard no debe cargarse — se muestra AvisoLimitePlan en
+  // su lugar. El backend valida lo mismo de forma estricta en POST /creditos
+  // (GET /api/tenant/plan/limite-prestamos), así que esto es solo para no
+  // dejar entrar al operador a un formulario que de todas formas va a rechazar.
+  // `activo` es un booleano (no la función `tienePermiso`, cuya identidad
+  // cambia en cada render por el SSE de permisos), así que el hook solo
+  // vuelve a consultar cuando el valor realmente cambia.
+  const [estadoLimite] = useLimitePlan('prestamos', { activo: !cargandoPermisos && tienePermiso('creditos.crear') })
 
   useEffect(() => {
     apiFetch('/api/tenant/plantillas-credito').then(({ ok, datos }) => {
@@ -72,6 +97,28 @@ export default function NuevoPrestamo() {
     apiFetch('/api/tenant/capital').then(({ ok, datos }) => {
       if (ok) setCajas(datos.capital || [])
     })
+  }, [])
+
+  // Restaura el avance guardado al salir a crear el cliente a mitad del wizard
+  // (Paso2ClienteCobradorCaja "Crear nuevo cliente"). El cliente mismo ya llega
+  // resuelto vía clienteDesdeQueryParams (mismo ?clienteId=... que ya usaba
+  // NuevoCliente.jsx en su botón "Guardar y crear préstamo") — acá solo se
+  // recupera todo lo demás que el operador ya había llenado.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).get('clienteId')) return
+    const borrador = obtenerBorradorPrestamo()
+    if (!borrador) return
+
+    setPlantillaId(borrador.plantillaId)
+    setDetalles(borrador.detalles)
+    setRedondearCuotaMil(borrador.redondearCuotaMil)
+    setCobradorId(borrador.cobradorId)
+    setCajaId(borrador.cajaId)
+    setGarantia(borrador.garantia)
+    setDocumentos(borrador.documentos)
+    setTieneDeudorSolidario(borrador.tieneDeudorSolidario)
+    setDeudorSolidario(borrador.deudorSolidario)
+    setPaso(2)
   }, [])
 
   // Simulación en vivo (debounced) — misma fórmula exacta que la creación real
@@ -129,6 +176,22 @@ export default function NuevoPrestamo() {
   }
   function cambiarDeudorSolidario(campo, valor) {
     setDeudorSolidario(d => ({ ...d, [campo]: valor }))
+  }
+
+  // El cliente no existe y hay permiso para crearlo — se le pregunta si quiere
+  // guardar el avance del préstamo antes de salir (decisión 2026-07-17): si
+  // dice que sí, al volver con el cliente ya creado (?clienteId=..., mismo
+  // flujo "Guardar y crear préstamo" de NuevoCliente.jsx) el wizard restaura
+  // todo automáticamente en vez de empezar de cero.
+  function crearClienteDesdeElWizard(guardarAvance) {
+    if (guardarAvance) {
+      guardarBorradorPrestamo({
+        plantillaId, detalles, redondearCuotaMil, cobradorId, cajaId,
+        garantia, documentos, tieneDeudorSolidario, deudorSolidario,
+      })
+    }
+    setMostrarModalCrearCliente(false)
+    navegarA('/clientes/nuevo')
   }
 
   const plantilla = plantillas.find(p => p.id === plantillaId)
@@ -205,11 +268,30 @@ export default function NuevoPrestamo() {
         setGuardando(false)
         return
       }
-      navegarA('/prestamos')
+      // Crédito ya creado — el borrador (si había uno) ya cumplió su propósito.
+      limpiarBorradorPrestamo()
+      if (tienePermiso('creditos.generar_letra')) {
+        setCreditoCreado({ id: datos.credito.id, clienteNombre: cliente.nombreCompleto, clienteCedula: cliente.cedula })
+        setGuardando(false)
+      } else {
+        navegarA('/prestamos')
+      }
     } catch {
       setErrorGuardar('Error de conexión. Intenta nuevamente.')
       setGuardando(false)
     }
+  }
+
+  // Se pasa `ventana` (ya abierta síncronamente por el modal, dentro del gesto
+  // de clic) para que documentoLetraCambio.js la rellene apenas responde la
+  // API — mismo patrón que Prestamos.jsx, reutilizado tal cual (CLAUDE.md §2).
+  async function generarLetraCambio(datosLetra, ventana) {
+    const { ok, datos: resp } = await apiFetch(`/api/tenant/creditos/${creditoCreado.id}/letra-cambio`, {
+      method: 'POST',
+      body: datosLetra,
+    })
+    if (!ok) throw new Error(resp.error || 'No se pudo generar la letra de cambio.')
+    escribirDocumentoLetraCambio(ventana, resp)
   }
 
   if (!cargandoPermisos && !tienePermiso('creditos.crear')) {
@@ -218,6 +300,22 @@ export default function NuevoPrestamo() {
         <div className="rounded-2xl border border-outline-variant/50 bg-surface-lowest p-8 text-center shadow-card">
           <p className="text-on-surface-variant text-sm">No tienes permiso para crear préstamos.</p>
         </div>
+      </div>
+    )
+  }
+
+  if (estadoLimite.cargando) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8 pt-7 pb-12 min-h-full flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-[3px] border-secondary-container/30 [border-top-color:var(--color-secondary)] animate-[girar_0.8s_linear_infinite]" />
+      </div>
+    )
+  }
+
+  if (estadoLimite.alcanzado) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8 pt-7 pb-12 min-h-full">
+        <AvisoLimitePlan usados={estadoLimite.usados} limite={estadoLimite.limite} />
       </div>
     )
   }
@@ -300,6 +398,7 @@ export default function NuevoPrestamo() {
               onCambiarCaja={setCajaId}
               cajas={cajas}
               montoInicial={monto}
+              onCrearCliente={() => setMostrarModalCrearCliente(true)}
             />
           )}
           {paso === 3 && (
@@ -374,9 +473,34 @@ export default function NuevoPrestamo() {
         </div>
 
         <div className="flex flex-col gap-4">
-          <ResumenCreditoCard resumen={resumenSimulado} caja={cajaSeleccionada} montoInicial={monto} />
+          <ResumenCreditoCard
+            resumen={resumenSimulado}
+            caja={cajaSeleccionada}
+            montoInicial={monto}
+            numeroCuotas={Number(detalles.numeroCuotas) || 0}
+          />
         </div>
       </div>
+
+      {creditoCreado && (
+        <ModalGenerarLetraCambio
+          credito={creditoCreado}
+          onCerrar={() => navegarA('/prestamos')}
+          onGenerar={generarLetraCambio}
+        />
+      )}
+
+      {mostrarModalCrearCliente && (
+        <ModalConfirmacion
+          tipo="confirmacion"
+          titulo="¿Guardar el avance de este préstamo?"
+          mensaje="Vas a salir para crear el cliente. Si guardas el avance, al terminar de crearlo podrás retomar este préstamo automáticamente con sus datos."
+          textoConfirmar="Sí, guardar y continuar"
+          textoCancelar="No, continuar sin guardar"
+          onConfirmar={() => crearClienteDesdeElWizard(true)}
+          onCancelar={() => crearClienteDesdeElWizard(false)}
+        />
+      )}
     </div>
   )
 }

@@ -20,7 +20,7 @@ const PASOS = [
   { numero: 5, etiqueta: 'Consentimientos' },
 ]
 
-const DATOS_PERSONALES_INICIAL = { nombreCompleto: '', telefono: '', fechaNacimiento: '' }
+const DATOS_PERSONALES_INICIAL = { nombreCompleto: '', telefono: '', email: '', fechaNacimiento: '' }
 const INFO_OPERATIVA_INICIAL = { zonaId: '', cobradorId: '', observaciones: '' }
 const CONSENTIMIENTOS_INICIAL = { tratamientoDatos: true, compartirScore: false, notificacionesWsp: false }
 
@@ -102,6 +102,7 @@ export default function NuevoCliente() {
           ? {
               nombreCompleto: datos.clienteGlobal.nombreCompleto,
               telefono: datos.clienteGlobal.telefono,
+              email: datos.clienteGlobal.email || '',
               fechaNacimiento: datos.clienteGlobal.fechaNacimiento ? datos.clienteGlobal.fechaNacimiento.slice(0, 10) : '',
             }
           : DATOS_PERSONALES_INICIAL
@@ -184,6 +185,7 @@ export default function NuevoCliente() {
       cuerpo.append('cedula', cedula.trim())
       cuerpo.append('nombreCompleto', datosPersonales.nombreCompleto)
       cuerpo.append('telefono', datosPersonales.telefono)
+      cuerpo.append('email', datosPersonales.email || '')
       cuerpo.append('fechaNacimiento', datosPersonales.fechaNacimiento || '')
       cuerpo.append('zonaId', infoOperativa.zonaId || '')
       cuerpo.append('cobradorId', infoOperativa.cobradorId || '')
@@ -437,6 +439,7 @@ export default function NuevoCliente() {
                 <ResumenFila etiqueta={resultadoCedula?.existeGlobal ? 'Cliente Global' : 'Cliente nuevo'} valor={datosPersonales.nombreCompleto} />
                 <ResumenFila etiqueta="Cédula" valor={cedula} />
                 <ResumenFila etiqueta="Teléfono" valor={datosPersonales.telefono} />
+                {datosPersonales.email && <ResumenFila etiqueta="Email" valor={datosPersonales.email} />}
                 {infoOperativa.cobradorId && (
                   <ResumenFila etiqueta="Cobrador asignado" valor={cobradores.find(c => c.id === infoOperativa.cobradorId)?.nombreCompleto} />
                 )}
@@ -455,6 +458,7 @@ export default function NuevoCliente() {
             cedula,
             nombreCompleto: datosPersonales.nombreCompleto,
             telefono: datosPersonales.telefono,
+            email: datosPersonales.email,
             fechaNacimiento: datosPersonales.fechaNacimiento,
             zona: zonas.find(z => z.id === infoOperativa.zonaId)?.nombre,
             cobrador: cobradores.find(c => c.id === infoOperativa.cobradorId)?.nombreCompleto,

@@ -101,6 +101,14 @@ export default function Paso1DatosPersonales({
                   placeholder="Ej. 300 123 4567"
                   disabled={soloLectura}
                 />
+                <CampoTexto
+                  etiqueta="Email (opcional)"
+                  tipo="email"
+                  valor={datosPersonales.email}
+                  onChange={v => onCambiarDatosPersonales('email', v)}
+                  placeholder="Ej. cliente@correo.com"
+                  disabled={soloLectura}
+                />
               </div>
               <div className="mt-4 max-w-[260px]">
                 <CampoFecha

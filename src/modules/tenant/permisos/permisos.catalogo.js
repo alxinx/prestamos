@@ -14,6 +14,7 @@ const CATALOGO_PERMISOS = [
   { codigo: 'creditos.editar',         nombre: 'Editar créditos',           descripcion: 'Modificar condiciones de un crédito',                     modulo: 'CREDITOS' },
   { codigo: 'creditos.anular',         nombre: 'Anular créditos',           descripcion: 'Anular un crédito otorgado',                              modulo: 'CREDITOS' },
   { codigo: 'creditos.cambiar_estado', nombre: 'Cambiar estado de crédito', descripcion: 'Cambiar el estado de un crédito (mora, cancelado, etc.)', modulo: 'CREDITOS' },
+  { codigo: 'creditos.generar_letra', nombre: 'Generar letra de cambio', descripcion: 'Generar la letra de cambio de un crédito otorgado',            modulo: 'CREDITOS' },
 
   // Cobros
   { codigo: 'cobros.ver',       nombre: 'Ver cobros',       descripcion: 'Consultar pagos y recaudos',             modulo: 'COBROS' },
@@ -64,7 +65,7 @@ const PERMISOS_POR_ROL = {
 
   SECRETARIA: [
     'clientes.ver', 'clientes.crear', 'clientes.editar',
-    'creditos.ver', 'creditos.crear', 'creditos.editar',
+    'creditos.ver', 'creditos.crear', 'creditos.editar', 'creditos.generar_letra',
     'cobros.ver', 'cobros.registrar', 'cobros.liquidar',
     'reportes.ver',
   ],

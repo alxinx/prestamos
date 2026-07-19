@@ -9,6 +9,7 @@ const { emailActivacionColaborador } = require('../../../emails/activacionColabo
 const { generarTokenActivacion, calcularExpiracionActivacion } = require('../../../lib/tokenActivacion')
 const { publicarCambioPermisos, publicarCuentaDesactivada } = require('../../../lib/eventosEmpleado')
 const { eliminarArchivoR2, generarUrlDescargaR2 } = require('../../../lib/r2Client')
+const { obtenerUsoLimiteColaboradores, errorLimiteAlcanzado } = require('../../../lib/limitesPlan')
 
 // `url` se selecciona solo para derivar la extensión del archivo real (la imagen se sube
 // convertida a webp, por lo que la extensión no siempre coincide con el nombre visible) —
@@ -75,6 +76,12 @@ async function crearColaborador(req) {
   const { tenantId, id: autorId } = req.empleado
   const datos = req.body
   const archivos = req.files || []
+
+  // Límite de colaboradores del plan del tenant — validación estricta,
+  // independiente de que el frontend ya haya bloqueado el formulario (ver
+  // src/lib/limitesPlan.js, misma fuente de verdad que Colaboradores.jsx).
+  const { alcanzado: limiteAlcanzado } = await obtenerUsoLimiteColaboradores(tenantId)
+  if (limiteAlcanzado) return errorLimiteAlcanzado('colaboradores')
 
   const rol = await prisma.rol.findFirst({ where: { id: datos.rolId, tenantId } })
   if (!rol) return { error: 'Rol inválido', status: 400 }
@@ -238,6 +245,14 @@ async function cambiarEstadoColaborador(req) {
   }
 
   const nuevoEstado = colaborador.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO'
+
+  // Reactivar (INACTIVO/SUSPENDIDO → ACTIVO) vuelve a ocupar un cupo del plan
+  // — sin este check se podía reactivar sin límite, porque obtenerUsoLimiteColaboradores
+  // solo cuenta ACTIVO (ver src/lib/limitesPlan.js). Desactivar siempre se permite.
+  if (nuevoEstado === 'ACTIVO') {
+    const { alcanzado: limiteAlcanzado } = await obtenerUsoLimiteColaboradores(tenantId)
+    if (limiteAlcanzado) return errorLimiteAlcanzado('colaboradores')
+  }
 
   const actualizado = await prisma.empleado.update({
     where: { id },

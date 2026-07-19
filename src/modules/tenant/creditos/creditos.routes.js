@@ -4,8 +4,8 @@ const { Router } = require('express')
 const multer = require('multer')
 const authTenant = require('../../../middleware/authTenant')
 const requierePermiso = require('../../../middleware/requierePermiso')
-const { validarCrearCredito } = require('./creditos.validator')
-const { manejarEstadisticas, manejarMora, manejarListar, manejarSimular, manejarCrear } = require('./creditos.controller')
+const { validarCrearCredito, validarGenerarLetraCambio } = require('./creditos.validator')
+const { manejarEstadisticas, manejarMora, manejarListar, manejarSimular, manejarCrear, manejarGenerarLetraCambio } = require('./creditos.controller')
 const { MAX_DOCUMENTO_BYTES } = require('../../../lib/documentos')
 
 const subirGarantiaArchivos = multer({
@@ -18,11 +18,12 @@ const router = Router()
 router.use(authTenant)
 
 // /estadisticas, /mora y /simular deben registrarse antes de cualquier /:id
-// genérico si en el futuro se agrega uno — hoy no hay conflicto de rutas.
+// genérico — /:id/letra-cambio ya es uno, por eso va después de estas.
 router.get('/estadisticas', requierePermiso('creditos.ver'),   manejarEstadisticas)
 router.get('/mora',         requierePermiso('creditos.ver'),   manejarMora)
 router.post('/simular',     requierePermiso('creditos.crear'), manejarSimular)
 router.get('/',              requierePermiso('creditos.ver'),   manejarListar)
 router.post('/',             requierePermiso('creditos.crear'), subirGarantiaArchivos, validarCrearCredito, manejarCrear)
+router.post('/:id/letra-cambio', requierePermiso('creditos.generar_letra'), validarGenerarLetraCambio, manejarGenerarLetraCambio)
 
 module.exports = router

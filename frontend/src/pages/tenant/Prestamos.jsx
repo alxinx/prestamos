@@ -5,10 +5,14 @@ import ChipEstado from '../../components/tenant/ChipEstado'
 import Paginador from '../../components/tenant/Paginador'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
-import { IcoMas, IcoMoneda, IcoChevronAbajo, IcoOpciones, IcoBuscar, IcoAlerta, IcoTendencia } from '../../components/tenant/iconos'
+import MenuAcciones from '../../components/tenant/MenuAcciones'
+import ModalGenerarLetraCambio from '../../components/tenant/ModalGenerarLetraCambio'
+import { IcoMas, IcoMoneda, IcoChevronAbajo, IcoBuscar, IcoAlerta, IcoTendencia, IcoArchivo } from '../../components/tenant/iconos'
 import { formatearPrecio, formatearFechaLocal } from '../../lib/formato'
 import { inicialesDe, claseAvatar } from '../../lib/avatar'
 import { apiFetch } from '../../lib/api'
+import { escribirDocumentoLetraCambio } from '../../lib/documentoLetraCambio'
+import usePermisos from '../../hooks/usePermisos'
 // IcoBuscar/IcoAlerta/IcoTendencia viven en components/iconos.jsx (compartidos
 // con Dashboard.jsx y Clientes.jsx).
 
@@ -51,19 +55,33 @@ function SelectCobrador({ valor, onChange, cobradores }) {
   )
 }
 
-function BotonAcciones() {
-  return (
-    <button
-      type="button"
-      aria-label="Más acciones"
-      className="w-7 h-7 rounded-lg inline-flex items-center justify-center text-on-surface-variant hover:bg-surface-default transition-colors"
-    >
-      <IcoOpciones />
-    </button>
-  )
-}
-
 export default function Prestamos() {
+  const { tienePermiso } = usePermisos()
+  const [creditoParaLetra, setCreditoParaLetra] = useState(null)
+
+  function accionesCredito(c) {
+    const acciones = []
+    if (tienePermiso('creditos.generar_letra')) {
+      acciones.push({
+        label: 'Generar letra de cambio',
+        icono: <IcoArchivo size={14} />,
+        onClick: () => setCreditoParaLetra({ id: c.id, clienteNombre: c.cliente, clienteCedula: c.clienteCedula }),
+      })
+    }
+    return acciones
+  }
+
+  // Se pasa `ventana` (ya abierta síncronamente por el modal, dentro del gesto
+  // de clic) para que documentoLetraCambio.js la rellene apenas responde la API.
+  async function generarLetraCambio(datos, ventana) {
+    const { ok, datos: resp } = await apiFetch(`/api/tenant/creditos/${creditoParaLetra.id}/letra-cambio`, {
+      method: 'POST',
+      body: datos,
+    })
+    if (!ok) throw new Error(resp.error || 'No se pudo generar la letra de cambio.')
+    escribirDocumentoLetraCambio(ventana, resp)
+  }
+
   const [estadisticas, setEstadisticas] = useState({ capitalCirculando: 0, carteraEnMora: 0, recaudadoEsteMes: 0, prestamosActivos: 0 })
   const [cargandoStats, setCargandoStats] = useState(true)
   const [cobradores, setCobradores] = useState([])
@@ -239,7 +257,7 @@ export default function Prestamos() {
                       <span className={`font-bold ${c.diasMora >= 30 ? 'text-error' : 'text-on-background'}`}>{c.diasMora}</span>
                     </td>
                     <td className="px-1 py-3"><ChipEstado estado={c.estado} /></td>
-                    <td className="px-1 py-3 text-right"><BotonAcciones /></td>
+                    <td className="px-1 py-3 text-right"><MenuAcciones acciones={accionesCredito(c)} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -325,7 +343,7 @@ export default function Prestamos() {
                       </td>
                       <td className="px-1 py-3"><ChipEstado estado={c.estado} /></td>
                       <td className="px-1 py-3 text-on-background whitespace-nowrap">{formatearFechaLocal(c.proximaCuota)}</td>
-                      <td className="px-1 py-3 text-right"><BotonAcciones /></td>
+                      <td className="px-1 py-3 text-right"><MenuAcciones acciones={accionesCredito(c)} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -341,6 +359,14 @@ export default function Prestamos() {
           </div>
         </TarjetaPanel>
       </div>
+
+      {creditoParaLetra && (
+        <ModalGenerarLetraCambio
+          credito={creditoParaLetra}
+          onCerrar={() => setCreditoParaLetra(null)}
+          onGenerar={generarLetraCambio}
+        />
+      )}
     </div>
   )
 }

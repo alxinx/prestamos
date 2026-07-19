@@ -33,6 +33,7 @@ import CapitalPanel from './pages/tenant/CapitalPanel'
 import Tesoreria from './pages/tenant/Tesoreria'
 import Reportes from './pages/tenant/Reportes'
 import Configuracion from './pages/tenant/Configuracion'
+import ConfiguracionInicial from './pages/tenant/ConfiguracionInicial'
 import MisCobros from './pages/tenant/MisCobros'
 import Historial from './pages/tenant/Historial'
 import GastosCampo from './pages/tenant/GastosCampo'
@@ -66,6 +67,7 @@ function RutasTenantPrivadas({ ruta }) {
   if (ruta.startsWith('/capital'))                  return <Capital />
   if (ruta.startsWith('/tesoreria'))                return <Tesoreria />
   if (ruta.startsWith('/reportes'))                 return <Reportes />
+  if (ruta.startsWith('/configuracion-inicial'))    return <ConfiguracionInicial />
   if (ruta.startsWith('/configuracion'))            return <Configuracion />
 
   // Cobrador

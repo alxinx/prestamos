@@ -255,14 +255,43 @@ async function obtenerEstadisticasCapital(req) {
 
 async function crearCapital(req) {
   const { tenantId, id: autorId } = req.empleado
-  const { nombre, valorTotal, socioId } = req.body
+  const { nombre, valorTotal } = req.body
+  let { socioId } = req.body
 
-  const [socio, tenant, autor] = await Promise.all([
-    prisma.socio.findFirst({ where: { id: socioId, tenantId, activo: true } }),
+  const [tenant, autor] = await Promise.all([
     prisma.tenant.findUnique({ where: { id: tenantId }, select: { nombreNegocio: true } }),
-    prisma.empleado.findFirst({ where: { id: autorId, tenantId }, select: { nombreCompleto: true } }),
+    prisma.empleado.findFirst({
+      where: { id: autorId, tenantId },
+      select: { nombreCompleto: true, cedula: true, telefono: true, email: true },
+    }),
   ])
-  if (!socio) return { error: 'Socio no encontrado', status: 404 }
+
+  let socio
+  if (socioId) {
+    socio = await prisma.socio.findFirst({ where: { id: socioId, tenantId, activo: true } })
+    if (!socio) return { error: 'Socio no encontrado', status: 404 }
+  } else {
+    // Socio responsable opcional (decisión 2026-07-18, wizard de configuración
+    // inicial): si no se indica, se usa/crea un socio vinculado al propio
+    // empleado que crea el capital (Socio.empleadoId ya modela esta relación)
+    // — así el capital siempre tiene un socio "dueño" sin pedirle ese dato a
+    // un tenant que apenas está empezando y todavía no tiene socios.
+    socio = await prisma.socio.findFirst({ where: { tenantId, empleadoId: autorId, activo: true } })
+    if (!socio) {
+      socio = await prisma.socio.create({
+        data: {
+          id: uuidv7(),
+          tenantId,
+          empleadoId: autorId,
+          nombreCompleto: autor.nombreCompleto,
+          cedula: autor.cedula,
+          telefono: autor.telefono,
+          email: autor.email,
+        },
+      })
+    }
+    socioId = socio.id
+  }
 
   const id = uuidv7()
   const tokenVerificacion = generarTokenVerificacion()

@@ -46,6 +46,7 @@ async function verificarCedula(req) {
       ? {
           nombreCompleto: clienteGlobal.nombreCompleto,
           telefono: clienteGlobal.telefono,
+          email: clienteGlobal.email,
           fechaNacimiento: clienteGlobal.fechaNacimiento,
         }
       : null,
@@ -139,6 +140,7 @@ async function crearCliente(req) {
         cedula,
         nombreCompleto: normalizarTitulo(datos.nombreCompleto.trim()),
         telefono: datos.telefono.trim(),
+        email: datos.email?.trim() || null,
         fechaNacimiento,
       },
     })
@@ -364,7 +366,7 @@ async function obtenerDetalleCliente(req) {
   const cliente = await prisma.cliente.findFirst({
     where: { id, tenantId },
     include: {
-      clienteGlobal: { select: { nombreCompleto: true, cedula: true, telefono: true, fechaNacimiento: true } },
+      clienteGlobal: { select: { nombreCompleto: true, cedula: true, telefono: true, email: true, fechaNacimiento: true } },
       zona: { select: { id: true, nombre: true } },
       cobrador: { select: { id: true, nombreCompleto: true } },
       scoreInterno: { select: { scoreActual: true } },

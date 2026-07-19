@@ -12,12 +12,13 @@ const transporte = nodemailer.createTransport({
   },
 })
 
-async function enviarEmail({ destinatario, asunto, html }) {
+async function enviarEmail({ destinatario, asunto, html, attachments }) {
   await transporte.sendMail({
     from: `"${process.env.MAIL_FROM_NAME || 'GotaPay'}" <${process.env.MAIL_FROM_ADDRESS}>`,
     to: destinatario,
     subject: asunto,
     html,
+    attachments,
   })
 }
 

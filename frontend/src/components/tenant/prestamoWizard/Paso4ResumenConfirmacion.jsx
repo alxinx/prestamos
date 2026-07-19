@@ -43,8 +43,8 @@ function Bloque({ icono, iconoClases, titulo, onEditar, children }) {
 function Dato({ etiqueta, valor }) {
   return (
     <div>
-      <p className="text-[11px] text-on-surface-variant m-0">{etiqueta}</p>
-      <p className="text-[13px] font-semibold text-on-background m-0">{valor ?? '—'}</p>
+      <p className="text-[12.5px] text-on-surface-variant m-0">{etiqueta}</p>
+      <p className="text-[15px] font-semibold text-on-background m-0">{valor ?? '—'}</p>
     </div>
   )
 }
@@ -93,8 +93,8 @@ export default function Paso4ResumenConfirmacion({
         <Dato etiqueta="Tipo de garantía" valor={ETIQUETA_TIPO_GARANTIA[garantia.tipo]} />
         <Dato etiqueta="Valor estimado" valor={garantia.valorEstimado > 0 ? formatearPrecio(garantia.valorEstimado) : 'Sin definir'} />
         <div className="sm:col-span-2">
-          <p className="text-[11px] text-on-surface-variant m-0">Descripción</p>
-          <p className="text-[13px] font-semibold text-on-background m-0">{garantia.descripcion || '—'}</p>
+          <p className="text-[12.5px] text-on-surface-variant m-0">Descripción</p>
+          <p className="text-[15px] font-semibold text-on-background m-0">{garantia.descripcion || '—'}</p>
         </div>
         {documentos.length > 0 && (
           <div className="sm:col-span-2">

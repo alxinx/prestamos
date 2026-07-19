@@ -76,4 +76,60 @@ function calcularResumenCredito({ montoInicial, tasaInteres, numeroCuotas, frecu
   return { totalIntereses, totalAPagar, valorCuota, fechaVencimiento, esSoloIntereses, valorPeriodico, diasCobro }
 }
 
-module.exports = { calcularResumenCredito }
+// Cronograma cuota-a-cuota (fecha, capital, interés, total cuota, saldo) — hoy
+// solo lo consume el PDF de "Resumen de préstamo" (src/lib/pdf/resumenPrestamo.js),
+// pero queda acá, no en el módulo de PDF, porque es cálculo de negocio, no de
+// presentación (misma razón por la que calcularResumenCredito vive acá).
+//
+// Reparto proporcional en partes iguales (decisión 2026-07-18, confirmada
+// contra el mockup de referencia): en un crédito de interés FLAT no existe un
+// "saldo insoluto" que recalcular período a período — eso es amortización
+// francesa, un modelo financiero distinto al que implementa esta app (ver
+// comentario de calcularResumenCredito arriba). Acá cada cuota simplemente
+// reparte el interés total y el capital total entre el número de cuotas, en
+// partes iguales. El saldo de la tabla SÍ es real: es el capital pendiente,
+// decrece en cada fila por el capitalCuota de esa fila y llega a $0 exacto en
+// la última.
+//
+// La última cuota absorbe el residuo de redondeo de las anteriores (mismo
+// principio que "el prestamista nunca pierde un peso" de calcularResumenCredito):
+// la suma de la columna Capital siempre da exactamente montoInicial, la de
+// Interés siempre da exactamente totalIntereses, y la de Total Cuota siempre
+// da exactamente totalAPagar.
+//
+// numeroCuotas = 0 (solo intereses) no tiene cronograma — devuelve [] y el PDF
+// muestra el bloque de "valor periódico" en su lugar (ya lo da calcularResumenCredito).
+function calcularCronogramaCredito({ montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil = false }) {
+  const cuotas = Number(numeroCuotas)
+  if (cuotas <= 0) return []
+
+  const capital = new Prisma.Decimal(montoInicial)
+  const { totalIntereses, totalAPagar, valorCuota, diasCobro } = calcularResumenCredito({
+    montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil,
+  })
+
+  const interesBase = totalIntereses.dividedBy(cuotas).toDecimalPlaces(0, Prisma.Decimal.ROUND_DOWN)
+  const capitalBase = capital.dividedBy(cuotas).toDecimalPlaces(0, Prisma.Decimal.ROUND_DOWN)
+
+  let saldo = capital
+  let fecha = new Date(fechaInicio)
+  const filas = []
+
+  for (let n = 1; n <= cuotas; n++) {
+    const esUltima = n === cuotas
+    fecha = new Date(fecha)
+    if (diasCobro) fecha.setDate(fecha.getDate() + diasCobro)
+
+    const interesCuota = esUltima ? totalIntereses.minus(interesBase.times(cuotas - 1)) : interesBase
+    const capitalCuota = esUltima ? capital.minus(capitalBase.times(cuotas - 1)) : capitalBase
+    const totalCuota = esUltima ? totalAPagar.minus(valorCuota.times(cuotas - 1)) : valorCuota
+
+    saldo = esUltima ? new Prisma.Decimal(0) : saldo.minus(capitalCuota)
+
+    filas.push({ numero: n, fecha, capital: capitalCuota, interes: interesCuota, totalCuota, saldo })
+  }
+
+  return filas
+}
+
+module.exports = { calcularResumenCredito, calcularCronogramaCredito }

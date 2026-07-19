@@ -13,7 +13,10 @@ function tokenDeUrl() {
 const ETIQUETAS_TIPO_DOCUMENTO = {
   CIERRE_CAJA_INDIVIDUAL: 'Cierre de caja individual',
   AJUSTE_CAPITAL: 'Ajuste de capital',
+  RESUMEN_PRESTAMO: 'Resumen de préstamo',
 }
+
+const ETIQUETAS_FRECUENCIA_VERIFICAR = { DIARIO: 'Diario', SEMANAL: 'Semanal', QUINCENAL: 'Quincenal', MENSUAL: 'Mensual' }
 
 function IcoCheck() {
   return (
@@ -84,9 +87,24 @@ function DetalleAjusteCapital({ datos }) {
   )
 }
 
+function DetalleResumenPrestamo({ datos }) {
+  return (
+    <>
+      <Fila etiqueta="Fecha">{formatearFechaHora(datos.fecha)}</Fila>
+      <Fila etiqueta="Cliente">{datos.cliente}</Fila>
+      <Fila etiqueta="Cédula">{datos.clienteCedula}</Fila>
+      <Fila etiqueta="Cobrador">{datos.cobrador}</Fila>
+      <Fila etiqueta="Valor prestado">{formatearPrecio(datos.montoInicial)}</Fila>
+      <Fila etiqueta="Tasa de interés">{`${datos.tasaInteres}% ${ETIQUETAS_FRECUENCIA_VERIFICAR[datos.frecuenciaPago] ?? datos.frecuenciaPago}`}</Fila>
+      <Fila etiqueta="Número de cuotas">{Number(datos.numeroCuotas) === 0 ? 'Solo intereses' : datos.numeroCuotas}</Fila>
+    </>
+  )
+}
+
 const DETALLES_POR_TIPO = {
   CIERRE_CAJA_INDIVIDUAL: DetalleCierreCaja,
   AJUSTE_CAPITAL: DetalleAjusteCapital,
+  RESUMEN_PRESTAMO: DetalleResumenPrestamo,
 }
 
 export default function Verificar() {

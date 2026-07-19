@@ -3,6 +3,9 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 
 COPY package*.json ./
+# prisma/ debe copiarse ANTES de npm ci: el postinstall (prisma generate) lo
+# necesita para resolver el schema — sin esto, npm ci falla en esta imagen.
+COPY prisma ./prisma
 RUN npm ci
 
 # ==================== STAGE 2: desarrollo (nodemon + hot reload) ====================
