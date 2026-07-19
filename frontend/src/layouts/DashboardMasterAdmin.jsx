@@ -22,7 +22,7 @@ export default function DashboardMasterAdmin({ children }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-admin-bg">
         <div className="text-center">
-          <div className="w-10 h-10 rounded-full border-[3px] border-[rgba(0,201,130,0.2)] [border-top-color:#00C982] animate-[girar_0.8s_linear_infinite] mx-auto mb-4" />
+          <div className="w-10 h-10 rounded-full border-[3px] border-[rgba(86,251,171,0.2)] [border-top-color:#56fbab] animate-[girar_0.8s_linear_infinite] mx-auto mb-4" />
           <p className="text-slate-400 text-sm m-0">Cargando...</p>
         </div>
       </div>

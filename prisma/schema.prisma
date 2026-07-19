@@ -1447,7 +1447,7 @@ model DatosSaas {
 
 model AuditLog {
   id            String   @id @db.Char(36)
-  tenantId      String   @map("tenant_id") @db.Char(36)
+  tenantId      String?  @map("tenant_id") @db.Char(36) // null = acción global de MasterAdmin (no pertenece a un tenant)
   empleadoId    String?  @map("empleado_id") @db.Char(36) // null si fue acción automática
   accion        String
   entidadTipo   String   @map("entidad_tipo")

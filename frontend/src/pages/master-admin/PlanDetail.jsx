@@ -19,7 +19,7 @@ function FilaFeature({ icono, etiqueta, valor, destacado = false }) {
         <span className="text-slate-500 text-base">{icono}</span>
         <span className="text-[13px] text-slate-400">{etiqueta}</span>
       </div>
-      <span className={`text-[13px] font-semibold ${destacado ? 'text-[#00C982]' : 'text-slate-200'}`}>
+      <span className={`text-[13px] font-semibold ${destacado ? 'text-[#56fbab]' : 'text-slate-200'}`}>
         {valor}
       </span>
     </div>
@@ -30,14 +30,14 @@ function CheckFeature({ etiqueta, activo }) {
   return (
     <div className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border
       ${activo
-        ? 'bg-[rgba(0,201,130,0.06)] border-[rgba(0,201,130,0.2)]'
+        ? 'bg-[rgba(86,251,171,0.06)] border-[rgba(86,251,171,0.2)]'
         : 'bg-white/[0.02] border-white/[0.06]'}`}
     >
       <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0
-        ${activo ? 'bg-[rgba(0,201,130,0.2)]' : 'bg-white/[0.05]'}`}
+        ${activo ? 'bg-[rgba(86,251,171,0.2)]' : 'bg-white/[0.05]'}`}
       >
         {activo
-          ? <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#00C982" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          ? <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="#56fbab" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
           : <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 1l6 6M7 1L1 7" stroke="#475569" strokeWidth="1.5" strokeLinecap="round" /></svg>
         }
       </div>
@@ -103,7 +103,7 @@ export default function PlanDetail() {
 
         {cargando && (
           <div className="flex items-center justify-center py-24">
-            <div className="w-9 h-9 rounded-full border-[3px] border-[rgba(0,201,130,0.2)] [border-top-color:#00C982] animate-[girar_0.8s_linear_infinite]" />
+            <div className="w-9 h-9 rounded-full border-[3px] border-[rgba(86,251,171,0.2)] [border-top-color:#56fbab] animate-[girar_0.8s_linear_infinite]" />
           </div>
         )}
 
@@ -131,7 +131,7 @@ export default function PlanDetail() {
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className={`${esMobil ? 'text-2xl' : 'text-3xl'} font-bold text-[#00C982] m-0 leading-none`}>
+                  <p className={`${esMobil ? 'text-2xl' : 'text-3xl'} font-bold text-[#56fbab] m-0 leading-none`}>
                     {formatearPrecio(plan.precio)}
                   </p>
                   <p className="text-[12px] text-slate-600 m-0 mt-1">/mes por tenant</p>
@@ -151,7 +151,7 @@ export default function PlanDetail() {
                 titulo="Activos"
                 valor={statsPorEstado.ACTIVO}
                 sub="pagando actualmente"
-                color="#00C982"
+                color="#56fbab"
               />
               <TarjetaStat
                 titulo="En gracia"
@@ -202,7 +202,7 @@ export default function PlanDetail() {
                   </p>
                   <div className="flex flex-col gap-2">
                     {[
-                      { label: 'Activos',      count: statsPorEstado.ACTIVO,         color: '#00C982' },
+                      { label: 'Activos',      count: statsPorEstado.ACTIVO,         color: '#56fbab' },
                       { label: 'En gracia',    count: statsPorEstado.PERIODO_GRACIA,  color: '#FBBF24' },
                       { label: 'Suspendidos',  count: statsPorEstado.SUSPENDIDO,      color: '#EF4444' },
                       { label: 'Cancelados',   count: statsPorEstado.CANCELADO,       color: '#64748B' },

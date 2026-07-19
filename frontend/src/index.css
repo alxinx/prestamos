@@ -23,10 +23,10 @@
   --color-error-container:        #ffdad6;
   --color-on-error-container:     #93000a;
 
-  --color-background:             #f7f5f5;
-  --color-on-background:          #06101e;
+  --color-background:             #f8f9ff;
+  --color-on-background:          #0b1c30;
 
-  --color-surface:                #f7f5f5;
+  --color-surface:                #f8f9ff;
   --color-surface-lowest:         #ffffff;
   --color-surface-low:            #eff4ff;
   --color-surface-default:        #e5eeff;
@@ -35,7 +35,7 @@
 
   --color-outline:                #747780;
   --color-outline-variant:        #c4c6d0;
-  --color-on-surface-variant:     #363a42;
+  --color-on-surface-variant:     #43474f;
 
   /* ── Radius ─────────────────────────────────────────────────── */
   --radius-sm:   0.25rem;
@@ -48,10 +48,12 @@
   --shadow-card:       0 2px 12px 0 rgba(0,40,85,0.08);
   --shadow-card-hover: 0 4px 24px 0 rgba(0,40,85,0.13);
 
-  /* ── Admin dark theme ────────────────────────────────────────── */
+  /* ── Admin dark theme ── acento derivado de secondary-container/       */
+  /* on-secondary-container (§5 CLAUDE.md) — nunca el verde del manual    */
+  /* viejo (#00C982), prohibido explícitamente salvo pedido del usuario.  */
   --color-admin-bg:           #06182B;
-  --color-admin-accent:       #00C982;
-  --color-admin-accent-dark:  #00a86b;
+  --color-admin-accent:       #56fbab;
+  --color-admin-accent-dark:  #007146;
 
   /* ── Tenant dark theme ───────────────────────────────────────── */
   --color-tenant-bg:          #060f1e;
@@ -61,7 +63,7 @@
 @layer utilities {
   /* Fondo principal del área de contenido del panel tenant */
   .tenant-main {
-    background-color: #F7F8FE;
+    background-color: var(--color-background);
   }
 }
 

@@ -156,7 +156,7 @@ export default function Topbar({ esMobil, onToggleMenu }) {
 
         {!esMobil && <div className="w-px h-6 bg-white/[0.08] mx-1" />}
 
-        <button className="w-9 h-9 rounded-full bg-gradient-to-br from-admin-accent to-[#2DD4BF] border-2 border-[rgba(0,201,130,0.3)] flex items-center justify-center cursor-pointer text-[13px] font-bold text-[#06182B] font-sans transition-shadow duration-150 hover:shadow-[0_0_0_3px_rgba(0,201,130,0.2)] shrink-0">
+        <button className="w-9 h-9 rounded-full bg-gradient-to-br from-admin-accent to-[#2DD4BF] border-2 border-[rgba(86,251,171,0.3)] flex items-center justify-center cursor-pointer text-[13px] font-bold text-[#06182B] font-sans transition-shadow duration-150 hover:shadow-[0_0_0_3px_rgba(86,251,171,0.2)] shrink-0">
           MA
         </button>
       </div>

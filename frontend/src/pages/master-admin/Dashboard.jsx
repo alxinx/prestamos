@@ -9,7 +9,7 @@ const kpisBase = [
     valor: null,          // se reemplaza con dato real
     delta: '+12.4%',
     positivo: true,
-    color: '#00C982',
+    color: '#56fbab',
     icono: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
@@ -81,8 +81,8 @@ function GraficoLinea() {
     <svg viewBox={`0 0 ${ancho} ${alto}`} className="w-full overflow-visible">
       <defs>
         <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#00C982" stopOpacity="0.2" />
-          <stop offset="100%" stopColor="#00C982" stopOpacity="0" />
+          <stop offset="0%" stopColor="#56fbab" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#56fbab" stopOpacity="0" />
         </linearGradient>
       </defs>
       {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
@@ -90,9 +90,9 @@ function GraficoLinea() {
         return <line key={i} x1={pad.left} y1={y} x2={pad.left + w} y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
       })}
       <path d={area} fill="url(#areaGrad)" />
-      <path d={linea} fill="none" stroke="#00C982" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={linea} fill="none" stroke="#56fbab" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       {puntos.map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r="3" fill="#00C982" stroke="#06182B" strokeWidth="2" />
+        <circle key={i} cx={x} cy={y} r="3" fill="#56fbab" stroke="#06182B" strokeWidth="2" />
       ))}
       {meses.map((m, i) => {
         const x = pad.left + (i / (meses.length - 1)) * w
@@ -107,7 +107,7 @@ function GraficoLinea() {
 }
 
 const planesDistribucion = [
-  { nombre: 'Starter', porcentaje: 35, color: '#00C982' },
+  { nombre: 'Starter', porcentaje: 35, color: '#56fbab' },
   { nombre: 'Growth', porcentaje: 45, color: '#2DD4BF' },
   { nombre: 'Enterprise', porcentaje: 20, color: '#818CF8' },
 ]
@@ -162,7 +162,7 @@ function GraficoDonut() {
 }
 
 const estadosTenant = [
-  { etiqueta: 'Activos', cantidad: 1198, color: '#00C982' },
+  { etiqueta: 'Activos', cantidad: 1198, color: '#56fbab' },
   { etiqueta: 'Prueba', cantidad: 34, color: '#2DD4BF' },
   { etiqueta: 'Suspendidos', cantidad: 12, color: '#F97316' },
   { etiqueta: 'Morosos', cantidad: 4, color: '#EF4444' },
@@ -185,7 +185,7 @@ const actividadReciente = [
 ]
 
 const colorTipo = {
-  upgrade:   { text: '#00C982', bg: 'rgba(0,201,130,0.1)' },
+  upgrade:   { text: '#56fbab', bg: 'rgba(86,251,171,0.1)' },
   new:       { text: '#2DD4BF', bg: 'rgba(45,212,191,0.1)' },
   error:     { text: '#EF4444', bg: 'rgba(239,68,68,0.1)' },
   restore:   { text: '#818CF8', bg: 'rgba(129,140,248,0.1)' },
@@ -244,7 +244,7 @@ export default function Dashboard() {
               <div className="text-[28px] font-bold text-slate-50 tracking-[-0.03em] mb-1.5">
                 {kpi.valor}
               </div>
-              <div className="text-[12px] font-semibold" style={{ color: kpi.positivo ? '#00C982' : '#F97316' }}>
+              <div className="text-[12px] font-semibold" style={{ color: kpi.positivo ? '#56fbab' : '#F97316' }}>
                 {kpi.delta} <span className="text-slate-500 font-normal">vs mes anterior</span>
               </div>
             </div>
@@ -310,12 +310,12 @@ export default function Dashboard() {
                   key={s.nombre}
                   className="flex items-center justify-between px-3.5 py-2.5 rounded-[10px]"
                   style={{
-                    background: s.ok ? 'rgba(0,201,130,0.05)' : 'rgba(249,115,22,0.06)',
-                    border: `1px solid ${s.ok ? 'rgba(0,201,130,0.12)' : 'rgba(249,115,22,0.15)'}`,
+                    background: s.ok ? 'rgba(86,251,171,0.05)' : 'rgba(249,115,22,0.06)',
+                    border: `1px solid ${s.ok ? 'rgba(86,251,171,0.12)' : 'rgba(249,115,22,0.15)'}`,
                   }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ background: s.ok ? '#00C982' : '#F97316' }} />
+                    <span className="w-2 h-2 rounded-full inline-block shrink-0" style={{ background: s.ok ? '#56fbab' : '#F97316' }} />
                     <span className="text-[13px] text-slate-50">{s.nombre}</span>
                   </div>
                   <div className="flex items-center gap-4">
@@ -323,8 +323,8 @@ export default function Dashboard() {
                     <span
                       className="text-[11px] font-semibold px-2 py-[3px] rounded-[5px]"
                       style={{
-                        background: s.ok ? 'rgba(0,201,130,0.1)' : 'rgba(249,115,22,0.12)',
-                        color: s.ok ? '#00C982' : '#F97316',
+                        background: s.ok ? 'rgba(86,251,171,0.1)' : 'rgba(249,115,22,0.12)',
+                        color: s.ok ? '#56fbab' : '#F97316',
                       }}
                     >
                       {s.estado}

@@ -13,10 +13,11 @@ const BLOQUEO_SEGUNDOS    = Number(process.env.LOGIN_BLOQUEO_SEGUNDOS)   || 15 *
 const { estaBloqueado: estaBloqueadoPorEmail, registrarFallo, resetearIntentos } =
   crearControlIntentos(PREFIJO, { maxIntentos: MAX_INTENTOS_EMAIL, bloqueoSegundos: BLOQUEO_SEGUNDOS })
 
+// req.ip ya respeta `trust proxy` (ver index.js) — nunca leer X-Forwarded-For
+// a mano acá: el cliente lo controla por completo y permitiría evadir el
+// whitelist de IP con un header falsificado si no hay un proxy confiable real.
 function extraerIp(req) {
-  const reenviada = req.headers['x-forwarded-for']
-  const cruda = reenviada ? reenviada.split(',')[0].trim() : req.ip
-  return cruda.replace(/^::ffff:/, '')
+  return req.ip.replace(/^::ffff:/, '')
 }
 
 async function iniciarSesion(req) {

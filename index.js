@@ -32,6 +32,15 @@ const app = express()
 app.disable('x-powered-by')
 const PORT = Number(process.env.APP_PORT) || 3000
 
+// ── IP real del cliente ───────────────────────────────────────────────────────
+// TRUST_PROXY_HOPS = cantidad de proxies confiables delante de la app (0 si no
+// hay ninguno, ej. este entorno). Con 0, Express ignora X-Forwarded-For por
+// completo y req.ip usa la IP de socket real — necesario para que el whitelist
+// de IP del MasterAdmin (auth.service.js) no se pueda evadir con un header
+// falsificado. Si en el futuro se pone un reverse proxy/ALB real delante,
+// subir este número al conteo exacto de saltos confiables, nunca a 'true'.
+app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS) || 0)
+
 // ── Protección contra prototype pollution (CLAUDE.md §6) ─────────────────────
 // Object.freeze(Object.prototype) rompe librerías npm (Prisma, ioredis, etc.).
 // La protección se implementa como middleware de sanitización de request bodies.

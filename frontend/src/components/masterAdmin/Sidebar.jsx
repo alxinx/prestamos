@@ -67,7 +67,7 @@ function ItemNav({ elemento, activo, onClick }) {
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 rounded-[10px] no-underline text-sm transition-all duration-150 cursor-pointer
         ${estaActivo
-          ? 'text-admin-accent bg-[rgba(0,201,130,0.1)] shadow-[0_0_0_1px_rgba(0,201,130,0.15)] font-semibold'
+          ? 'text-admin-accent bg-[rgba(86,251,171,0.1)] shadow-[0_0_0_1px_rgba(86,251,171,0.15)] font-semibold'
           : 'text-slate-400 font-normal hover:bg-white/[0.05] hover:text-slate-50'
         }`}
     >

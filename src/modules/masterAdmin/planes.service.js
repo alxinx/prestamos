@@ -2,18 +2,26 @@
 
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../lib/prisma')
+const { registrarAuditoria } = require('../../lib/auditoria')
+
+// Prisma.Decimal no es serializable como JSON tal cual (campo `datos` viene de
+// Zod con Number, pero `existe` viene de Prisma con Decimal) — se normaliza a
+// Number solo para el snapshot de auditoría, nunca para los cálculos de negocio.
+function numero(valor) {
+  return valor != null && typeof valor.toNumber === 'function' ? valor.toNumber() : valor
+}
 
 // Campos de precio/límites — comunes entre la edición completa del plan (camposPlane)
 // y la edición rápida de configuración (actualizarConfigPlan), que no toca nombre/features/estado.
 function camposConfigPlan(datos) {
   return {
-    precio: datos.precio,
+    precio: numero(datos.precio),
     limitePrestamos: datos.limitePrestamos,
     limiteColaboradores: datos.limiteColaboradores,
     limiteMensajesWsp: datos.limiteMensajesWsp,
     consultasScore: datos.consultasScore,
-    precioPréstamoAdicional: datos.precioPrestamoAdicional,
-    precioColaboradorAdicional: datos.precioColaboradorAdicional,
+    precioPréstamoAdicional: numero(datos.precioPréstamoAdicional ?? datos.precioPrestamoAdicional),
+    precioColaboradorAdicional: numero(datos.precioColaboradorAdicional),
   }
 }
 
@@ -62,35 +70,74 @@ async function obtenerPlan(id) {
   return { plan, statsPorEstado, ultimosTenants }
 }
 
-async function crearPlan(datos) {
+async function crearPlan(datos, masterAdminId) {
   const plan = await prisma.plan.create({
     data: { id: uuidv7(), ...camposPlane(datos) },
   })
+
+  await registrarAuditoria({
+    accion: 'PLAN_CREADO',
+    entidadTipo: 'Plan',
+    entidadId: plan.id,
+    valorNuevo: camposPlane(datos),
+    metadata: { masterAdminId },
+  })
+
   return { plan }
 }
 
-async function actualizarPlan(id, datos) {
+async function actualizarPlan(id, datos, masterAdminId) {
   const existe = await prisma.plan.findUnique({ where: { id } })
   if (!existe) return { error: 'Plan no encontrado', status: 404 }
 
   const plan = await prisma.plan.update({ where: { id }, data: camposPlane(datos) })
+
+  await registrarAuditoria({
+    accion: 'PLAN_EDITADO',
+    entidadTipo: 'Plan',
+    entidadId: plan.id,
+    valorAnterior: camposPlane(existe),
+    valorNuevo: camposPlane(datos),
+    metadata: { masterAdminId },
+  })
+
   return { plan }
 }
 
-async function cambiarEstadoPlan(id) {
+async function cambiarEstadoPlan(id, masterAdminId) {
   const existe = await prisma.plan.findUnique({ where: { id } })
   if (!existe) return { error: 'Plan no encontrado', status: 404 }
 
   const nuevoEstado = existe.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO'
   const plan = await prisma.plan.update({ where: { id }, data: { estado: nuevoEstado } })
+
+  await registrarAuditoria({
+    accion: 'PLAN_CAMBIO_ESTADO',
+    entidadTipo: 'Plan',
+    entidadId: plan.id,
+    valorAnterior: { estado: existe.estado },
+    valorNuevo: { estado: plan.estado },
+    metadata: { masterAdminId },
+  })
+
   return { plan }
 }
 
-async function actualizarConfigPlan(id, datos) {
+async function actualizarConfigPlan(id, datos, masterAdminId) {
   const existe = await prisma.plan.findUnique({ where: { id } })
   if (!existe) return { error: 'Plan no encontrado', status: 404 }
 
   const plan = await prisma.plan.update({ where: { id }, data: camposConfigPlan(datos) })
+
+  await registrarAuditoria({
+    accion: 'PLAN_CONFIG_ACTUALIZADA',
+    entidadTipo: 'Plan',
+    entidadId: plan.id,
+    valorAnterior: camposConfigPlan(existe),
+    valorNuevo: camposConfigPlan(datos),
+    metadata: { masterAdminId },
+  })
+
   return { plan }
 }
 

@@ -22,7 +22,7 @@ function CampoTexto({ id, label, valor, onChange, placeholder, tipo = 'text', au
         className={`w-full px-3.5 py-2.5 rounded-lg text-slate-50 text-sm font-sans outline-none box-border transition-[border-color,box-shadow] duration-150
           ${claseInput}
           ${enfocado
-            ? 'border-[1.5px] border-[rgba(0,201,130,0.5)] shadow-[0_0_0_3px_rgba(0,201,130,0.08)]'
+            ? 'border-[1.5px] border-[rgba(86,251,171,0.5)] shadow-[0_0_0_3px_rgba(86,251,171,0.08)]'
             : 'border-[1.5px] border-white/10'
           }`}
       />
@@ -132,7 +132,7 @@ export default function ModalConfigApp({ onCerrar }) {
             </div>
           ) : exito ? (
             <div className="text-center py-4 pb-2">
-              <div className="w-14 h-14 rounded-full bg-[rgba(0,201,130,0.15)] flex items-center justify-center mx-auto mb-4 text-admin-accent">
+              <div className="w-14 h-14 rounded-full bg-[rgba(86,251,171,0.15)] flex items-center justify-center mx-auto mb-4 text-admin-accent">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
@@ -187,7 +187,7 @@ export default function ModalConfigApp({ onCerrar }) {
                   type="submit"
                   disabled={enviando}
                   className={`flex-1 py-2.5 rounded-lg border-none text-primary text-sm font-bold font-sans flex items-center justify-center gap-2 transition-all duration-150
-                    ${enviando ? 'bg-[rgba(0,201,130,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
+                    ${enviando ? 'bg-[rgba(86,251,171,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
                 >
                   {enviando ? (
                     <>

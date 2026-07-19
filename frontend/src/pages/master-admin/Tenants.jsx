@@ -53,7 +53,7 @@ const TIPOS_ID = {
 
 function IconoTenants() {
   return (
-    <div className="w-8 h-8 rounded-lg bg-[rgba(0,201,130,0.12)] flex items-center justify-center text-admin-accent shrink-0">
+    <div className="w-8 h-8 rounded-lg bg-[rgba(86,251,171,0.12)] flex items-center justify-center text-admin-accent shrink-0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -133,7 +133,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
       <div className="m-auto w-full max-w-[420px] bg-gradient-to-br from-[#0F2337] to-[#0A1A2E] border border-white/10 rounded-[20px] shadow-[0_32px_80px_rgba(0,0,0,0.6)] animate-[slideUp_0.25s_cubic-bezier(0.34,1.56,0.64,1)]">
         {/* Header */}
         <div className="px-6 pt-5 pb-4 border-b border-white/[0.07] flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[10px] bg-[rgba(0,201,130,0.12)] flex items-center justify-center text-admin-accent shrink-0">
+          <div className="w-9 h-9 rounded-[10px] bg-[rgba(86,251,171,0.12)] flex items-center justify-center text-admin-accent shrink-0">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
             </svg>
@@ -159,7 +159,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
             </div>
           ))}
 
-          <div className="mt-1 px-4 py-3.5 bg-[rgba(0,201,130,0.06)] border border-[rgba(0,201,130,0.15)] rounded-[10px]">
+          <div className="mt-1 px-4 py-3.5 bg-[rgba(86,251,171,0.06)] border border-[rgba(86,251,171,0.15)] rounded-[10px]">
             <div className="flex items-center justify-between">
               <div className="text-center">
                 <p className="text-[10px] font-semibold text-admin-accent uppercase tracking-[0.06em] m-0 mb-1">Inicia</p>
@@ -167,7 +167,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
                   {formatearFecha(fechaInicio)}
                 </p>
               </div>
-              <div className="flex-1 h-px bg-[rgba(0,201,130,0.3)] mx-3 relative top-2" />
+              <div className="flex-1 h-px bg-[rgba(86,251,171,0.3)] mx-3 relative top-2" />
               <div className="text-center">
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.06em] m-0 mb-1">Primer corte</p>
                 <p className="text-[13px] font-bold text-slate-400 m-0">
@@ -194,7 +194,7 @@ function ModalConfirmacion({ form, planes, onConfirmar, onCancelar, enviando }) 
             onClick={onConfirmar}
             disabled={enviando}
             className={`flex-1 py-2.5 rounded-lg border-none text-primary text-[13px] font-bold font-sans flex items-center justify-center gap-2 transition-all duration-150
-              ${enviando ? 'bg-[rgba(0,201,130,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
+              ${enviando ? 'bg-[rgba(86,251,171,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
           >
             {enviando
               ? <><span className="w-[13px] h-[13px] rounded-full border-2 border-[rgba(0,20,48,0.3)] [border-top-color:#001430] animate-[girar_0.7s_linear_infinite] inline-block" />Registrando...</>
@@ -424,7 +424,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
                   className={`${claseInput} pr-9`}
                   style={{
                     borderColor: emailEstado === 'ocupado' ? 'rgba(239,68,68,0.6)'
-                      : emailEstado === 'disponible' ? 'rgba(0,201,130,0.5)'
+                      : emailEstado === 'disponible' ? 'rgba(86,251,171,0.5)'
                       : 'rgba(255,255,255,0.1)',
                   }}
                 />
@@ -433,7 +433,7 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
                     <span className="w-[13px] h-[13px] rounded-full border-2 border-white/[0.15] [border-top-color:#94A3B8] animate-[girar_0.7s_linear_infinite] inline-block" />
                   )}
                   {emailEstado === 'disponible' && (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00C982" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#56fbab" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   )}
                   {emailEstado === 'ocupado' && (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -467,8 +467,8 @@ function FormularioTenant({ tenantEditando, onGuardado, planes }) {
             <input type="date" value={form.fechaInicio} onChange={e => cambiar('fechaInicio', e.target.value)}
               className={`${claseInput} [color-scheme:dark]`} />
             {fechaCorte && (
-              <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-[rgba(0,201,130,0.06)] border border-[rgba(0,201,130,0.12)] rounded-lg">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00C982" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-[rgba(86,251,171,0.06)] border border-[rgba(86,251,171,0.12)] rounded-lg">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#56fbab" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                 </svg>
                 <span className="text-[12px] text-slate-500">Primer corte:</span>
@@ -596,7 +596,7 @@ export default function Tenants() {
               onClick={alNuevo}
               className={`px-3.5 py-[7px] rounded-lg border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150
                 ${tenantEditando === null
-                  ? 'bg-[rgba(0,201,130,0.12)] text-admin-accent'
+                  ? 'bg-[rgba(86,251,171,0.12)] text-admin-accent'
                   : 'bg-transparent text-slate-500 hover:bg-white/[0.06] hover:text-slate-50'
                 }`}
             >
@@ -612,7 +612,7 @@ export default function Tenants() {
 
       {cargandoTabla ? (
         <div className="p-12 text-center">
-          <div className="w-8 h-8 rounded-full border-[3px] border-[rgba(0,201,130,0.2)] [border-top-color:#00C982] animate-[girar_0.8s_linear_infinite] mx-auto" />
+          <div className="w-8 h-8 rounded-full border-[3px] border-[rgba(86,251,171,0.2)] [border-top-color:#56fbab] animate-[girar_0.8s_linear_infinite] mx-auto" />
         </div>
       ) : tenants.length === 0 ? (
         <div className="p-12 text-center text-slate-600 text-sm">
@@ -661,7 +661,7 @@ export default function Tenants() {
                       onClick={() => alEditar(t)}
                       className={`px-3 py-[5px] rounded-md border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150 whitespace-nowrap
                         ${tenantEditando?.id === t.id
-                          ? 'bg-[rgba(0,201,130,0.15)] text-admin-accent'
+                          ? 'bg-[rgba(86,251,171,0.15)] text-admin-accent'
                           : 'bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-50'
                         }`}
                     >

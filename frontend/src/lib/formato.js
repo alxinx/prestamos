@@ -38,7 +38,7 @@ export function formatearFechaHora(fecha) {
 }
 
 export const COLORES_ESTADO = {
-  ACTIVO:         { bg: 'rgba(0,201,130,0.12)',   color: '#00C982', border: 'rgba(0,201,130,0.25)' },
+  ACTIVO:         { bg: 'rgba(86,251,171,0.12)',  color: '#007146', border: 'rgba(86,251,171,0.25)' },
   INACTIVO:       { bg: 'rgba(239,68,68,0.12)',   color: '#EF4444', border: 'rgba(239,68,68,0.25)' },
   PERIODO_GRACIA: { bg: 'rgba(251,191,36,0.12)',  color: '#FBBF24', border: 'rgba(251,191,36,0.25)' },
   SUSPENDIDO:     { bg: 'rgba(239,68,68,0.12)',   color: '#EF4444', border: 'rgba(239,68,68,0.25)' },

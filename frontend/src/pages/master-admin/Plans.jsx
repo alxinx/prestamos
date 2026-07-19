@@ -33,7 +33,7 @@ function IconoCheck({ ok }) {
 
 function IconoPlan() {
   return (
-    <div className="w-8 h-8 rounded-lg bg-[rgba(0,201,130,0.12)] flex items-center justify-center text-admin-accent shrink-0">
+    <div className="w-8 h-8 rounded-lg bg-[rgba(86,251,171,0.12)] flex items-center justify-center text-admin-accent shrink-0">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
       </svg>
@@ -165,7 +165,7 @@ function FormularioPlan({ planEditando, onGuardado }) {
     : {
         tipo: 'confirmacion',
         titulo: `¿Reactivar "${form.nombre}"?`,
-        mensaje: <>Este plan <span className="text-[#00C982] font-semibold">quedará disponible al público</span> y los tenants podrán seleccionarlo nuevamente.</>,
+        mensaje: <>Este plan <span className="text-[#56fbab] font-semibold">quedará disponible al público</span> y los tenants podrán seleccionarlo nuevamente.</>,
         textoConfirmar: 'Sí, reactivar',
       }
 
@@ -272,7 +272,7 @@ function FormularioPlan({ planEditando, onGuardado }) {
           type="submit"
           disabled={enviando}
           className={`py-2.5 rounded-lg border-none text-primary text-sm font-bold font-sans flex items-center justify-center gap-2 transition-all duration-150
-            ${enviando ? 'bg-[rgba(0,201,130,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
+            ${enviando ? 'bg-[rgba(86,251,171,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
         >
           {enviando
             ? <><span className="w-3.5 h-3.5 rounded-full border-2 border-[rgba(0,20,48,0.3)] [border-top-color:#001430] animate-[girar_0.7s_linear_infinite] inline-block" />Guardando...</>
@@ -368,7 +368,7 @@ export default function Plans() {
                     onClick={alNuevoPlan}
                     className={`px-3.5 py-[7px] rounded-lg border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150
                       ${planEditando === null
-                        ? 'bg-[rgba(0,201,130,0.12)] text-admin-accent'
+                        ? 'bg-[rgba(86,251,171,0.12)] text-admin-accent'
                         : 'bg-transparent text-slate-500 hover:bg-white/[0.06] hover:text-slate-50'
                       }`}
                   >
@@ -379,7 +379,7 @@ export default function Plans() {
 
               {cargandoTabla ? (
                 <div className="p-12 text-center">
-                  <div className="w-8 h-8 rounded-full border-[3px] border-[rgba(0,201,130,0.2)] [border-top-color:#00C982] animate-[girar_0.8s_linear_infinite] mx-auto" />
+                  <div className="w-8 h-8 rounded-full border-[3px] border-[rgba(86,251,171,0.2)] [border-top-color:#56fbab] animate-[girar_0.8s_linear_infinite] mx-auto" />
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -434,7 +434,7 @@ export default function Plans() {
                                 onClick={() => alEditar(plan)}
                                 className={`px-3 py-[5px] rounded-md border-none text-[12px] font-semibold cursor-pointer font-sans transition-all duration-150 whitespace-nowrap
                                   ${planEditando?.id === plan.id
-                                    ? 'bg-[rgba(0,201,130,0.15)] text-admin-accent'
+                                    ? 'bg-[rgba(86,251,171,0.15)] text-admin-accent'
                                     : 'bg-white/[0.06] text-slate-400 hover:bg-white/10 hover:text-slate-50'
                                   }`}
                               >

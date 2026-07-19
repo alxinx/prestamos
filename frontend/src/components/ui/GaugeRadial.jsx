@@ -6,7 +6,7 @@
  *   color    – color del arco de progreso (default verde admin)
  *   grosor   – strokeWidth (default 10)
  */
-export default function GaugeRadial({ valor = 0, maximo = 100, color = '#00C982', grosor = 10 }) {
+export default function GaugeRadial({ valor = 0, maximo = 100, color = '#56fbab', grosor = 10 }) {
   const pct = maximo > 0 ? Math.min(1, Math.max(0, valor / maximo)) : 0
   const R = 52
   const cx = 70

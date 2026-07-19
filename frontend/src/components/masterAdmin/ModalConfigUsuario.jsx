@@ -13,7 +13,7 @@ function ReglasPassword({ valor }) {
     <div className="mt-2 flex flex-col gap-1">
       {reglas.map(r => (
         <div key={r.texto} className={`flex items-center gap-1.5 text-[12px] ${r.ok ? 'text-admin-accent' : 'text-slate-500'}`}>
-          <span className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center ${r.ok ? 'bg-[rgba(0,201,130,0.15)] text-admin-accent' : 'bg-white/[0.05] text-slate-600'}`}>
+          <span className={`w-4 h-4 rounded-full shrink-0 flex items-center justify-center ${r.ok ? 'bg-[rgba(86,251,171,0.15)] text-admin-accent' : 'bg-white/[0.05] text-slate-600'}`}>
             {r.ok ? <IcoCheck /> : <span className="text-[8px]">●</span>}
           </span>
           {r.texto}
@@ -47,7 +47,7 @@ function CampoPassword({ id, label, valor, onChange, placeholder }) {
           onBlur={() => setEnfocado(false)}
           className={`w-full py-2.5 pl-9 pr-10 bg-white/[0.04] rounded-lg text-slate-50 text-sm font-sans outline-none box-border transition-[border-color,box-shadow] duration-150
             ${enfocado
-              ? 'border-[1.5px] border-[rgba(0,201,130,0.5)] shadow-[0_0_0_3px_rgba(0,201,130,0.08)]'
+              ? 'border-[1.5px] border-[rgba(86,251,171,0.5)] shadow-[0_0_0_3px_rgba(86,251,171,0.08)]'
               : 'border-[1.5px] border-white/10'
             }`}
         />
@@ -131,7 +131,7 @@ export default function ModalConfigUsuario({ onCerrar }) {
         {/* Header */}
         <div className="px-6 pt-5 pb-[18px] border-b border-white/[0.07] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-[10px] bg-[rgba(0,201,130,0.12)] flex items-center justify-center text-admin-accent">
+            <div className="w-9 h-9 rounded-[10px] bg-[rgba(86,251,171,0.12)] flex items-center justify-center text-admin-accent">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
               </svg>
@@ -155,7 +155,7 @@ export default function ModalConfigUsuario({ onCerrar }) {
         <div className="p-6">
           {exito ? (
             <div className="text-center py-4 pb-2">
-              <div className="w-14 h-14 rounded-full bg-[rgba(0,201,130,0.15)] flex items-center justify-center mx-auto mb-4 text-admin-accent">
+              <div className="w-14 h-14 rounded-full bg-[rgba(86,251,171,0.15)] flex items-center justify-center mx-auto mb-4 text-admin-accent">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
@@ -221,7 +221,7 @@ export default function ModalConfigUsuario({ onCerrar }) {
                   type="submit"
                   disabled={enviando}
                   className={`flex-1 py-2.5 rounded-lg border-none text-primary text-sm font-bold font-sans flex items-center justify-center gap-2 transition-all duration-150
-                    ${enviando ? 'bg-[rgba(0,201,130,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
+                    ${enviando ? 'bg-[rgba(86,251,171,0.4)] cursor-not-allowed' : 'bg-admin-accent cursor-pointer hover:bg-admin-accent-dark'}`}
                 >
                   {enviando ? (
                     <>

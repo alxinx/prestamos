@@ -23,14 +23,14 @@ const claseLabel = 'text-[10px] font-bold text-slate-600 uppercase tracking-[0.0
 const claseLabelForm = 'text-[11px] font-bold text-slate-600 uppercase tracking-[0.07em]'
 
 const COLORES_FACTURA = {
-  PAGADO:    { bg: 'rgba(0,201,130,0.12)',  color: '#00C982', label: 'PAGADO' },
+  PAGADO:    { bg: 'rgba(86,251,171,0.12)',  color: '#56fbab', label: 'PAGADO' },
   PENDIENTE: { bg: 'rgba(251,191,36,0.12)', color: '#FBBF24', label: 'PENDIENTE' },
   FALLIDO:   { bg: 'rgba(239,68,68,0.12)',  color: '#EF4444', label: 'FALLIDO' },
   VENCIDO:   { bg: 'rgba(239,68,68,0.12)',  color: '#EF4444', label: 'VENCIDO' },
 }
 
 const COLORES_ENGAGEMENT = {
-  ACTIVO:    { color: '#00C982', bg: 'rgba(0,201,130,0.12)',   label: 'Activo' },
+  ACTIVO:    { color: '#56fbab', bg: 'rgba(86,251,171,0.12)',   label: 'Activo' },
   EN_RIESGO: { color: '#FBBF24', bg: 'rgba(251,191,36,0.12)', label: 'En riesgo' },
   INACTIVO:  { color: '#94A3B8', bg: 'rgba(148,163,184,0.12)', label: 'Inactivo' },
 }
@@ -43,7 +43,7 @@ function WidgetColaboradores({ plan, actividad }) {
   return (
     <div className={tarjeta}>
       <p className={claseLabel}>Colaboradores</p>
-      <GaugeRadial valor={actual} maximo={limite} color="#00C982" />
+      <GaugeRadial valor={actual} maximo={limite} color="#56fbab" />
       <div className="text-center mt-2">
         <p className="text-lg font-bold text-slate-50 m-0">
           {actual} <span className="text-slate-600 font-normal">/ {limite}</span>
@@ -65,7 +65,7 @@ function WidgetPrestamos({ plan, actividad }) {
     <div className={`${tarjeta} flex flex-col`}>
       <p className={claseLabel}>Préstamos Usados</p>
       <div className="flex-1 flex items-end gap-3.5">
-        <BarraVertical pct={pct} color="#00C982" altura={90} />
+        <BarraVertical pct={pct} color="#56fbab" altura={90} />
         <div>
           <p className="text-[22px] font-bold text-slate-50 m-0 leading-tight">
             {actual.toLocaleString('es-CO')}
@@ -105,7 +105,7 @@ function WidgetEngagement({ actividad }) {
             className="flex-1 rounded-t-[3px]"
             style={{
               height: `${Math.round(h * 34)}px`,
-              background: i === barras.length - 1 ? '#00C982' : 'rgba(0,201,130,0.25)',
+              background: i === barras.length - 1 ? '#56fbab' : 'rgba(86,251,171,0.25)',
             }}
           />
         ))}
@@ -147,12 +147,12 @@ function TarjetaPlan({ plan, seleccionado, esActual, onSeleccionar }) {
       onClick={onSeleccionar}
       className={`rounded-xl p-4 border cursor-pointer transition-all duration-150 relative select-none
         ${seleccionado
-          ? 'bg-[rgba(0,201,130,0.07)] border-admin-accent'
+          ? 'bg-[rgba(86,251,171,0.07)] border-admin-accent'
           : 'bg-white/[0.03] border-white/[0.07] hover:bg-white/[0.05] hover:border-white/20'
         }`}
     >
       {esActual && (
-        <span className="absolute top-3 right-3 text-[9px] font-bold text-admin-accent bg-[rgba(0,201,130,0.12)] border border-[rgba(0,201,130,0.2)] px-2 py-[2px] rounded-full tracking-[0.06em]">
+        <span className="absolute top-3 right-3 text-[9px] font-bold text-admin-accent bg-[rgba(86,251,171,0.12)] border border-[rgba(86,251,171,0.2)] px-2 py-[2px] rounded-full tracking-[0.06em]">
           ACTUAL
         </span>
       )}
@@ -252,7 +252,7 @@ function ModalCambiarPlan({ tenant, onCerrar, onPlanCambiado }) {
           <div className="px-6 pt-5 pb-3">
             {cargando ? (
               <div className="flex justify-center py-10">
-                <div className="w-7 h-7 rounded-full border-[3px] border-[rgba(0,201,130,0.15)] [border-top-color:#00C982] animate-[girar_0.7s_linear_infinite]" />
+                <div className="w-7 h-7 rounded-full border-[3px] border-[rgba(86,251,171,0.15)] [border-top-color:#56fbab] animate-[girar_0.7s_linear_infinite]" />
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3">
@@ -447,7 +447,7 @@ function SaludSistema({ tenant }) {
   const dias = diasRestantes(tenant.fechaVencimiento)
 
   let estadoLabel = 'Optimizado'
-  let estadoColor = '#00C982'
+  let estadoColor = '#56fbab'
   if (!activado) { estadoLabel = 'Sin activar'; estadoColor = '#FBBF24' }
   else if (dias <= 0) { estadoLabel = 'Vencido'; estadoColor = '#EF4444' }
   else if (dias <= 5) { estadoLabel = 'Crítico'; estadoColor = '#EF4444' }
@@ -457,12 +457,12 @@ function SaludSistema({ tenant }) {
     <div className="rounded-xl px-6 py-[22px] relative overflow-hidden border border-white/[0.07]"
       style={{ background: 'linear-gradient(135deg, rgba(0,40,85,0.65) 0%, rgba(0,20,48,0.75) 100%)' }}>
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(circle at 75% 25%, rgba(0,201,130,0.07) 0%, transparent 55%)' }} />
+        style={{ background: 'radial-gradient(circle at 75% 25%, rgba(86,251,171,0.07) 0%, transparent 55%)' }} />
       <h4 className="text-sm font-bold text-slate-50 m-0 mb-1">Estado del sistema</h4>
       <p className="text-[12px] text-slate-600 m-0 mb-4">
         Estado del nodo: <span className="font-semibold" style={{ color: estadoColor }}>{estadoLabel}</span>
       </p>
-      <button className="px-4 py-[7px] rounded-lg border-none bg-[rgba(0,201,130,0.14)] text-admin-accent text-[12px] font-bold cursor-pointer font-sans tracking-[0.04em]">
+      <button className="px-4 py-[7px] rounded-lg border-none bg-[rgba(86,251,171,0.14)] text-admin-accent text-[12px] font-bold cursor-pointer font-sans tracking-[0.04em]">
         Reescanear nodo
       </button>
     </div>
@@ -652,9 +652,9 @@ function ConfiguracionAvanzada({ tenant, onGuardado }) {
           disabled={guardando}
           className={`py-[11px] rounded-lg text-[13px] font-bold cursor-pointer font-sans flex items-center justify-center gap-2 transition-all duration-200
             ${guardado
-              ? 'bg-[rgba(0,201,130,0.35)] text-admin-accent border border-[rgba(0,201,130,0.3)]'
+              ? 'bg-[rgba(86,251,171,0.35)] text-admin-accent border border-[rgba(86,251,171,0.3)]'
               : guardando
-                ? 'bg-[rgba(0,201,130,0.25)] text-slate-50 border border-white/[0.08] cursor-not-allowed'
+                ? 'bg-[rgba(86,251,171,0.25)] text-slate-50 border border-white/[0.08] cursor-not-allowed'
                 : 'bg-primary text-slate-50 border border-white/[0.08] hover:bg-primary-container'
             }`}
         >
@@ -703,7 +703,7 @@ export default function TenantPanel() {
     return (
       <DashboardMasterAdmin>
         <div className="flex items-center justify-center h-[60vh]">
-          <div className="w-8 h-8 rounded-full border-[3px] border-[rgba(0,201,130,0.15)] [border-top-color:#00C982] animate-[girar_0.7s_linear_infinite]" />
+          <div className="w-8 h-8 rounded-full border-[3px] border-[rgba(86,251,171,0.15)] [border-top-color:#56fbab] animate-[girar_0.7s_linear_infinite]" />
         </div>
       </DashboardMasterAdmin>
     )
