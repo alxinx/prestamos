@@ -12,6 +12,7 @@ const prisma = require('./src/lib/prisma')
 const { redis, redisConfig } = require('./src/lib/redis')
 const { registrarJobsRecurrentes } = require('./src/queues')
 const { crearWorkerActividad } = require('./src/queues/workers/actividadTenants.worker')
+const { crearWorkerMora } = require('./src/queues/workers/mora.worker')
 const { globalLimiter } = require('./src/middleware/rateLimiter')
 const healthRouter = require('./src/routes/health')
 const masterAdminAuthRouter = require('./src/modules/masterAdmin/auth.routes')
@@ -148,6 +149,7 @@ async function start() {
     if (process.env.MORA_JOB_ENABLED === 'true') {
       await registrarJobsRecurrentes()
       crearWorkerActividad()
+      crearWorkerMora()
       console.log('[Queues] Jobs recurrentes registrados')
     }
 

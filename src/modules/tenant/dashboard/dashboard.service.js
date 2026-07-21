@@ -1,6 +1,7 @@
 'use strict'
 
 const { obtenerUsoLimitePrestamos } = require('../../../lib/limitesPlan')
+const { carteraEnMoraDe } = require('../creditos/creditos.service')
 
 // "Créditos activos" del dashboard: cuántos créditos vigentes tiene el tenant
 // hoy vs. cuántos le permite su plan rentado (Plan.limitePrestamos). Reutiliza
@@ -11,4 +12,11 @@ async function creditosActivosResumen(req) {
   return { usados, limite }
 }
 
-module.exports = { creditosActivosResumen }
+// "Cartera en mora" del dashboard — misma fuente única que Prestamos.jsx y
+// Clientes.jsx (carteraEnMoraDe en creditos.service.js), para no divergir.
+async function carteraEnMoraResumen(req) {
+  const carteraEnMora = await carteraEnMoraDe(req.empleado.tenantId)
+  return { carteraEnMora }
+}
+
+module.exports = { creditosActivosResumen, carteraEnMoraResumen }

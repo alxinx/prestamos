@@ -1,8 +1,9 @@
 'use strict'
 
-const { creditosActivosResumen } = require('./dashboard.service')
+const { creditosActivosResumen, carteraEnMoraResumen } = require('./dashboard.service')
 const { controlar } = require('../../../lib/controlador')
 
 const manejarCreditosActivos = controlar(req => creditosActivosResumen(req))
+const manejarCarteraEnMora = controlar(req => carteraEnMoraResumen(req))
 
-module.exports = { manejarCreditosActivos }
+module.exports = { manejarCreditosActivos, manejarCarteraEnMora }

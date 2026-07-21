@@ -22,6 +22,7 @@ import RestablecerContrasena from './pages/tenant/RestablecerContrasena'
 import LayoutTenant from './layouts/DashboardTenant'
 import DashboardTenant from './pages/tenant/Dashboard'
 import Clientes from './pages/tenant/Clientes'
+import ClientePerfil from './pages/tenant/ClientePerfil'
 import NuevoCliente from './pages/tenant/NuevoCliente'
 import Prestamos from './pages/tenant/Prestamos'
 import NuevoPrestamo from './pages/tenant/NuevoPrestamo'
@@ -57,6 +58,7 @@ function RutasTenantPrivadas({ ruta }) {
   // Administrador / secretaria / auditor
   if (ruta === '/dashboard')                        return <DashboardTenant />
   if (ruta.startsWith('/clientes/nuevo'))            return <NuevoCliente />
+  if (/^\/clientes\/[^/]+\/perfil/.test(ruta))       return <ClientePerfil />
   if (ruta.startsWith('/clientes'))                 return <Clientes />
   if (ruta.startsWith('/prestamos/nuevo'))          return <NuevoPrestamo />
   if (ruta.startsWith('/prestamos'))                return <Prestamos />

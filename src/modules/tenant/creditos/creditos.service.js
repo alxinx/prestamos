@@ -18,7 +18,7 @@ const { emailResumenPrestamo } = require('../../../emails/resumenPrestamo')
 const { enviarEmail } = require('../../../lib/email')
 
 const INCLUDE_CLIENTE_COBRADOR = {
-  cliente: { include: { clienteGlobal: { select: { nombreCompleto: true, cedula: true } } } },
+  cliente: { include: { clienteGlobal: { select: { nombreCompleto: true, cedula: true, telefono: true } } } },
   cobrador: { select: { id: true, nombreCompleto: true } },
 }
 
@@ -65,6 +65,27 @@ function proximaFechaCuotaDe(credito) {
   return credito.fechaVencimiento
 }
 
+// Cuotas que todavía no vencen, contadas con la misma aproximación de
+// calendario contractual que proximaFechaCuotaDe (sin cronograma de cuotas
+// real todavía). Créditos de solo intereses (numeroCuotas = 0) no tienen un
+// número de cuotas finito — devuelve -1 (misma convención de "ilimitado" que
+// los límites de Plan, ver formatearLimite en frontend/src/lib/formato.js).
+function cuotasFaltantesDe(credito) {
+  if (credito.numeroCuotas === 0) return -1
+
+  const dias = DIAS_POR_FRECUENCIA[credito.frecuenciaPago]
+  if (!dias) return credito.numeroCuotas
+
+  const hoy = Date.now()
+  let restantes = 0
+  for (let i = 1; i <= credito.numeroCuotas; i++) {
+    const fecha = new Date(credito.fechaInicio)
+    fecha.setDate(fecha.getDate() + dias * i)
+    if (fecha.getTime() >= hoy) restantes++
+  }
+  return restantes
+}
+
 // Saldo de capital pendiente (montoInicial - abonos a capital ya liquidados),
 // excluyendo intereses/mora/recargos.
 async function anexarSaldoCapital(creditos, tenantId) {
@@ -85,11 +106,20 @@ async function anexarSaldoCapital(creditos, tenantId) {
   }))
 }
 
+// Cartera en mora — suma bruta de montoInicial de créditos EN_MORA/VENCIDO,
+// sin descontar abonos (mismo criterio "bruto" ya establecido para "capital
+// circulando" en capital.service.js, confirmado con el usuario 2026-07-16).
+// Fuente única: la usan estadisticasCreditos, estadisticasClientes
+// (clientes.service.js) y el dashboard del tenant — para no divergir en silencio.
+async function carteraEnMoraDe(tenantId) {
+  const mora = await prisma.credito.aggregate({
+    where: { tenantId, estado: { in: ESTADOS_CREDITO_MORA } },
+    _sum: { montoInicial: true },
+  })
+  return mora._sum.montoInicial ?? 0
+}
+
 // ── Estadísticas del dashboard de préstamos ─────────────────────────────────
-// Capital circulando / Cartera en mora usan el mismo criterio "bruto" que
-// capitalEnCalle en capital.service.js: suma de montoInicial de los créditos
-// vigentes, sin descontar abonos — consistente con esa definición ya
-// establecida (y con el ejemplo dado por el usuario: 2026-07-16).
 async function estadisticasCreditos(req) {
   const { tenantId } = req.empleado
 
@@ -99,15 +129,12 @@ async function estadisticasCreditos(req) {
   const inicioMesSiguiente = new Date(inicioMes)
   inicioMesSiguiente.setMonth(inicioMesSiguiente.getMonth() + 1)
 
-  const [capital, mora, recaudado, activos] = await Promise.all([
+  const [capital, carteraEnMora, recaudado, activos] = await Promise.all([
     prisma.credito.aggregate({
       where: { tenantId, estado: { in: ESTADOS_CREDITO_ACTIVOS } },
       _sum: { montoInicial: true },
     }),
-    prisma.credito.aggregate({
-      where: { tenantId, estado: { in: ESTADOS_CREDITO_MORA } },
-      _sum: { montoInicial: true },
-    }),
+    carteraEnMoraDe(tenantId),
     prisma.pago.aggregate({
       where: { tenantId, estado: 'LIQUIDADO', fechaLiquidacion: { gte: inicioMes, lt: inicioMesSiguiente } },
       _sum: { montoRecibido: true },
@@ -117,7 +144,7 @@ async function estadisticasCreditos(req) {
 
   return {
     capitalCirculando: capital._sum.montoInicial ?? 0,
-    carteraEnMora: mora._sum.montoInicial ?? 0,
+    carteraEnMora,
     recaudadoEsteMes: recaudado._sum.montoRecibido ?? 0,
     prestamosActivos: activos,
   }
@@ -155,13 +182,16 @@ async function creditosEnMora(req) {
 // ── Sección 2: todos los préstamos, paginado con búsqueda y filtros ────────
 async function listarCreditos(req) {
   const { tenantId } = req.empleado
-  const { busqueda = '', estado = '', cobradorId = '', fechaDesde = '', fechaHasta = '' } = req.query
+  const { busqueda = '', estado = '', cobradorId = '', clienteId = '', fechaDesde = '', fechaHasta = '' } = req.query
   const { paginaNum, porPaginaNum } = parsearPaginacion(req.query)
 
   const where = {
     tenantId,
     ...(estado && { estado }),
     ...(cobradorId && { cobradorId }),
+    // clienteId: usado por la pestaña "Préstamos" del perfil de cliente — nunca
+    // confía en filtrar solo por esto, siempre va junto a tenantId arriba.
+    ...(clienteId && { clienteId }),
     // Rango de fechas sobre fechaInicio (fecha en que se otorgó el préstamo) —
     // no hay una especificación distinta, es la interpretación más natural
     // para un listado de "todos los préstamos".
@@ -194,6 +224,7 @@ async function listarCreditos(req) {
     id: c.id,
     cliente: c.cliente.clienteGlobal.nombreCompleto,
     clienteCedula: c.cliente.clienteGlobal.cedula,
+    clienteTelefono: c.cliente.clienteGlobal.telefono,
     cobrador: c.cobrador.nombreCompleto,
     monto: c.montoInicial,
     saldo: c.saldo,
@@ -220,6 +251,17 @@ function mensajeErrorParse(err, fallback) {
 // mientras completa el formulario nunca puede divergir del crédito real que
 // se termina guardando. Deliberadamente permisivo con inputs incompletos (el
 // operador todavía está escribiendo) en vez de devolver 422 en cada tecla.
+// Primera fecha de cobro contractual (fechaInicio + una cadencia de
+// frecuenciaPago) — misma lógica de calendario que proximaFechaCuotaDe, pero
+// evaluable en la simulación, antes de que el crédito exista.
+function primeraFechaCuotaDesde(fechaInicio, frecuenciaPago) {
+  const dias = DIAS_POR_FRECUENCIA[frecuenciaPago]
+  if (!dias || !fechaInicio) return null
+  const fecha = new Date(fechaInicio)
+  fecha.setDate(fecha.getDate() + dias)
+  return fecha
+}
+
 async function simularCredito(req) {
   const { montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil } = req.body
 
@@ -228,13 +270,24 @@ async function simularCredito(req) {
   const cuotas = Number(numeroCuotas)
 
   if (!(monto > 0) || !(tasa > 0)) {
-    return { valorCuota: null, totalAPagar: null, totalIntereses: null, fechaVencimiento: null, esSoloIntereses: false, valorPeriodico: null, diasCobro: null }
+    return { valorCuota: null, totalAPagar: null, totalIntereses: null, fechaVencimiento: null, esSoloIntereses: false, valorPeriodico: null, diasCobro: null, entraEnMoraInmediatamente: false }
   }
 
-  return calcularResumenCredito({
+  const resumen = calcularResumenCredito({
     montoInicial: monto, tasaInteres: tasa, numeroCuotas: cuotas, frecuenciaPago, fechaInicio,
     redondearCuotaMil: !!redondearCuotaMil,
   })
+
+  // Aviso preventivo: si con la fecha de inicio y frecuencia elegidas la
+  // primera cuota/cobro ya venció (fecha anterior a hoy), el crédito quedaría
+  // en mora desde el momento en que se cree. No depende de días de gracia —
+  // ese motor todavía no está configurado para la mayoría de tenants
+  // (src/lib/configMora.js) — mismo criterio "sin gracia" que ya usa
+  // diasMoraDe en este archivo.
+  const primeraFecha = primeraFechaCuotaDesde(fechaInicio, frecuenciaPago)
+  const entraEnMoraInmediatamente = !!primeraFecha && primeraFecha.getTime() < Date.now()
+
+  return { ...resumen, entraEnMoraInmediatamente }
 }
 
 // ── Creación del préstamo (wizard "Nuevo préstamo") ─────────────────────────
@@ -528,4 +581,7 @@ async function crearCredito(req) {
   return { credito: { id: creditoId, estado: 'ACTIVO' }, documentos, documentosFallidos }
 }
 
-module.exports = { estadisticasCreditos, creditosEnMora, listarCreditos, simularCredito, crearCredito }
+module.exports = {
+  estadisticasCreditos, creditosEnMora, listarCreditos, simularCredito, crearCredito,
+  diasMoraDe, proximaFechaCuotaDe, cuotasFaltantesDe, anexarSaldoCapital, carteraEnMoraDe,
+}

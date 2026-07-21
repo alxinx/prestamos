@@ -9,6 +9,7 @@ export {
   IcoOjoTachado,
   IcoCandado,
   IcoCorreo,
+  IcoTelefono,
   IcoCheck,
   IcoX,
   IcoChevronAbajo,

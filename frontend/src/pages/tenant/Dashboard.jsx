@@ -50,18 +50,11 @@ const STATS_FICTICIOS = [
     delta: { sube: true, positivo: true, porcentaje: '47.3', texto: 'vs ayer' },
     href: '/prestamos',
   },
-  {
-    id: 'creditos-mora',
-    titulo: 'Créditos en mora',
-    subtitulo: 'Total en atraso',
-    valor: '23',
-    imagen3d: '/iconos/mora.webp',
-    badge: { icono: <IcoReloj />, clases: 'bg-error/12 text-error' },
-    delta: { sube: true, positivo: false, porcentaje: '32.4', texto: 'vs ayer' },
-    href: '/prestamos',
-    peligro: true,
-  },
 ]
+
+// "Cartera en mora" ya no vive en STATS_FICTICIOS — se arma en el componente
+// con datos reales de GET /api/tenant/dashboard/cartera-en-mora (mismo criterio
+// que Prestamos.jsx y Clientes.jsx, ver carteraEnMoraDe en creditos.service.js).
 
 // ── Recaudo del día — ficticio, listo para GET /api/tenant/dashboard/recaudo-dia ──
 
@@ -124,6 +117,8 @@ export default function Dashboard() {
   // null mientras carga o si el empleado no tiene permiso para verlo (403).
   const [creditosActivos, setCreditosActivos] = useState(null)
   const [cargandoCreditos, setCargandoCreditos] = useState(true)
+  const [carteraEnMora, setCarteraEnMora] = useState(0)
+  const [cargandoMora, setCargandoMora] = useState(true)
 
   useEffect(() => {
     async function cargarCreditosActivos() {
@@ -132,6 +127,15 @@ export default function Dashboard() {
       setCargandoCreditos(false)
     }
     cargarCreditosActivos()
+  }, [])
+
+  useEffect(() => {
+    async function cargarCarteraEnMora() {
+      const { ok, datos } = await apiFetch('/api/tenant/dashboard/cartera-en-mora')
+      if (ok) setCarteraEnMora(datos.carteraEnMora)
+      setCargandoMora(false)
+    }
+    cargarCarteraEnMora()
   }, [])
 
   const stats = [
@@ -147,6 +151,26 @@ export default function Dashboard() {
       planUso: creditosActivos ? { usados: creditosActivos.usados, limite: creditosActivos.limite } : null,
     },
     ...STATS_FICTICIOS,
+    {
+      id: 'cartera-en-mora',
+      titulo: 'Cartera en mora',
+      subtitulo: 'Monto vencido o en mora',
+      valor: cargandoMora ? '—' : formatearPrecio(carteraEnMora),
+      imagen3d: '/iconos/mora.webp',
+      // 20% más chico que el ajuste anterior (86/100 -> 69/80) — libera aún más
+      // espacio vertical/horizontal arriba a la derecha.
+      imagenClases: 'absolute top-4 right-3 w-[69px] h-[69px] sm:w-[80px] sm:h-[80px] object-contain pointer-events-none select-none',
+      badge: { icono: <IcoReloj />, clases: 'bg-error/12 text-error' },
+      delta: null,
+      href: '/prestamos',
+      peligro: !cargandoMora && Number(carteraEnMora) > 0,
+      valorAutoFit: true,
+      // El ícono quedó chico y anclado arriba — para cuando llega la fila del
+      // valor ya no hay ilustración en el camino. Cancela el padding-derecho
+      // reservado (pensado para el ícono grande por default) solo en esta fila,
+      // sin afectar título/subtítulo, que sí comparten la banda del ícono.
+      valorExtenderClases: '-mr-[123px] sm:-mr-[141px] pr-4',
+    },
   ]
 
   return (

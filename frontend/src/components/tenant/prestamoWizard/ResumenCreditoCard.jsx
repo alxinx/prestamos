@@ -31,6 +31,13 @@ export default function ResumenCreditoCard({ resumen, caja, montoInicial, numero
         <p className="text-[14px] font-bold text-on-background m-0">Resumen del crédito</p>
       </div>
 
+      {tieneResumen && resumen.entraEnMoraInmediatamente && (
+        <div className="rounded-lg bg-error-container text-on-error-container text-[11.5px] font-semibold px-3 py-2 mb-3 flex items-start gap-1.5">
+          <span aria-hidden="true">⚠</span>
+          Con la fecha de inicio y frecuencia elegidas, este crédito entrará en mora inmediatamente al crearse.
+        </div>
+      )}
+
       {!tieneResumen ? (
         <div className="text-center py-4">
           <img

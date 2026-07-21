@@ -6,8 +6,8 @@ import Paginador from '../../components/tenant/Paginador'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
 import Estrellas from '../../components/tenant/Estrellas'
-import { IcoMas, IcoPersonas, IcoCheck, IcoReloj, IcoChevronAbajo, IcoOpciones, IcoBuscar, IcoAlerta } from '../../components/tenant/iconos'
-import { formatearPrecio } from '../../lib/formato'
+import { IcoMas, IcoPersonas, IcoCheck, IcoReloj, IcoChevronAbajo, IcoBuscar, IcoAlerta } from '../../components/tenant/iconos'
+import { formatearPrecio, formatearLimite } from '../../lib/formato'
 import { inicialesDe, claseAvatar } from '../../lib/avatar'
 import { apiFetch } from '../../lib/api'
 
@@ -29,6 +29,7 @@ export default function Clientes() {
   const [clientes, setClientes] = useState([])
   const [estadisticas, setEstadisticas] = useState({ total: 0, porcentajeAlDia: 0, porFinalizar: 0, enMora: 0 })
   const [busqueda, setBusqueda] = useState('')
+  const [busquedaDebounced, setBusquedaDebounced] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('')
   const [pagina, setPagina] = useState(1)
   const [totalPaginas, setTotalPaginas] = useState(1)
@@ -39,7 +40,7 @@ export default function Clientes() {
 
   async function cargarClientes() {
     setCargandoClientes(true)
-    const params = new URLSearchParams({ busqueda, pagina: String(pagina), porPagina: String(POR_PAGINA), estado: estadoFiltro })
+    const params = new URLSearchParams({ busqueda: busquedaDebounced, pagina: String(pagina), porPagina: String(POR_PAGINA), estado: estadoFiltro })
     const { ok, status, datos } = await apiFetch(`/api/tenant/clientes?${params}`)
     if (status === 403) { setSinPermiso(true); setCargandoClientes(false); return }
     if (ok) {
@@ -58,7 +59,15 @@ export default function Clientes() {
   }
 
   useEffect(() => { cargarEstadisticas() }, [])
-  useEffect(() => { cargarClientes() }, [busqueda, pagina, estadoFiltro])
+
+  // Debounce del buscador: espera a que el usuario deje de escribir antes de
+  // consultar la BD — evita un request por cada tecla presionada.
+  useEffect(() => {
+    const idTimeout = setTimeout(() => setBusquedaDebounced(busqueda), 400)
+    return () => clearTimeout(idTimeout)
+  }, [busqueda])
+
+  useEffect(() => { cargarClientes() }, [busquedaDebounced, pagina, estadoFiltro])
 
   function buscar(valor) {
     setBusqueda(valor)
@@ -219,16 +228,15 @@ export default function Clientes() {
                       {formatearPrecio(c.valorAdeudado)}
                     </td>
                     <td className="px-1 py-3"><Estrellas calificacion={c.calificacion} /></td>
-                    <td className="px-1 py-3 text-on-background font-semibold text-center">{c.cuotasFaltantes}</td>
+                    <td className="px-1 py-3 text-on-background font-semibold text-center">{formatearLimite(c.cuotasFaltantes)}</td>
                     <td className="px-1 py-3"><ChipEstado estado={c.estado} /></td>
                     <td className="px-1 py-3 text-right">
-                      <button
-                        type="button"
-                        aria-label="Más acciones"
-                        className="w-7 h-7 rounded-lg inline-flex items-center justify-center text-on-surface-variant hover:bg-surface-default transition-colors"
+                      <a
+                        href={`/clientes/${c.id}/perfil`}
+                        className="inline-block whitespace-nowrap px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors no-underline"
                       >
-                        <IcoOpciones />
-                      </button>
+                        Ver más
+                      </a>
                     </td>
                   </tr>
                 ))}

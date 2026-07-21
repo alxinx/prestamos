@@ -7,7 +7,7 @@ import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
 import MenuAcciones from '../../components/tenant/MenuAcciones'
 import ModalGenerarLetraCambio from '../../components/tenant/ModalGenerarLetraCambio'
-import { IcoMas, IcoMoneda, IcoChevronAbajo, IcoBuscar, IcoAlerta, IcoTendencia, IcoArchivo } from '../../components/tenant/iconos'
+import { IcoMas, IcoMoneda, IcoChevronAbajo, IcoBuscar, IcoAlerta, IcoTendencia, IcoArchivo, IcoTelefono } from '../../components/tenant/iconos'
 import { formatearPrecio, formatearFechaLocal } from '../../lib/formato'
 import { inicialesDe, claseAvatar } from '../../lib/avatar'
 import { apiFetch } from '../../lib/api'
@@ -96,6 +96,7 @@ export default function Prestamos() {
   const [creditos, setCreditos] = useState([])
   const [cargandoCreditos, setCargandoCreditos] = useState(true)
   const [busqueda, setBusqueda] = useState('')
+  const [busquedaDebounced, setBusquedaDebounced] = useState('')
   const [estadoFiltro, setEstadoFiltro] = useState('')
   const [cobradorFiltro, setCobradorFiltro] = useState('')
   const [fechaDesde, setFechaDesde] = useState('')
@@ -132,7 +133,7 @@ export default function Prestamos() {
   async function cargarCreditos() {
     setCargandoCreditos(true)
     const params = new URLSearchParams({
-      busqueda, estado: estadoFiltro, cobradorId: cobradorFiltro, fechaDesde, fechaHasta,
+      busqueda: busquedaDebounced, estado: estadoFiltro, cobradorId: cobradorFiltro, fechaDesde, fechaHasta,
       pagina: String(pagina), porPagina: String(POR_PAGINA),
     })
     const { ok, status, datos } = await apiFetch(`/api/tenant/creditos?${params}`)
@@ -147,7 +148,15 @@ export default function Prestamos() {
 
   useEffect(() => { cargarEstadisticas(); cargarCobradores() }, [])
   useEffect(() => { cargarMora() }, [cobradorMora])
-  useEffect(() => { cargarCreditos() }, [busqueda, estadoFiltro, cobradorFiltro, fechaDesde, fechaHasta, pagina])
+
+  // Debounce del buscador: espera a que el usuario deje de escribir antes de
+  // consultar la BD — evita un request por cada tecla presionada.
+  useEffect(() => {
+    const idTimeout = setTimeout(() => setBusquedaDebounced(busqueda), 400)
+    return () => clearTimeout(idTimeout)
+  }, [busqueda])
+
+  useEffect(() => { cargarCreditos() }, [busquedaDebounced, estadoFiltro, cobradorFiltro, fechaDesde, fechaHasta, pagina])
 
   function buscar(valor) { setBusqueda(valor); setPagina(1) }
   function filtrarConReset(setter) {
@@ -189,6 +198,10 @@ export default function Prestamos() {
           subtitulo="Prestado en créditos vigentes"
           valor={cargandoStats ? '—' : formatearPrecio(estadisticas.capitalCirculando)}
           imagen3d="/iconos/capitales.webp"
+          // Este monto suele ser más largo que el resto de tarjetas — ícono
+          // 20% más chico y anclado arriba (no centrado) para que nunca tape
+          // el valor (mismo ajuste puntual documentado en TarjetaStat.jsx).
+          imagenClases="absolute top-4 right-3 w-[86px] h-[86px] sm:w-[100px] sm:h-[100px] object-contain pointer-events-none select-none"
           badge={{ icono: <IcoMoneda size={14} />, clases: 'bg-on-tertiary-container/12 text-on-tertiary-container' }}
         />
         <TarjetaStat
@@ -196,8 +209,11 @@ export default function Prestamos() {
           subtitulo="Créditos vencidos o en mora"
           valor={cargandoStats ? '—' : formatearPrecio(estadisticas.carteraEnMora)}
           imagen3d="/iconos/mora.webp"
+          imagenClases="absolute top-4 right-3 w-[69px] h-[69px] sm:w-[80px] sm:h-[80px] object-contain pointer-events-none select-none"
           badge={{ icono: <IcoAlerta />, clases: 'bg-error/12 text-error' }}
           peligro={!cargandoStats && Number(estadisticas.carteraEnMora) > 0}
+          valorAutoFit
+          valorExtenderClases="-mr-[123px] sm:-mr-[141px] pr-4"
         />
         <TarjetaStat
           titulo="Recaudado este mes"
@@ -333,7 +349,12 @@ export default function Prestamos() {
                           <span className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-[12px] shrink-0 ${claseAvatar(i)}`}>
                             {inicialesDe(c.cliente)}
                           </span>
-                          <p className="text-on-background font-semibold truncate m-0">{c.cliente}</p>
+                          <div className="min-w-0">
+                            <p className="text-on-background font-semibold truncate m-0">{c.cliente}</p>
+                            <p className="text-on-surface-variant text-[12px] truncate m-0 flex items-center gap-1">
+                              CC {c.clienteCedula} · <IcoTelefono size={11} /> {c.clienteTelefono}
+                            </p>
+                          </div>
                         </div>
                       </td>
                       <td className="px-1 py-3 text-on-background whitespace-nowrap">{c.cobrador}</td>

@@ -9,7 +9,27 @@ import BarraProgreso from './BarraProgreso'
 // de 35%, como en Capital y Socios): ícono chico anclado arriba a la derecha (no
 // centrado verticalmente), para que nunca tape el valor principal ni le quite
 // protagonismo al dato.
-export default function TarjetaStat({ titulo, subtitulo, valor, imagen3d, badge, delta, notaInferior, href, peligro, planUso, compacto = false, centrarValor = false }) {
+//
+// `imagenClases` — override puntual de posición/tamaño de la ilustración para
+// una tarjeta específica cuyo valor es más largo de lo normal (ej. "Capital
+// circulando" en Prestamos.jsx, donde el monto en pesos tapaba el ícono
+// centrado por default). Si no se pasa, usa el default según `compacto`.
+//
+// `valorAutoFit` — para valores en pesos que pueden desbordar la tarjeta en
+// pantallas angostas (ej. "Cartera en mora"): el tamaño de fuente se ajusta al
+// ancho disponible con `clamp()` + unidades de container query (`cqw`), así el
+// valor siempre cabe en una sola línea sin recortarse. Además intenta la
+// propiedad CSS `text-fit` (soporte de navegador variable a la fecha) como
+// mejora progresiva — si el navegador no la reconoce, el clamp() ya cubre el
+// caso por su cuenta, así que no depende de que exista.
+//
+// `valorExtenderClases` — con un ícono más chico (`imagenClases`) posicionado
+// arriba (no centrado), la fila del valor queda por debajo de la ilustración
+// y puede reclamar ese espacio sin tocar el ancho reservado de título/subtítulo
+// (que sí comparten la banda vertical del ícono). Se aplica solo al contenedor
+// del valor — típicamente un margen derecho negativo que cancela el padding
+// del contenido para esa fila puntual.
+export default function TarjetaStat({ titulo, subtitulo, valor, imagen3d, badge, delta, notaInferior, href, peligro, planUso, compacto = false, centrarValor = false, imagenClases, valorAutoFit = false, valorExtenderClases = '' }) {
   return (
     <div className={`relative bg-surface-lowest border border-outline-variant/50 rounded-2xl overflow-hidden flex flex-col shadow-card ${compacto ? 'min-h-[140px]' : 'min-h-[178px]'}`}>
 
@@ -18,9 +38,11 @@ export default function TarjetaStat({ titulo, subtitulo, valor, imagen3d, badge,
         src={imagen3d}
         alt=""
         className={
-          compacto
-            ? 'absolute top-3 right-3 w-11 h-11 sm:w-12 sm:h-12 object-contain pointer-events-none select-none'
-            : 'absolute top-1/2 -translate-y-1/2 right-3 w-[107px] h-[107px] sm:w-[125px] sm:h-[125px] object-contain pointer-events-none select-none'
+          imagenClases ?? (
+            compacto
+              ? 'absolute top-3 right-3 w-11 h-11 sm:w-12 sm:h-12 object-contain pointer-events-none select-none'
+              : 'absolute top-1/2 -translate-y-1/2 right-3 w-[107px] h-[107px] sm:w-[125px] sm:h-[125px] object-contain pointer-events-none select-none'
+          )
         }
       />
 
@@ -43,13 +65,25 @@ export default function TarjetaStat({ titulo, subtitulo, valor, imagen3d, badge,
         {/* Valor principal — a todo el ancho, sin reservar espacio para el ícono.
             `centrarValor` lo centra horizontalmente (ej. conteos de una sola cifra,
             donde el número es el foco visual de la tarjeta, no un monto largo). */}
-        <p className={`font-bold tracking-tight leading-none mb-2 ${centrarValor ? 'text-center' : ''} ${
-          peligro
-            ? 'text-[38px] sm:text-[44px] text-error animate-[brillo-rojo_2s_ease-in-out_infinite]'
-            : 'text-[30px] sm:text-[33px] text-on-background'
-        }`}>
-          {valor}
-        </p>
+        {valorAutoFit ? (
+          <div className={`@container ${valorExtenderClases}`}>
+            <p className={`font-bold tracking-tight leading-none mb-2 whitespace-nowrap [text-fit:max] ${centrarValor ? 'text-center' : ''} ${
+              peligro
+                ? 'text-[clamp(20px,15cqw,44px)] text-error animate-[brillo-rojo_2s_ease-in-out_infinite]'
+                : 'text-[clamp(20px,15cqw,33px)] text-on-background'
+            }`}>
+              {valor}
+            </p>
+          </div>
+        ) : (
+          <p className={`font-bold tracking-tight leading-none mb-2 ${centrarValor ? 'text-center' : ''} ${
+            peligro
+              ? 'text-[38px] sm:text-[44px] text-error animate-[brillo-rojo_2s_ease-in-out_infinite]'
+              : 'text-[30px] sm:text-[33px] text-on-background'
+          }`}>
+            {valor}
+          </p>
+        )}
 
         {/* Delta — `sufijo` por defecto '%'; pasar '' para deltas de conteo simple */}
         {delta && (

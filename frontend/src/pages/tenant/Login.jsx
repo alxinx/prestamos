@@ -74,10 +74,8 @@ export default function LoginTenant() {
 
   const panelIzq = (
     <>
-      <h1 style={{ fontSize: 'clamp(32px, 3.5vw, 52px)', fontWeight: 700, color: '#ffffff', lineHeight: 1.12, letterSpacing: '-0.02em', marginBottom: 40 }}>
-        Infraestructura Segura<br />
-        para <span style={{ color: '#56fbab' }}>Administración de pagos.</span>
-      </h1>
+      Infraestructura Segura<br />
+      para <span style={{ color: '#56fbab' }}>Administración de pagos.</span>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginBottom: 48 }}>
         {features.map(f => (

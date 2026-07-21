@@ -22,6 +22,14 @@ const ESTILOS = {
   VENCIDO:      'bg-error-container text-on-error-container',
   CASTIGADO:    'bg-error-container text-on-error-container',
   REFINANCIADO: 'bg-tertiary-container/25 text-on-tertiary-container',
+  // LIQUIDADO/PENDIENTE_LIQUIDAR/ANULADO son valores reales del enum EstadoPago
+  // (Prisma). EXTEMPORANEO no es un valor de enum — es una etiqueta sintética
+  // que la pestaña "Pagos" del perfil de cliente usa cuando el pago viene de
+  // una SolicitudExtemporanea aprobada; reusa el mismo ámbar de POR_FINALIZAR.
+  LIQUIDADO:          'bg-secondary-container/25 text-on-secondary-container',
+  PENDIENTE_LIQUIDAR: 'bg-[#FBBF24]/15 text-[#FBBF24]',
+  ANULADO:            'bg-error-container text-on-error-container',
+  EXTEMPORANEO:       'bg-[#FBBF24]/15 text-[#FBBF24]',
 }
 
 const ETIQUETAS = {
@@ -42,11 +50,19 @@ const ETIQUETAS = {
   VENCIDO: 'Vencido',
   CASTIGADO: 'Castigado',
   REFINANCIADO: 'Refinanciado',
+  LIQUIDADO: 'Liquidado',
+  PENDIENTE_LIQUIDAR: 'Pendiente',
+  ANULADO: 'Anulado',
+  EXTEMPORANEO: 'Extemporáneo',
 }
 
-export default function ChipEstado({ estado }) {
+// `punto` — antepone un punto de color (bg-current, toma el mismo color del
+// texto del chip) en vez de solo el texto. Usado en el header del perfil de
+// cliente (mockup: "• Activo" debajo del avatar).
+export default function ChipEstado({ estado, punto = false }) {
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap ${ESTILOS[estado] || ESTILOS.RETIRADO}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold whitespace-nowrap ${ESTILOS[estado] || ESTILOS.RETIRADO}`}>
+      {punto && <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" />}
       {ETIQUETAS[estado] || estado}
     </span>
   )
