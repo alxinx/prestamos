@@ -110,7 +110,7 @@ export default function ModalConfirmarGuardarCliente({ datos, guardando, onCorre
           <button
             onClick={onGuardarYCrearPrestamo}
             disabled={guardando}
-            className="py-3 rounded-lg bg-secondary-container text-primary text-[13.5px] font-bold cursor-pointer font-sans transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-95"
+            className="py-3 rounded-lg bg-secondary-container text-primary-fixed text-[13.5px] font-bold cursor-pointer font-sans transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-95"
           >
             {guardando ? 'Guardando...' : 'Guardar y crear préstamo →'}
           </button>

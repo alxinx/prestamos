@@ -52,7 +52,7 @@ export default function MenuUsuario({ iniciales }) {
                     key={op.etiqueta}
                     href={op.href}
                     onClick={() => setAbierto(false)}
-                    className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-on-surface-variant text-[13px] no-underline transition-colors duration-100 hover:bg-primary hover:text-secondary-container"
+                    className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-on-surface-variant text-[13px] no-underline transition-colors duration-100 hover:bg-primary-fixed hover:text-secondary-container"
                   >
                     <span className="text-secondary shrink-0 group-hover:text-secondary-container">{op.icono}</span>
                     {op.etiqueta}
@@ -68,7 +68,7 @@ export default function MenuUsuario({ iniciales }) {
             <a
               href="/configuracion"
               onClick={() => setAbierto(false)}
-              className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-on-surface-variant text-[13px] no-underline transition-colors duration-100 hover:bg-primary hover:text-secondary-container"
+              className="group flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-on-surface-variant text-[13px] no-underline transition-colors duration-100 hover:bg-primary-fixed hover:text-secondary-container"
             >
               <span className="text-on-surface-variant shrink-0 group-hover:text-secondary-container"><IcoConfiguracion size={15} /></span>
               Configuración

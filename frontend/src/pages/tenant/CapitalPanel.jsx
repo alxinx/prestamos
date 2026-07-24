@@ -186,7 +186,7 @@ export default function CapitalPanel() {
           {!cargandoPermisos && tienePermiso('capital.editar') && capital.estado === 'ACTIVA' && (
             <button
               onClick={() => setMostrandoAjuste(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary-container text-primary text-[13px] font-semibold hover:brightness-95 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-secondary-container text-primary-fixed text-[13px] font-semibold hover:brightness-95 transition-all"
             >
               <IcoMoneda /> Agregar/Disminuir capital
             </button>

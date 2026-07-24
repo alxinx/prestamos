@@ -2,7 +2,7 @@
 // original y sigue siendo el default para no romper los usos existentes de BotonAccion.
 const VARIANTES = {
   primario:   'bg-primary text-on-primary hover:brightness-125 active:brightness-150',
-  accion:     'bg-secondary-container text-primary hover:brightness-95 active:brightness-90',
+  accion:     'bg-secondary-container text-primary-fixed hover:brightness-95 active:brightness-90',
   secundario: 'bg-transparent text-on-background border border-outline-variant hover:bg-surface-default active:bg-surface-default',
   peligro:    'bg-error text-on-primary hover:brightness-110 active:brightness-95',
 }

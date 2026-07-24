@@ -30,6 +30,17 @@ const ESTILOS = {
   PENDIENTE_LIQUIDAR: 'bg-[#FBBF24]/15 text-[#FBBF24]',
   ANULADO:            'bg-error-container text-on-error-container',
   EXTEMPORANEO:       'bg-[#FBBF24]/15 text-[#FBBF24]',
+  // CUOTA_PENDIENTE no es un valor de enum — es una etiqueta sintética de la
+  // pestaña "Plan de pagos" del detalle de préstamo, para una cuota futura
+  // que todavía no vence (distinta de PENDIENTE_LIQUIDAR, que es sobre un
+  // pago ya recibido esperando revisión — gris neutro, no ámbar, para no
+  // confundir ambos significados).
+  CUOTA_PENDIENTE:    'bg-outline-variant/30 text-on-surface-variant',
+  // SE_COBRA_HOY tampoco es un valor de enum — cuota cuya fecha de cobro es
+  // HOY mismo: todavía no es "En mora" (eso arranca recién al día siguiente
+  // de vencer, decisión del usuario 2026-07-23), pero ya no es una cuota
+  // futura genérica — mismo ámbar que POR_FINALIZAR/EXTEMPORANEO.
+  SE_COBRA_HOY:       'bg-[#FBBF24]/15 text-[#FBBF24]',
 }
 
 const ETIQUETAS = {
@@ -54,6 +65,8 @@ const ETIQUETAS = {
   PENDIENTE_LIQUIDAR: 'Pendiente',
   ANULADO: 'Anulado',
   EXTEMPORANEO: 'Extemporáneo',
+  CUOTA_PENDIENTE: 'Pendiente',
+  SE_COBRA_HOY: 'Se cobra hoy',
 }
 
 // `punto` — antepone un punto de color (bg-current, toma el mismo color del

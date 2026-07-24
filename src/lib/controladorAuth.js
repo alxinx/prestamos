@@ -1,8 +1,14 @@
 'use strict'
 
+// `secure` se deriva de NODE_ENV por defecto (CLAUDE.md §6: "secure: true en
+// producción") — nunca depende únicamente de que alguien recuerde setear
+// COOKIE_SECURE=true en el .env de producción. COOKIE_SECURE sigue existiendo
+// como override explícito para casos raros (ej. staging detrás de un proxy
+// TLS con NODE_ENV=development), pero el valor seguro es el que se aplica solo
+// si production ya no lo exige.
 const BASE_COOKIE = {
   httpOnly: process.env.COOKIE_HTTP_ONLY !== 'false',
-  secure:   process.env.COOKIE_SECURE === 'true',
+  secure:   process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true',
   sameSite: process.env.COOKIE_SAME_SITE || 'strict',
 }
 

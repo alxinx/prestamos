@@ -37,4 +37,6 @@ export {
   IcoBuscar,
   IcoAlerta,
   IcoTendencia,
+  IcoSol,
+  IcoLuna,
 } from '../iconos'

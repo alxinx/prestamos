@@ -1,6 +1,7 @@
 import MenuUsuario from './MenuUsuario'
 import { navAdmin, navCobrador, subitemsCaja } from './Sidebar'
 import { ETIQUETAS_ROL_CORTO } from '../../lib/roles'
+import { IcoSol, IcoLuna } from './iconos'
 
 function IconoHamburguesa() {
   return (
@@ -35,7 +36,7 @@ function resolverSeccion(ruta) {
   return etiquetasRuta[masEspecifica]
 }
 
-export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol }) {
+export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol, tema, alternarTema }) {
   const ruta = window.location.pathname
   const nombreSeccion = resolverSeccion(ruta)
   const iniciales = (nombreNegocio || 'T').substring(0, 2).toUpperCase()
@@ -71,6 +72,15 @@ export default function TopbarTenant({ esMobil, onToggleMenu, nombreNegocio, rol
 
       {/* Derecha */}
       <div className={`flex items-center shrink-0 ${esMobil ? 'gap-1' : 'gap-2'}`}>
+        <button
+          onClick={alternarTema}
+          aria-label={tema === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          title={tema === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+          className="flex items-center justify-center w-9 h-9 rounded-lg bg-transparent border-none text-on-surface-variant cursor-pointer transition-all duration-150 hover:bg-surface-container hover:text-on-background"
+        >
+          {tema === 'dark' ? <IcoSol /> : <IcoLuna />}
+        </button>
+
         <button className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-transparent border-none text-on-surface-variant cursor-pointer transition-all duration-150 hover:bg-surface-container hover:text-on-background">
           <IconoCampana />
           <span className="absolute top-1.5 right-1.5 w-[7px] h-[7px] rounded-full border-2 bg-secondary-container border-surface-lowest" />

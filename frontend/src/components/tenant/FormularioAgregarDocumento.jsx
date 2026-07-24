@@ -60,7 +60,7 @@ export default function FormularioAgregarDocumento({ onAgregar }) {
           disabled={enviando}
           aria-label="Agregar documento"
           title="Agregar documento"
-          className="inline-flex items-center justify-center shrink-0 w-11 h-11 rounded-lg bg-secondary-container text-primary hover:brightness-95 active:brightness-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center shrink-0 w-11 h-11 rounded-lg bg-secondary-container text-primary-fixed hover:brightness-95 active:brightness-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <IcoMas size={18} />
         </button>

@@ -6,6 +6,7 @@ import TopbarTenant from '../components/tenant/Topbar'
 import AvisoInactividad from '../components/tenant/AvisoInactividad'
 import useTamanoPantalla from '../hooks/useTamanoPantalla'
 import useInactividad from '../hooks/useInactividad'
+import useTema from '../hooks/useTema'
 import { apiFetch } from '../lib/api'
 
 // Roles de oficina: se cierran por inactividad. Los cobradores operan en campo
@@ -17,6 +18,7 @@ export default function DashboardTenant({ children }) {
   const rutaActiva = window.location.pathname
   const esMobil = useTamanoPantalla()
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const { tema, alternarTema } = useTema()
 
   // onboardingCompletado arranca en null ("todavía no sabemos") a propósito —
   // si arrancara en true, se vería un parpadeo del dashboard real antes de
@@ -74,35 +76,46 @@ export default function DashboardTenant({ children }) {
 
   return (
     <PermisosProvider>
-      <div className="flex min-h-screen font-sans bg-tenant-bg">
-        {esMobil && menuAbierto && (
-          <div
-            onClick={() => setMenuAbierto(false)}
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
-          />
-        )}
+      {/* data-theme acá (no en <html> ni en el Sidebar): escopa la paleta oscura
+          a todo lo que el usuario ve como "el panel" (topbar, páginas, el aviso
+          de inactividad) sin filtrar el toggle hacia el panel master-admin, que
+          vive en un árbol de componentes completamente aparte. El Sidebar queda
+          adentro también, pero es inmune al toggle — su gradiente usa
+          --color-primary-fixed, no --color-primary (ver index.css). `contents`
+          para que el wrapper no meta una caja de más en el layout flex. */}
+      <div data-theme={tema} className="contents">
+        <div className="flex min-h-screen font-sans bg-tenant-bg">
+          {esMobil && menuAbierto && (
+            <div
+              onClick={() => setMenuAbierto(false)}
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
+            />
+          )}
 
-        <SidebarTenant
-          rutaActiva={rutaActiva}
-          rol={infoUsuario.rol}
-          menuAbierto={menuAbierto}
-          onCerrar={() => setMenuAbierto(false)}
-        />
-
-        <div className={`flex-1 flex flex-col min-w-0 ${esMobil ? '' : 'overflow-hidden'}`}>
-          <TopbarTenant
-            esMobil={esMobil}
-            onToggleMenu={() => setMenuAbierto(v => !v)}
-            nombreNegocio={infoUsuario.nombreNegocio}
+          <SidebarTenant
+            rutaActiva={rutaActiva}
             rol={infoUsuario.rol}
+            menuAbierto={menuAbierto}
+            onCerrar={() => setMenuAbierto(false)}
           />
-          <main className={`flex-1 tenant-main ${esMobil ? '' : 'overflow-y-auto'}`}>{children}</main>
-        </div>
-      </div>
 
-      {mostrarAviso && (
-        <AvisoInactividad segundosRestantes={segundosRestantes} onContinuar={continuarTrabajando} />
-      )}
+          <div className={`flex-1 flex flex-col min-w-0 ${esMobil ? '' : 'overflow-hidden'}`}>
+            <TopbarTenant
+              esMobil={esMobil}
+              onToggleMenu={() => setMenuAbierto(v => !v)}
+              nombreNegocio={infoUsuario.nombreNegocio}
+              rol={infoUsuario.rol}
+              tema={tema}
+              alternarTema={alternarTema}
+            />
+            <main className={`flex-1 tenant-main ${esMobil ? '' : 'overflow-y-auto'}`}>{children}</main>
+          </div>
+        </div>
+
+        {mostrarAviso && (
+          <AvisoInactividad segundosRestantes={segundosRestantes} onContinuar={continuarTrabajando} />
+        )}
+      </div>
     </PermisosProvider>
   )
 }

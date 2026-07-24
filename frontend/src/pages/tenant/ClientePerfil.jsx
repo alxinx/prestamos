@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import TarjetaPanel from '../../components/tenant/TarjetaPanel'
+import TarjetaStatChica from '../../components/tenant/TarjetaStatChica'
 import ChipEstado from '../../components/tenant/ChipEstado'
 import Estrellas from '../../components/tenant/Estrellas'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import SelectorDocumentos from '../../components/tenant/SelectorDocumentos'
 import {
-  IcoPersonas, IcoTelefono, IcoCheck, IcoMoneda, IcoReloj, IcoEditar, IcoAlerta,
+  IcoPersonas, IcoTelefono, IcoCheck, IcoMoneda, IcoReloj, IcoEditar, IcoAlerta, IcoOjo,
   IcoArchivo, IcoArchivoImagen, IcoArchivoPdf, IcoArchivoWord, IcoArchivoExcel, IcoArchivoPowerPoint,
 } from '../../components/tenant/iconos'
 import { formatearPrecio, formatearFecha, formatearFechaLocal } from '../../lib/formato'
@@ -64,23 +65,6 @@ const TABS = [
   { id: 'documentos', etiqueta: 'Documentos' },
   { id: 'referencias', etiqueta: 'Referencias' },
 ]
-
-// Tarjeta de stat compacta — versión liviana de TarjetaStat (que trae
-// ilustración 3D grande pensada para la esquina de una tarjeta ancha, no para
-// el tamaño chico de estas 5 tarjetas del header). Reusa las mismas
-// ilustraciones webp del resto de la app (ver imagen3d en TarjetaStat).
-function StatChica({ imagen, titulo, valor, subtitulo, peligro = false }) {
-  return (
-    <div className="bg-surface-lowest border border-outline-variant/50 rounded-xl shadow-card p-5 flex items-center gap-4 min-h-[100px]">
-      <img src={imagen} alt="" className="w-12 h-12 object-contain shrink-0" />
-      <div className="min-w-0">
-        <p className="text-[13px] text-on-surface-variant m-0 truncate">{titulo}</p>
-        <p className={`text-2xl font-bold m-0 leading-tight ${peligro ? 'text-error' : 'text-on-background'}`}>{valor}</p>
-        {subtitulo && <p className="text-[13px] font-semibold text-[#FBBF24] m-0 mt-0.5">{subtitulo}</p>}
-      </div>
-    </div>
-  )
-}
 
 function SinPermiso() {
   return <p className="text-[13px] text-on-surface-variant py-6 text-center">No tienes permiso para ver esta información.</p>
@@ -204,6 +188,7 @@ function PrestamosTab({ clienteId }) {
             <th className="font-semibold px-1 pb-2">Saldo</th>
             <th className="font-semibold px-1 pb-2">Estado</th>
             <th className="font-semibold px-1 pb-2">Próxima cuota</th>
+            <th className="px-1 pb-2" />
           </tr>
         </thead>
         <tbody>
@@ -214,6 +199,15 @@ function PrestamosTab({ clienteId }) {
               <td className={`px-1 py-2.5 font-semibold whitespace-nowrap ${c.saldo > 0 ? 'text-error' : 'text-secondary'}`}>{formatearPrecio(c.saldo)}</td>
               <td className="px-1 py-2.5"><ChipEstado estado={c.estado} /></td>
               <td className="px-1 py-2.5 text-on-background whitespace-nowrap">{c.proximaCuota ? formatearFechaLocal(c.proximaCuota) : '—'}</td>
+              <td className="px-1 py-2.5 text-right">
+                <button
+                  type="button"
+                  onClick={() => navegarA(`/prestamos/${c.id}/detalle`)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold text-on-background bg-surface-lowest hover:bg-surface-default transition-colors whitespace-nowrap"
+                >
+                  <IcoOjo size={13} /> Ver detalle
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -463,16 +457,16 @@ export default function ClientePerfil() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
-        <StatChica imagen="/iconos/billetera.webp" titulo="Préstamos activos" valor={perfil.stats.prestamosActivos} />
-        <StatChica imagen="/iconos/coin.webp" titulo="Total en deuda" valor={formatearPrecio(perfil.stats.totalEnDeuda)} />
-        <StatChica imagen="/iconos/check.webp" titulo="Pagos realizados" valor={perfil.stats.pagosRealizados} />
-        <StatChica
+        <TarjetaStatChica imagen="/iconos/billetera.webp" titulo="Préstamos activos" valor={perfil.stats.prestamosActivos} />
+        <TarjetaStatChica imagen="/iconos/coin.webp" titulo="Total en deuda" valor={formatearPrecio(perfil.stats.totalEnDeuda)} />
+        <TarjetaStatChica imagen="/iconos/check.webp" titulo="Pagos realizados" valor={perfil.stats.pagosRealizados} />
+        <TarjetaStatChica
           imagen="/iconos/clock.webp"
           titulo="Pagos pendientes"
           valor={perfil.stats.pagosPendientes.cantidad}
           subtitulo={formatearPrecio(perfil.stats.pagosPendientes.monto)}
         />
-        <StatChica imagen="/iconos/warning.webp" titulo="Veces en mora" valor={perfil.stats.vecesEnMora} peligro={perfil.stats.vecesEnMora > 0} />
+        <TarjetaStatChica imagen="/iconos/warning.webp" titulo="Veces en mora" valor={perfil.stats.vecesEnMora} peligro={perfil.stats.vecesEnMora > 0} />
       </div>
 
       {/* Tabs */}

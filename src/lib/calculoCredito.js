@@ -22,26 +22,35 @@ const { DIAS_POR_FRECUENCIA } = require('./creditosConstantes')
 // el cliente nunca paga menos de lo pactado — esas son cifras contractuales y
 // quedan exactas sin importar `redondearCuotaMil`.
 //
-// `redondearCuotaMil` es una preferencia aparte, solo para el valor que se
-// cobra en efectivo cada período (valorCuota, o el monto periódico si es solo
-// intereses): redondea al múltiplo de 1.000 más cercano (puede subir o bajar,
-// a diferencia del ROUND_UP de la base) para facilitar el manejo de billetes.
-// Se persiste en Credito.redondearCuotaMil porque la cuota nunca se guarda
-// (CLAUDE.md §4) — sin el flag, cada recálculo futuro (listados, tabla de
-// mora) mostraría un número distinto al que el operador ya le dijo al cliente.
+// El valor que se cobra en efectivo cada período (valorCuota, el monto
+// periódico si es solo intereses, y el desglose capital/interés del
+// cronograma) SIEMPRE redondea al 100 más cercano — decisión del usuario
+// (2026-07-23): en pesos colombianos no se maneja billetera/moneda por
+// debajo de $100, así que $79.999 (66.666 de capital + 13.333 de interés) se
+// muestra como $80.000. `redondearCuotaMil` sigue siendo una preferencia
+// APARTE, encima de ese redondeo al 100: si está activa, redondea otra vez al
+// múltiplo de 1.000 más cercano. Se persiste en Credito.redondearCuotaMil
+// porque la cuota nunca se guarda (CLAUDE.md §4) — sin el flag, cada
+// recálculo futuro (listados, tabla de mora) mostraría un número distinto al
+// que el operador ya le dijo al cliente.
 //
-// Se redondea a 0 decimales (peso entero), NO a 2 (centavos): toda la app
-// muestra dinero sin decimales (formatearPrecio usa maximumFractionDigits: 0,
-// que redondea con SU propia regla al mostrar) — si acá se dejaran centavos,
-// el "hacia arriba" se perdería silenciosamente en esa segunda conversión al
-// mostrar. Encontrado probando en vivo (2026-07-16): $1.150.000 / 12 mostraba
-// $95.833 (redondeado hacia abajo por Intl.NumberFormat) en vez de $95.834.
-// Decimal(15,2) en el schema sigue siendo el tipo de columna correcto para
-// dinero — el redondeo a entero es una decisión de negocio, no de esquema.
+// Se redondea a 0 decimales (peso entero) antes de redondear al 100, NO a 2
+// (centavos): toda la app muestra dinero sin decimales (formatearPrecio usa
+// maximumFractionDigits: 0, que redondea con SU propia regla al mostrar) — si
+// acá se dejaran centavos, el redondeo de negocio se perdería silenciosamente
+// en esa segunda conversión al mostrar. Encontrado probando en vivo
+// (2026-07-16): $1.150.000 / 12 mostraba $95.833 (redondeado hacia abajo por
+// Intl.NumberFormat) en vez de $95.834. Decimal(15,2) en el schema sigue
+// siendo el tipo de columna correcto para dinero — el redondeo a entero (y
+// luego al 100) es una decisión de negocio, no de esquema.
 //
 // Única fuente de verdad para esta fórmula — la usan tanto la simulación en
 // vivo del wizard (POST /simular) como la creación real del crédito, así
 // nunca pueden divergir entre lo que el operador vio y lo que quedó guardado.
+function redondearACien(valor) {
+  return valor.dividedBy(100).toDecimalPlaces(0, Prisma.Decimal.ROUND_HALF_UP).times(100)
+}
+
 function calcularResumenCredito({ montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil = false }) {
   const capital = new Prisma.Decimal(montoInicial)
   const tasa = new Prisma.Decimal(tasaInteres)
@@ -49,10 +58,11 @@ function calcularResumenCredito({ montoInicial, tasaInteres, numeroCuotas, frecu
   const totalIntereses = capital.times(tasa).dividedBy(100).toDecimalPlaces(0, Prisma.Decimal.ROUND_UP)
   const totalAPagar = capital.plus(totalIntereses)
 
-  function redondearAMil(valor) {
+  function redondearCuota(valor) {
+    const alCien = redondearACien(valor)
     return redondearCuotaMil
-      ? valor.dividedBy(1000).toDecimalPlaces(0, Prisma.Decimal.ROUND_HALF_UP).times(1000)
-      : valor
+      ? alCien.dividedBy(1000).toDecimalPlaces(0, Prisma.Decimal.ROUND_HALF_UP).times(1000)
+      : alCien
   }
 
   const cuotas = Number(numeroCuotas)
@@ -64,9 +74,9 @@ function calcularResumenCredito({ montoInicial, tasaInteres, numeroCuotas, frecu
   let valorPeriodico = null
 
   if (esSoloIntereses) {
-    valorPeriodico = redondearAMil(totalIntereses)
+    valorPeriodico = redondearCuota(totalIntereses)
   } else if (cuotas > 0) {
-    valorCuota = redondearAMil(totalAPagar.dividedBy(cuotas).toDecimalPlaces(0, Prisma.Decimal.ROUND_UP))
+    valorCuota = redondearCuota(totalAPagar.dividedBy(cuotas))
     if (diasCobro && fechaInicio) {
       fechaVencimiento = new Date(fechaInicio)
       fechaVencimiento.setDate(fechaVencimiento.getDate() + diasCobro * cuotas)
@@ -108,8 +118,12 @@ function calcularCronogramaCredito({ montoInicial, tasaInteres, numeroCuotas, fr
     montoInicial, tasaInteres, numeroCuotas, frecuenciaPago, fechaInicio, redondearCuotaMil,
   })
 
-  const interesBase = totalIntereses.dividedBy(cuotas).toDecimalPlaces(0, Prisma.Decimal.ROUND_DOWN)
-  const capitalBase = capital.dividedBy(cuotas).toDecimalPlaces(0, Prisma.Decimal.ROUND_DOWN)
+  // Mismo redondeo al 100 más cercano que valorCuota (ver comentario de
+  // calcularResumenCredito) — la última cuota sigue absorbiendo el residuo
+  // exacto de las anteriores, así que la suma de cada columna nunca pierde
+  // ni gana un peso frente al total contractual.
+  const interesBase = redondearACien(totalIntereses.dividedBy(cuotas))
+  const capitalBase = redondearACien(capital.dividedBy(cuotas))
 
   let saldo = capital
   let fecha = new Date(fechaInicio)
@@ -132,4 +146,32 @@ function calcularCronogramaCredito({ montoInicial, tasaInteres, numeroCuotas, fr
   return filas
 }
 
-module.exports = { calcularResumenCredito, calcularCronogramaCredito }
+// Medianoche de hoy — punto de referencia único para toda comparación de
+// "¿ya venció?" en la app (cronograma, mora, próxima cuota). Se usa en vez de
+// Date.now() directo para que una cuota que vence HOY MISMO no cuente como
+// vencida solo por la hora del día en que se consulta — entra en mora recién
+// al día siguiente (decisión del usuario 2026-07-23).
+function inicioDeHoy() {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+// Cuántos períodos completos de frecuenciaPago ya VENCIERON (su fecha de
+// cobro quedó estrictamente antes de hoy) desde fechaInicio — base común para
+// mora (mora.worker.js), deuda de solo intereses (clientes.service.js) y el
+// motor de aplicación de pago (pagos.service.js). El período que se cobra HOY
+// mismo todavía no cuenta como transcurrido. Nunca negativo.
+function periodosTranscurridosDe({ fechaInicio, frecuenciaPago }) {
+  const dias = DIAS_POR_FRECUENCIA[frecuenciaPago]
+  if (!dias) return 0
+  const periodoMs = dias * 86_400_000
+  const diff = inicioDeHoy().getTime() - new Date(fechaInicio).getTime()
+  if (diff <= 0) return 0
+  // -1ms empuja el caso "hoy cae justo en la fecha de una cuota" hacia abajo
+  // (esa cuota se cobra hoy, no cuenta como vencida) sin afectar los demás
+  // casos, donde ya faltaba más de un período completo para el próximo corte.
+  return Math.floor((diff - 1) / periodoMs)
+}
+
+module.exports = { calcularResumenCredito, calcularCronogramaCredito, periodosTranscurridosDe, inicioDeHoy }

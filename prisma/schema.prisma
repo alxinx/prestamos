@@ -239,12 +239,6 @@ enum EstadoPago {
   ANULADO
 }
 
-enum EstadoMora {
-  VIGENTE
-  PAGADA
-  CONDONADA
-}
-
 enum TipoRecargo {
   GASTO_COBRANZA
   PENALIZACION
@@ -1069,7 +1063,6 @@ model Credito {
   historialEstados         HistorialEstadoCredito[]
   pagos                    Pago[]                   @relation("PagoCredito")
   distribuciones           DistribucionPago[]
-  morasAplicadas           MoraAplicada[]
   recargos                 Recargo[]
   garantias                Garantia[]
   deudoresSolidarios       DeudorSolidario[]
@@ -1147,6 +1140,12 @@ model Pago {
   fechaLiquidacion DateTime?  @map("fecha_liquidacion")
   liquidadoPorId   String?    @map("liquidado_por") @db.Char(36)
   comprobanteUrl   String?    @map("comprobante_url")
+  // Voucher QR del pago liquidado (PAGO_LIQUIDADO) — se genera solo al liquidar
+  // (pagos.service.js/liquidarPago), nunca al registrar. Mismo patrón de columna
+  // propia @unique ya usado por Credito/MovimientoCaja/LetraCambio, no la tabla
+  // central VoucherVerificacion que documenta CLAUDE.md §11-13 pero que el
+  // código nunca implementó (verificacion.service.js).
+  tokenVerificacion String?   @unique @map("token_verificacion") @db.Char(64)
   createdAt        DateTime   @default(now()) @map("created_at")
   updatedAt        DateTime   @updatedAt @map("updated_at")
 
@@ -1166,6 +1165,14 @@ model DistribucionPago {
   tenantId       String   @map("tenant_id") @db.Char(36)
   pagoId         String   @map("pago_id") @db.Char(36)
   creditoId      String   @map("credito_id") @db.Char(36)
+  // Un Pago puede repartirse entre varias cuotas (una fila por cuota tocada,
+  // motor de aplicación por cuota — spec 2026-07-23). Null en créditos de
+  // solo intereses (sin cuotas fijas) y en la fila "extra" que registra el
+  // sobrante elegido por el operador (capital o próximas cuotas). Es un hecho
+  // de la transacción, no un valor calculado — se persiste para no tener que
+  // re-derivarlo después (voucher, historial de "Pagos realizados").
+  numeroCuota    Int?     @map("numero_cuota")
+  fechaCuota     DateTime? @map("fecha_cuota")
   valorMora      Decimal  @default(0) @map("valor_mora") @db.Decimal(15, 2)
   valorRecargos  Decimal  @default(0) @map("valor_recargos") @db.Decimal(15, 2)
   valorIntereses Decimal  @default(0) @map("valor_intereses") @db.Decimal(15, 2)
@@ -1178,24 +1185,6 @@ model DistribucionPago {
   credito Credito @relation(fields: [creditoId], references: [id])
 
   @@map("distribucion_pagos")
-}
-
-model MoraAplicada {
-  id              String     @id @db.Char(36)
-  tenantId        String     @map("tenant_id") @db.Char(36)
-  creditoId       String     @map("credito_id") @db.Char(36)
-  fechaInicioMora DateTime   @map("fecha_inicio_mora")
-  fechaFinMora    DateTime?  @map("fecha_fin_mora")
-  diasMora        Int        @map("dias_mora")
-  porcentajeMora  Decimal    @map("porcentaje_mora") @db.Decimal(15, 2)
-  valorMora       Decimal    @map("valor_mora") @db.Decimal(15, 2)
-  estado          EstadoMora
-  createdAt       DateTime   @default(now()) @map("created_at")
-  updatedAt       DateTime   @updatedAt @map("updated_at")
-
-  credito Credito @relation(fields: [creditoId], references: [id])
-
-  @@map("moras_aplicadas")
 }
 
 model Recargo {
@@ -1532,7 +1521,10 @@ model DatosSaas {
 
 model AuditLog {
   id            String   @id @db.Char(36)
-  tenantId      String   @map("tenant_id") @db.Char(36)
+  // Nullable en la BD real desde antes de esta sesión (drift sin migración
+  // registrada, documentado en 20260719120000_auditlog_tenantid_nullable) —
+  // ningún código actual (registrarAuditoria) omite tenantId hoy.
+  tenantId      String?  @map("tenant_id") @db.Char(36)
   empleadoId    String?  @map("empleado_id") @db.Char(36) // null si fue acción automática
   accion        String
   entidadTipo   String   @map("entidad_tipo")

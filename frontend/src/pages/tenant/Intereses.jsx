@@ -3,7 +3,8 @@ import TarjetaPanel from '../../components/tenant/TarjetaPanel'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
 import ModalCrearPlantilla from '../../components/tenant/ModalCrearPlantilla'
-import { IcoMas, IcoMoneda, IcoAlerta } from '../../components/tenant/iconos'
+import ModalEditarPlantilla from '../../components/tenant/ModalEditarPlantilla'
+import { IcoMas, IcoMoneda, IcoAlerta, IcoEditar } from '../../components/tenant/iconos'
 import { ETIQUETA_FRECUENCIA_PAGO, rangoMontoPlantilla, textoCuotasPlantilla } from '../../lib/plantillaCreditoFormato'
 import { apiFetch } from '../../lib/api'
 
@@ -49,6 +50,7 @@ export default function Intereses() {
   const [mora, setMora] = useState([])
   const [cargandoMora, setCargandoMora] = useState(true)
   const [mostrandoModal, setMostrandoModal] = useState(false)
+  const [plantillaEditando, setPlantillaEditando] = useState(null)
   const [sinPermiso, setSinPermiso] = useState(false)
 
   async function cargarPlantillas() {
@@ -72,6 +74,18 @@ export default function Intereses() {
   async function crearPlantilla(datos) {
     const { ok, datos: respuesta } = await apiFetch('/api/tenant/plantillas-credito', { method: 'POST', body: datos })
     if (!ok) throw new Error(respuesta.error || 'No se pudo crear la plantilla.')
+    await Promise.all([cargarPlantillas(), cargarMora()])
+  }
+
+  async function editarPlantilla(id, datos) {
+    const { ok, datos: respuesta } = await apiFetch(`/api/tenant/plantillas-credito/${id}`, { method: 'PUT', body: datos })
+    if (!ok) throw new Error(respuesta.error || 'No se pudo guardar la plantilla.')
+    await cargarPlantillas()
+  }
+
+  async function cambiarEstadoPlantilla(id, estado) {
+    const { ok, datos: respuesta } = await apiFetch(`/api/tenant/plantillas-credito/${id}/estado`, { method: 'PATCH', body: { estado } })
+    if (!ok) throw new Error(respuesta.error || 'No se pudo cambiar el estado de la plantilla.')
     await Promise.all([cargarPlantillas(), cargarMora()])
   }
 
@@ -100,8 +114,8 @@ export default function Intereses() {
         </ConPermiso>
       </div>
 
-      {/* 50/50 — listado de plantillas + qué plantillas tienden a tener más mora */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* 70/30 — listado de plantillas + qué plantillas tienden a tener más mora */}
+      <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4">
         <TarjetaPanel
           icono={<IcoMoneda size={18} />}
           iconoClases="bg-primary/10 text-primary"
@@ -124,6 +138,7 @@ export default function Intereses() {
                     <th className="font-semibold px-1 pb-2">Frecuencia</th>
                     <th className="font-semibold px-1 pb-2">Monto</th>
                     <th className="font-semibold px-1 pb-2">Estado</th>
+                    <th className="px-1 pb-2" />
                   </tr>
                 </thead>
                 <tbody>
@@ -136,6 +151,17 @@ export default function Intereses() {
                       <td className="px-1 py-3 text-on-background whitespace-nowrap">{ETIQUETA_FRECUENCIA_PAGO[p.frecuenciaPago] ?? p.frecuenciaPago}</td>
                       <td className="px-1 py-3 text-on-background whitespace-nowrap">{rangoMontoPlantilla(p.montoMinimo, p.montoMaximo)}</td>
                       <td className="px-1 py-3"><ChipEstadoPlantilla estado={p.estado} /></td>
+                      <td className="px-1 py-3 text-right">
+                        <ConPermiso permiso="creditos.editar" compacto>
+                          <button
+                            type="button"
+                            onClick={() => setPlantillaEditando(p)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold text-on-background bg-surface-lowest hover:bg-surface-default transition-colors whitespace-nowrap"
+                          >
+                            <IcoEditar size={13} /> Editar
+                          </button>
+                        </ConPermiso>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -164,6 +190,15 @@ export default function Intereses() {
 
       {mostrandoModal && (
         <ModalCrearPlantilla onCerrar={() => setMostrandoModal(false)} onCrear={crearPlantilla} />
+      )}
+
+      {plantillaEditando && (
+        <ModalEditarPlantilla
+          plantilla={plantillaEditando}
+          onCerrar={() => setPlantillaEditando(null)}
+          onEditar={editarPlantilla}
+          onCambiarEstado={cambiarEstadoPlantilla}
+        />
       )}
     </div>
   )

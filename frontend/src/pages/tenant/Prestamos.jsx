@@ -5,14 +5,11 @@ import ChipEstado from '../../components/tenant/ChipEstado'
 import Paginador from '../../components/tenant/Paginador'
 import BotonAccion from '../../components/tenant/BotonAccion'
 import ConPermiso from '../../components/tenant/ConPermiso'
-import MenuAcciones from '../../components/tenant/MenuAcciones'
-import ModalGenerarLetraCambio from '../../components/tenant/ModalGenerarLetraCambio'
-import { IcoMas, IcoMoneda, IcoChevronAbajo, IcoBuscar, IcoAlerta, IcoTendencia, IcoArchivo, IcoTelefono } from '../../components/tenant/iconos'
+import { IcoMas, IcoMoneda, IcoChevronAbajo, IcoBuscar, IcoAlerta, IcoTendencia, IcoOjo, IcoTelefono } from '../../components/tenant/iconos'
 import { formatearPrecio, formatearFechaLocal } from '../../lib/formato'
 import { inicialesDe, claseAvatar } from '../../lib/avatar'
 import { apiFetch } from '../../lib/api'
-import { escribirDocumentoLetraCambio } from '../../lib/documentoLetraCambio'
-import usePermisos from '../../hooks/usePermisos'
+import { navegarA } from '../../lib/navegacion'
 // IcoBuscar/IcoAlerta/IcoTendencia viven en components/iconos.jsx (compartidos
 // con Dashboard.jsx y Clientes.jsx).
 
@@ -56,32 +53,6 @@ function SelectCobrador({ valor, onChange, cobradores }) {
 }
 
 export default function Prestamos() {
-  const { tienePermiso } = usePermisos()
-  const [creditoParaLetra, setCreditoParaLetra] = useState(null)
-
-  function accionesCredito(c) {
-    const acciones = []
-    if (tienePermiso('creditos.generar_letra')) {
-      acciones.push({
-        label: 'Generar letra de cambio',
-        icono: <IcoArchivo size={14} />,
-        onClick: () => setCreditoParaLetra({ id: c.id, clienteNombre: c.cliente, clienteCedula: c.clienteCedula }),
-      })
-    }
-    return acciones
-  }
-
-  // Se pasa `ventana` (ya abierta síncronamente por el modal, dentro del gesto
-  // de clic) para que documentoLetraCambio.js la rellene apenas responde la API.
-  async function generarLetraCambio(datos, ventana) {
-    const { ok, datos: resp } = await apiFetch(`/api/tenant/creditos/${creditoParaLetra.id}/letra-cambio`, {
-      method: 'POST',
-      body: datos,
-    })
-    if (!ok) throw new Error(resp.error || 'No se pudo generar la letra de cambio.')
-    escribirDocumentoLetraCambio(ventana, resp)
-  }
-
   const [estadisticas, setEstadisticas] = useState({ capitalCirculando: 0, carteraEnMora: 0, recaudadoEsteMes: 0, prestamosActivos: 0 })
   const [cargandoStats, setCargandoStats] = useState(true)
   const [cobradores, setCobradores] = useState([])
@@ -220,6 +191,7 @@ export default function Prestamos() {
           subtitulo="Pagos liquidados del mes"
           valor={cargandoStats ? '—' : formatearPrecio(estadisticas.recaudadoEsteMes)}
           imagen3d="/iconos/recaudo.webp"
+          imagenClases="absolute top-4 right-3 w-[86px] h-[86px] sm:w-[100px] sm:h-[100px] object-contain pointer-events-none select-none"
           badge={{ icono: <IcoMoneda size={14} />, clases: 'bg-secondary/10 text-secondary' }}
         />
         <TarjetaStat
@@ -273,7 +245,15 @@ export default function Prestamos() {
                       <span className={`font-bold ${c.diasMora >= 30 ? 'text-error' : 'text-on-background'}`}>{c.diasMora}</span>
                     </td>
                     <td className="px-1 py-3"><ChipEstado estado={c.estado} /></td>
-                    <td className="px-1 py-3 text-right"><MenuAcciones acciones={accionesCredito(c)} /></td>
+                    <td className="px-1 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => navegarA(`/prestamos/${c.id}/detalle`)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold text-on-background bg-surface-lowest hover:bg-surface-default transition-colors whitespace-nowrap"
+                      >
+                        <IcoOjo size={13} /> Ver detalle
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -364,7 +344,15 @@ export default function Prestamos() {
                       </td>
                       <td className="px-1 py-3"><ChipEstado estado={c.estado} /></td>
                       <td className="px-1 py-3 text-on-background whitespace-nowrap">{formatearFechaLocal(c.proximaCuota)}</td>
-                      <td className="px-1 py-3 text-right"><MenuAcciones acciones={accionesCredito(c)} /></td>
+                      <td className="px-1 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => navegarA(`/prestamos/${c.id}/detalle`)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant text-[12px] font-semibold text-on-background bg-surface-lowest hover:bg-surface-default transition-colors whitespace-nowrap"
+                        >
+                          <IcoOjo size={13} /> Ver detalle
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -381,13 +369,6 @@ export default function Prestamos() {
         </TarjetaPanel>
       </div>
 
-      {creditoParaLetra && (
-        <ModalGenerarLetraCambio
-          credito={creditoParaLetra}
-          onCerrar={() => setCreditoParaLetra(null)}
-          onGenerar={generarLetraCambio}
-        />
-      )}
     </div>
   )
 }

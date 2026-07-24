@@ -25,6 +25,7 @@ import Clientes from './pages/tenant/Clientes'
 import ClientePerfil from './pages/tenant/ClientePerfil'
 import NuevoCliente from './pages/tenant/NuevoCliente'
 import Prestamos from './pages/tenant/Prestamos'
+import PrestamoDetalle from './pages/tenant/PrestamoDetalle'
 import NuevoPrestamo from './pages/tenant/NuevoPrestamo'
 import Intereses from './pages/tenant/Intereses'
 import Colaboradores from './pages/tenant/Colaboradores'
@@ -61,6 +62,7 @@ function RutasTenantPrivadas({ ruta }) {
   if (/^\/clientes\/[^/]+\/perfil/.test(ruta))       return <ClientePerfil />
   if (ruta.startsWith('/clientes'))                 return <Clientes />
   if (ruta.startsWith('/prestamos/nuevo'))          return <NuevoPrestamo />
+  if (/^\/prestamos\/[^/]+\/detalle/.test(ruta))    return <PrestamoDetalle />
   if (ruta.startsWith('/prestamos'))                return <Prestamos />
   if (ruta.startsWith('/intereses'))                return <Intereses />
   if (/^\/colaboradores\/[^/]+\/panel/.test(ruta))  return <ColaboradorPanel />

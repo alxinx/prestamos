@@ -59,6 +59,96 @@ async function crearPlantilla(req) {
   return plantilla
 }
 
+// PUT /plantillas-credito/:id — edita las condiciones de una plantilla ya
+// creada. No toca `estado` (eso es cambiarEstadoPlantilla, una acción
+// separada) ni afecta créditos ya otorgados con esta plantilla: montoInicial,
+// tasaInteres, numeroCuotas, etc. quedan copiados en el propio Credito al
+// otorgarse (CLAUDE.md §4 — nunca se recalculan desde la plantilla después).
+// La configuración de mora (porcentajeMora/diasGraciaMora/interesMoraActivo)
+// sí se resuelve en vivo contra la plantilla en cada cálculo, así que
+// editarla acá cambia la mora de los créditos activos que la usan — es el
+// comportamiento esperado de una pantalla de "condiciones".
+async function editarPlantilla(req) {
+  const { tenantId, id: autorId } = req.empleado
+  const { id } = req.params
+  const {
+    nombre, plazo, tasaInteres, numeroCuotas, frecuenciaPago, montoMinimo, montoMaximo,
+    interesMoraActivo, porcentajeMora, baseCalculoMora, diasGraciaMora,
+  } = req.body
+
+  const anterior = await prisma.plantillaCredito.findFirst({ where: { id, tenantId } })
+  if (!anterior) return { error: 'Plantilla no encontrada', status: 404 }
+
+  const plantilla = await prisma.plantillaCredito.update({
+    where: { id },
+    data: {
+      nombre, plazo, tasaInteres, numeroCuotas, frecuenciaPago, montoMinimo, montoMaximo,
+      interesMoraActivo,
+      porcentajeMora: interesMoraActivo ? porcentajeMora : null,
+      baseCalculoMora: interesMoraActivo ? baseCalculoMora : null,
+      diasGraciaMora,
+    },
+  })
+
+  await registrarAuditoria({
+    tenantId,
+    empleadoId: autorId,
+    accion: 'EDITAR_PLANTILLA_CREDITO',
+    entidadTipo: 'PlantillaCredito',
+    entidadId: id,
+    valorAnterior: {
+      nombre: anterior.nombre, plazo: anterior.plazo, numeroCuotas: anterior.numeroCuotas, frecuenciaPago: anterior.frecuenciaPago,
+      tasaInteres: anterior.tasaInteres.toNumber(),
+      montoMinimo: anterior.montoMinimo.toNumber(),
+      montoMaximo: anterior.montoMaximo.toNumber(),
+      interesMoraActivo: anterior.interesMoraActivo,
+      porcentajeMora: anterior.porcentajeMora ? anterior.porcentajeMora.toNumber() : null,
+      baseCalculoMora: anterior.baseCalculoMora,
+      diasGraciaMora: anterior.diasGraciaMora,
+    },
+    valorNuevo: {
+      nombre, plazo, numeroCuotas, frecuenciaPago,
+      tasaInteres: plantilla.tasaInteres.toNumber(),
+      montoMinimo: plantilla.montoMinimo.toNumber(),
+      montoMaximo: plantilla.montoMaximo.toNumber(),
+      interesMoraActivo: plantilla.interesMoraActivo,
+      porcentajeMora: plantilla.porcentajeMora ? plantilla.porcentajeMora.toNumber() : null,
+      baseCalculoMora: plantilla.baseCalculoMora,
+      diasGraciaMora: plantilla.diasGraciaMora,
+    },
+  })
+
+  return plantilla
+}
+
+// PATCH /plantillas-credito/:id/estado — suspende ("INACTIVA") o reactiva
+// ("ACTIVA") una plantilla. Una plantilla INACTIVA simplemente deja de
+// ofrecerse para NUEVOS préstamos (el wizard de creación filtra por
+// estado:'ACTIVA') — no afecta los créditos que ya se otorgaron con ella.
+async function cambiarEstadoPlantilla(req) {
+  const { tenantId, id: autorId } = req.empleado
+  const { id } = req.params
+  const { estado } = req.body
+
+  const anterior = await prisma.plantillaCredito.findFirst({ where: { id, tenantId } })
+  if (!anterior) return { error: 'Plantilla no encontrada', status: 404 }
+  if (anterior.estado === estado) return anterior
+
+  const plantilla = await prisma.plantillaCredito.update({ where: { id }, data: { estado } })
+
+  await registrarAuditoria({
+    tenantId,
+    empleadoId: autorId,
+    accion: 'CAMBIAR_ESTADO_PLANTILLA_CREDITO',
+    entidadTipo: 'PlantillaCredito',
+    entidadId: id,
+    valorAnterior: { estado: anterior.estado },
+    valorNuevo: { estado: plantilla.estado },
+  })
+
+  return plantilla
+}
+
 // Stat: % de créditos en mora por plantilla, para identificar cuáles plantillas
 // tienden a producir más cartera en mora. Solo incluye plantillas con al menos
 // un crédito otorgado — una plantilla nueva sin uso no aporta señal ("0 de 0").
@@ -100,4 +190,4 @@ async function moraPorPlantilla(req) {
   return { plantillas: resultado }
 }
 
-module.exports = { listarPlantillas, crearPlantilla, moraPorPlantilla }
+module.exports = { listarPlantillas, crearPlantilla, editarPlantilla, cambiarEstadoPlantilla, moraPorPlantilla }

@@ -3,22 +3,13 @@
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('../../../lib/prisma')
 const { registrarAuditoria } = require('../../../lib/auditoria')
-const { subirDocumento, ErrorDocumento, extensionDe } = require('../../../lib/documentos')
+const { subirDocumento, ErrorDocumento, SELECT_DOCUMENTO, serializarDocumento, obtenerUrlDescargaDocumentoDe } = require('../../../lib/documentos')
 const { enviarEmail } = require('../../../lib/email')
 const { emailActivacionColaborador } = require('../../../emails/activacionColaborador')
 const { generarTokenActivacion, calcularExpiracionActivacion } = require('../../../lib/tokenActivacion')
 const { publicarCambioPermisos, publicarCuentaDesactivada } = require('../../../lib/eventosEmpleado')
-const { eliminarArchivoR2, generarUrlDescargaR2 } = require('../../../lib/r2Client')
+const { eliminarArchivoR2 } = require('../../../lib/r2Client')
 const { obtenerUsoLimiteColaboradores, errorLimiteAlcanzado } = require('../../../lib/limitesPlan')
-
-// `url` se selecciona solo para derivar la extensión del archivo real (la imagen se sube
-// convertida a webp, por lo que la extensión no siempre coincide con el nombre visible) —
-// nunca se envía al frontend (CLAUDE.md §9: el cliente nunca recibe la ruta directa de R2).
-const SELECT_DOCUMENTO = { id: true, nombreArchivo: true, tamanioBytes: true, createdAt: true, url: true }
-
-function serializarDocumento({ url, ...resto }) {
-  return { ...resto, extension: extensionDe(url) }
-}
 
 function enviarEmailActivacionColaborador({ colaborador, nombreNegocio, rolNombre, tokenActivacion }) {
   const urlActivacion = `${process.env.APP_URL}/activar-colaborador?token=${tokenActivacion}&email=${encodeURIComponent(colaborador.email)}`
@@ -180,6 +171,13 @@ async function actualizarColaborador(req) {
 
   const colaboradorActual = await prisma.empleado.findFirst({ where: { id, tenantId } })
   if (!colaboradorActual) return { error: 'Colaborador no encontrado', status: 404 }
+
+  // CLAUDE.md §6: "El super admin no puede... degradarse". esSuperAdmin ya
+  // le da todos los permisos sin importar rolId (permisos.service.js), pero
+  // cambiarle el rol igual sería engañoso (auditoría, UI) — se bloquea acá.
+  if (colaboradorActual.esSuperAdmin && datos.rolId !== colaboradorActual.rolId) {
+    return { error: 'No se puede cambiar el rol del super admin', status: 403 }
+  }
 
   const rol = await prisma.rol.findFirst({ where: { id: datos.rolId, tenantId } })
   if (!rol) return { error: 'Rol inválido', status: 400 }
@@ -362,14 +360,7 @@ async function eliminarDocumentoColaborador(req) {
 async function obtenerUrlDescargaDocumento(req) {
   const { tenantId } = req.empleado
   const { id: empleadoId, documentoId } = req.params
-
-  const documento = await prisma.documento.findFirst({
-    where: { id: documentoId, tenantId, entidadTipo: 'EMPLEADO', entidadId: empleadoId },
-  })
-  if (!documento) return { error: 'Documento no encontrado', status: 404 }
-
-  const url = await generarUrlDescargaR2(documento.url)
-  return { url }
+  return obtenerUrlDescargaDocumentoDe({ tenantId, entidadTipo: 'EMPLEADO', entidadId: empleadoId, documentoId })
 }
 
 module.exports = {

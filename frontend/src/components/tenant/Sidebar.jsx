@@ -259,7 +259,7 @@ export default function SidebarTenant({ rutaActiva, rol, menuAbierto, onCerrar }
     <aside className={`
       ${esMobil || !colapsado ? 'w-[260px]' : 'w-[76px]'}
       h-dvh flex flex-col shrink-0
-      bg-gradient-to-b from-primary to-primary-dark
+      bg-gradient-to-b from-primary-fixed to-primary-dark
       border-r border-white/[0.06]
       ${esMobil
         ? 'fixed top-0 left-0 z-50 transition-transform duration-[250ms] ease-[cubic-bezier(0.4,0,0.2,1)] will-change-transform'

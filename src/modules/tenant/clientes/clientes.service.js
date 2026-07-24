@@ -4,13 +4,12 @@ const { v7: uuidv7 } = require('uuid')
 const { Prisma } = require('@prisma/client')
 const prisma = require('../../../lib/prisma')
 const { registrarAuditoria } = require('../../../lib/auditoria')
-const { subirDocumento, ErrorDocumento, extensionDe } = require('../../../lib/documentos')
-const { generarUrlDescargaR2 } = require('../../../lib/r2Client')
+const { subirDocumento, ErrorDocumento, SELECT_DOCUMENTO, serializarDocumento, obtenerUrlDescargaDocumentoDe } = require('../../../lib/documentos')
 const { normalizarTitulo } = require('../../../lib/validar')
 const { esquemaUbicaciones, esquemaReferencias } = require('./clientes.validator')
-const { ESTADOS_CREDITO_ACTIVOS, ESTADOS_CREDITO_MORA, DIAS_POR_FRECUENCIA } = require('../../../lib/creditosConstantes')
-const { calcularResumenCredito } = require('../../../lib/calculoCredito')
-const { diasMoraDe, proximaFechaCuotaDe, cuotasFaltantesDe } = require('../creditos/creditos.service')
+const { ESTADOS_CREDITO_ACTIVOS, ESTADOS_CREDITO_MORA } = require('../../../lib/creditosConstantes')
+const { calcularResumenCredito, periodosTranscurridosDe } = require('../../../lib/calculoCredito')
+const { diasMoraDe, proximaFechaCuotaDe, cuotasFaltantesDe, abonosPorCreditoDe } = require('../creditos/creditos.service')
 const { parsearPaginacion } = require('../../../lib/paginacion')
 
 // ClienteGlobal es la ÚNICA tabla de este módulo que deliberadamente NO se filtra
@@ -281,10 +280,7 @@ function owedDeCredito(credito, abono) {
       fechaInicio: credito.fechaInicio,
       redondearCuotaMil: credito.redondearCuotaMil,
     })
-    const dias = DIAS_POR_FRECUENCIA[credito.frecuenciaPago] ?? null
-    const periodosTranscurridos = dias
-      ? Math.max(0, Math.floor((Date.now() - new Date(credito.fechaInicio).getTime()) / (dias * 86_400_000)))
-      : 0
+    const periodosTranscurridos = periodosTranscurridosDe(credito)
     const saldoCapital = new Prisma.Decimal(credito.montoInicial).minus(capitalPagado)
     owed = saldoCapital.plus(valorPeriodico.times(periodosTranscurridos)).minus(interesesPagados)
   } else {
@@ -376,12 +372,7 @@ async function listarClientes(req) {
   ])
 
   const creditoIds = creditosActivos.map(c => c.id)
-  const abonos = creditoIds.length === 0 ? [] : await prisma.distribucionPago.groupBy({
-    by: ['creditoId'],
-    where: { tenantId, creditoId: { in: creditoIds } },
-    _sum: { valorCapital: true, valorIntereses: true },
-  })
-  const abonoPorCredito = new Map(abonos.map(a => [a.creditoId, a._sum]))
+  const abonoPorCredito = await abonosPorCreditoDe(tenantId, creditoIds)
 
   const valorAdeudadoPorCliente = new Map()
   const valorPrestamoPorCliente = new Map()
@@ -571,12 +562,7 @@ async function obtenerPerfilCliente(req) {
   const creditosActivos = creditos.filter(c => ESTADOS_CREDITO_ACTIVOS.includes(c.estado))
   const creditoIds = creditos.map(c => c.id)
 
-  const abonos = creditoIds.length === 0 ? [] : await prisma.distribucionPago.groupBy({
-    by: ['creditoId'],
-    where: { tenantId, creditoId: { in: creditoIds } },
-    _sum: { valorCapital: true, valorIntereses: true },
-  })
-  const abonoPorCredito = new Map(abonos.map(a => [a.creditoId, a._sum]))
+  const abonoPorCredito = await abonosPorCreditoDe(tenantId, creditoIds)
 
   const totalEnDeuda = creditosActivos.reduce(
     (acc, c) => acc.plus(owedDeCredito(c, abonoPorCredito.get(c.id))),
@@ -650,7 +636,7 @@ async function listarMovimientosCliente(req) {
   const { id: clienteId } = req.params
   const { paginaNum, porPaginaNum } = parsearPaginacion(req.query)
 
-  const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, tenantId }, select: { id: true } })
+  const cliente = await buscarClienteDelTenant({ tenantId, clienteId })
   if (!cliente) return { error: 'Cliente no encontrado', status: 404 }
 
   const creditos = await prisma.credito.findMany({ where: { tenantId, clienteId }, select: { id: true, fechaInicio: true } })
@@ -676,44 +662,39 @@ async function listarMovimientosCliente(req) {
   }
 }
 
+// Confirma que el cliente exista y pertenezca al tenant del request — usado
+// por las funciones de pagos/documentos para no repetir la misma validación
+// de aislamiento (mismo patrón que buscarColaboradorDelTenant en
+// colaboradores.service.js).
+async function buscarClienteDelTenant({ tenantId, clienteId }) {
+  return prisma.cliente.findFirst({ where: { id: clienteId, tenantId }, select: { id: true } })
+}
+
 // Documentos del cliente — mismo patrón de colaboradores.service.js
 // (listarDocumentosColaborador/obtenerUrlDescargaDocumento), con
 // entidadTipo:'CLIENTE'. Nunca se expone la ruta directa de R2 (CLAUDE.md §9)
 // — solo URLs firmadas temporales generadas acá, siempre tras validar
 // tenantId + entidadId juntos.
-const SELECT_DOCUMENTO_CLIENTE = { id: true, nombreArchivo: true, tamanioBytes: true, createdAt: true, url: true }
-
-function serializarDocumentoCliente({ url, ...resto }) {
-  return { ...resto, extension: extensionDe(url) }
-}
-
 async function listarDocumentosCliente(req) {
   const { tenantId } = req.empleado
   const { id: clienteId } = req.params
 
-  const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, tenantId }, select: { id: true } })
+  const cliente = await buscarClienteDelTenant({ tenantId, clienteId })
   if (!cliente) return { error: 'Cliente no encontrado', status: 404 }
 
   const documentos = await prisma.documento.findMany({
     where: { tenantId, entidadTipo: 'CLIENTE', entidadId: clienteId },
-    select: SELECT_DOCUMENTO_CLIENTE,
+    select: SELECT_DOCUMENTO,
     orderBy: { createdAt: 'desc' },
   })
 
-  return { documentos: documentos.map(serializarDocumentoCliente) }
+  return { documentos: documentos.map(serializarDocumento) }
 }
 
 async function obtenerUrlDescargaDocumentoCliente(req) {
   const { tenantId } = req.empleado
   const { id: clienteId, documentoId } = req.params
-
-  const documento = await prisma.documento.findFirst({
-    where: { id: documentoId, tenantId, entidadTipo: 'CLIENTE', entidadId: clienteId },
-  })
-  if (!documento) return { error: 'Documento no encontrado', status: 404 }
-
-  const url = await generarUrlDescargaR2(documento.url)
-  return { url }
+  return obtenerUrlDescargaDocumentoDe({ tenantId, entidadTipo: 'CLIENTE', entidadId: clienteId, documentoId })
 }
 
 // POST /clientes/:id/documentos — mismo patrón de subirDocumentoAColaborador
@@ -724,7 +705,7 @@ async function subirDocumentoACliente(req) {
   const nombre = req.body.nombre
   const archivo = req.file
 
-  const cliente = await prisma.cliente.findFirst({ where: { id: clienteId, tenantId }, select: { id: true } })
+  const cliente = await buscarClienteDelTenant({ tenantId, clienteId })
   if (!cliente) return { error: 'Cliente no encontrado', status: 404 }
   if (!archivo) return { error: 'Selecciona un archivo', status: 400 }
   if (!nombre || !nombre.trim()) return { error: 'El documento debe tener un nombre', status: 400 }

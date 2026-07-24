@@ -3,7 +3,7 @@
 const sharp = require('sharp')
 const { v7: uuidv7 } = require('uuid')
 const prisma = require('./prisma')
-const { subirArchivoR2 } = require('./r2Client')
+const { subirArchivoR2, generarUrlDescargaR2 } = require('./r2Client')
 
 const MAX_IMAGEN_BYTES = 3 * 1024 * 1024
 const MAX_DOCUMENTO_MB = Number(process.env.MAX_FILE_SIZE_MB) || 10
@@ -111,4 +111,29 @@ async function subirDocumento({ tenantId, entidadTipo, entidadId, subidoPorId, n
   return { ...documento, extension: extensionFinal }
 }
 
-module.exports = { subirDocumento, ErrorDocumento, extensionDe, MAX_DOCUMENTO_BYTES }
+// `url` se selecciona solo para derivar la extensión del archivo real (la imagen se sube
+// convertida a webp, por lo que la extensión no siempre coincide con el nombre visible) —
+// nunca se envía al frontend (CLAUDE.md §9: el cliente nunca recibe la ruta directa de R2).
+// Fuente única — antes duplicada por separado en colaboradores/clientes/creditos.service.js.
+const SELECT_DOCUMENTO = { id: true, nombreArchivo: true, tamanioBytes: true, createdAt: true, url: true }
+
+function serializarDocumento({ url, ...resto }) {
+  return { ...resto, extension: extensionDe(url) }
+}
+
+// Valida tenantId + entidadTipo + entidadId antes de firmar la URL de descarga
+// (CLAUDE.md §9) — fuente única para cualquier módulo con documentos adjuntos.
+async function obtenerUrlDescargaDocumentoDe({ tenantId, entidadTipo, entidadId, documentoId }) {
+  const documento = await prisma.documento.findFirst({
+    where: { id: documentoId, tenantId, entidadTipo, entidadId },
+  })
+  if (!documento) return { error: 'Documento no encontrado', status: 404 }
+
+  const url = await generarUrlDescargaR2(documento.url)
+  return { url }
+}
+
+module.exports = {
+  subirDocumento, ErrorDocumento, extensionDe, MAX_DOCUMENTO_BYTES,
+  SELECT_DOCUMENTO, serializarDocumento, obtenerUrlDescargaDocumentoDe,
+}

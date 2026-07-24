@@ -163,12 +163,57 @@ async function buscarResumenPrestamo(token) {
   }
 }
 
+// Voucher de un pago (pagos.service.js/registrarPago) — todo pago se aplica y
+// se marca LIQUIDADO de inmediato al registrarse (decisión del usuario
+// 2026-07-23, ya no hay paso de liquidación aparte), así que si el token
+// existe el pago ya es un hecho consumado. Un mismo Pago puede repartirse
+// entre varias cuotas (una fila de DistribucionPago por cuota tocada — motor
+// de aplicación por cuota), por eso se suman todas sus filas en vez de leer
+// solo la primera.
+async function buscarPagoLiquidado(token) {
+  const pago = await prisma.pago.findFirst({
+    where: { tokenVerificacion: token, estado: 'LIQUIDADO' },
+    select: {
+      montoRecibido: true,
+      metodoPago: true,
+      tipo: true,
+      fechaLiquidacion: true,
+      credito: { select: { cliente: { select: { clienteGlobal: { select: { nombreCompleto: true, cedula: true } } } } } },
+      liquidadoPor: { select: { nombreCompleto: true } },
+      distribuciones: { select: { valorRecargos: true, valorIntereses: true, valorCapital: true, totalAplicado: true } },
+    },
+  })
+  if (!pago) return null
+
+  const totales = pago.distribuciones.reduce((acc, d) => ({
+    valorRecargos: acc.valorRecargos + d.valorRecargos.toNumber(),
+    valorIntereses: acc.valorIntereses + d.valorIntereses.toNumber(),
+    valorCapital: acc.valorCapital + d.valorCapital.toNumber(),
+  }), { valorRecargos: 0, valorIntereses: 0, valorCapital: 0 })
+
+  return {
+    valido: true,
+    tipoDocumento: 'PAGO_LIQUIDADO',
+    datos: {
+      fecha: pago.fechaLiquidacion.toISOString(),
+      cliente: pago.credito.cliente.clienteGlobal.nombreCompleto,
+      clienteCedula: pago.credito.cliente.clienteGlobal.cedula,
+      montoRecibido: pago.montoRecibido.toNumber(),
+      metodoPago: pago.metodoPago,
+      tipo: pago.tipo,
+      ...totales,
+      liquidadoPor: pago.liquidadoPor?.nombreCompleto ?? null,
+    },
+  }
+}
+
 async function verificarDocumento(token) {
   try {
     const encontrado = (await buscarCierreCajaIndividual(token))
       ?? (await buscarAjusteCapital(token))
       ?? (await buscarLetraCambio(token))
       ?? (await buscarResumenPrestamo(token))
+      ?? (await buscarPagoLiquidado(token))
     if (!encontrado) return { error: 'Documento no encontrado', status: 404 }
 
     return { ...encontrado, verificadoEn: new Date().toISOString() }
